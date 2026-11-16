@@ -1,0 +1,5 @@
+Hello from Antigravity! 🚀
+This is a demo file created to test if your Git repository detects new files or automatically updates.
+
+Created at: 2026-11-16
+Status: Testing file tracking and GitHub sync!
