@@ -58,3 +58,30 @@ src/
 - **Theme:** *"Unveiling Technology"* — Tech-forward, atmospheric dark/light mode with deep slate accents, precision borders, glow accents, and monospace code typography.
 - **Typography:** `Inter` / `Geist Sans` for UI prose, `JetBrains Mono` / `Geist Mono` for technical data and code.
 - **Micro-Interactions:** Fluid CSS transitions, hover elevations, and responsive loading skeletons for zero layout shift.
+
+
+---
+
+## Phase 2: Parallel Execution, Review & Live Launch
+
+> **Execution Protocol:** Coordinate parallel workers via `@mentions` and do not mark the task complete until the Verifier passes every check.
+
+1. **@db-architect (`Supabase` + `Context7`):**
+   - Apply the SQL migrations, indexes, and strict Row-Level Security (RLS) policies in Supabase.
+   - Generate accurate TypeScript database types and build a clean, isolated data-access layer with full error handling and input validation.
+
+2. **@ui-craftsman (`Context7` + `Gemini API` if needed):**
+   - Build the frontend components strictly following our Phase 1 design tokens and modular file structure.
+   - Implement skeleton loading states, graceful error boundaries, keyboard accessibility, and responsive layouts across desktop and mobile. Keep components small, pure, and readable.
+
+3. **@staff-reviewer (`CodeRabbit` + `Superpowers`):**
+   - Run a `CodeRabbit` audit across all newly written code.
+   - Flag and refactor any security vulnerabilities, exposed secrets, N+1 queries, race conditions, dead code, or messy logic until the diff is spotless.
+
+4. **@qa-verifier (`Chrome DevTools`):**
+   - Start the local dev server and open the live app using `Chrome DevTools`.
+   - Test the full user journey end-to-end, inspect the Console and Network tabs to confirm zero runtime errors or failed Supabase requests, and verify visual alignment.
+
+5. **@release-lead (`Vercel`):**
+   - Write a crisp, judge-ready `README.md` featuring the problem statement, system architecture overview, tech stack, and local setup steps.
+   - Verify environment variables (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, etc. — never hardcoded), deploy the build to `Vercel`, and confirm the live public `.vercel.app` URL responds cleanly.
