@@ -11,6 +11,7 @@ import { ParameterControls } from './components/simulation/ParameterControls';
 import { MetricsPanel } from './components/simulation/MetricsPanel';
 import { MechanismExplainer } from './components/features/MechanismExplainer';
 import { PhoneHero3D } from './components/features/PhoneHero3D';
+import { FloatingPillNav } from './components/ui/FloatingPillNav';
 import { Cpu, Zap, ShieldCheck, Terminal, Code2 } from 'lucide-react';
 
 const DEFAULT_PARAMS: SimulationParams = {
@@ -46,6 +47,9 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#07090e] text-[#f1f5f9]">
+      {/* Skiper UI Dynamic Floating Pill HUD */}
+      <FloatingPillNav state={simState} isTouched={touch.active} />
+
       {/* Background ambient lighting */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-cyan-500/10 rounded-full blur-[140px]" />
@@ -53,8 +57,8 @@ export const App: React.FC = () => {
         <div className="absolute bottom-10 right-0 w-[450px] h-[450px] bg-rose-500/5 rounded-full blur-[120px]" />
       </div>
 
-      {/* Top Navigation */}
-      <header className="sticky top-0 z-50 border-b border-white/5 bg-[#07090e]/80 backdrop-blur-xl">
+      {/* Top Header */}
+      <header className="border-b border-white/5 bg-[#07090e]/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-indigo-600 shadow-lg shadow-cyan-500/20">
@@ -118,7 +122,7 @@ export const App: React.FC = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-base text-slate-300 leading-relaxed max-w-xl"
             >
-              We touch glass dozens of times each hour. But glass is an electrical insulator.
+              Glass is an electrical insulator. Yet modern screens register sub-millimeter touches in under 20 milliseconds.
               Explore the real electrodynamics of mutual capacitance, transparent Indium Tin Oxide micro-electrodes, and how the human body acts as a virtual ground shunt.
             </motion.p>
 
@@ -130,11 +134,11 @@ export const App: React.FC = () => {
             >
               <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-slate-300">
                 <ShieldCheck className="h-4 w-4 text-cyan-400" />
-                <span>100% In-Browser Math</span>
+                <span>100% Client-Side Physics</span>
               </div>
               <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-slate-300">
                 <Terminal className="h-4 w-4 text-indigo-400" />
-                <span>Zero AI / Zero External API</span>
+                <span>Zero AI / Zero External Quota</span>
               </div>
             </motion.div>
           </div>
@@ -151,7 +155,7 @@ export const App: React.FC = () => {
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
                 <span>Interactive Capacitive Matrix</span>
                 <span className="text-xs font-mono font-normal text-slate-400">
-                  (Move pointer over canvas)
+                  (Move pointer or finger over canvas)
                 </span>
               </h2>
               <p className="text-xs text-slate-400">
@@ -160,7 +164,7 @@ export const App: React.FC = () => {
             </div>
             {touch.active && (
               <span className="inline-flex items-center gap-2 font-mono text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 px-3 py-1 rounded-full animate-pulse">
-                TOUCH DETECTED: -{simState.deltaCapacitancePf.toFixed(2)} pF
+                TOUCH REGISTERED: -{simState.deltaCapacitancePf.toFixed(2)} pF
               </span>
             )}
           </div>
@@ -183,7 +187,7 @@ export const App: React.FC = () => {
           />
         </section>
 
-        {/* Three Step Educational Explainer Section */}
+        {/* Three Step Educational Explainer Section with Anime.js Circuit Trace & Spotlight Cards */}
         <section className="space-y-6 mb-16">
           <div className="text-center max-w-2xl mx-auto space-y-2">
             <h3 className="text-2xl font-bold text-white">The Scientific Mechanism Explained</h3>
@@ -200,7 +204,7 @@ export const App: React.FC = () => {
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 sm:flex-row">
           <p>© 2026 Global Virtual Hackathon Submission — Canadian International School, Singapore.</p>
           <p className="font-mono text-[11px] text-slate-400">
-            Powered by Next-Gen Vite, React 19, Motion, Three.js & Lenis.
+            Powered by Vite, React 19, Motion, Three.js Custom Shaders, Anime.js & Lenis.
           </p>
         </div>
       </footer>
