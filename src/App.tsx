@@ -11,6 +11,7 @@ import { ParameterControls } from './components/simulation/ParameterControls';
 import { MetricsPanel } from './components/simulation/MetricsPanel';
 import { MechanismExplainer } from './components/features/MechanismExplainer';
 import { PhoneHero3D } from './components/features/PhoneHero3D';
+import { QuantumFieldShowcase } from './components/features/QuantumFieldShowcase';
 import { FloatingPillNav } from './components/ui/FloatingPillNav';
 import { Cpu, Zap, ShieldCheck, Terminal, Code2 } from 'lucide-react';
 
@@ -147,6 +148,11 @@ export const App: React.FC = () => {
             <PhoneHero3D isTouched={touch.active} />
           </div>
         </div>
+
+        {/* Premier 3D Quantum Field Showcase with GSAP, GLSL Shaders & Anime.js */}
+        <section className="mb-16">
+          <QuantumFieldShowcase />
+        </section>
 
         {/* Live Simulation & Metrics Section */}
         <section className="space-y-6 mb-16">
