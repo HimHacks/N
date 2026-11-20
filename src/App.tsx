@@ -10,6 +10,7 @@ import { SimulationCanvas } from './components/simulation/SimulationCanvas';
 import { ParameterControls } from './components/simulation/ParameterControls';
 import { MetricsPanel } from './components/simulation/MetricsPanel';
 import { MechanismExplainer } from './components/features/MechanismExplainer';
+import { PhoneHero3D } from './components/features/PhoneHero3D';
 import { FuturePhoneExperience } from './components/features/FuturePhoneExperience';
 import { QuantumFieldShowcase } from './components/features/QuantumFieldShowcase';
 import { LiquidTopographicTerrain } from './components/features/LiquidTopographicTerrain';
