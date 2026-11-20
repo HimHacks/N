@@ -12,6 +12,7 @@ import { MetricsPanel } from './components/simulation/MetricsPanel';
 import { MechanismExplainer } from './components/features/MechanismExplainer';
 import { FuturePhoneExperience } from './components/features/FuturePhoneExperience';
 import { QuantumFieldShowcase } from './components/features/QuantumFieldShowcase';
+import { LiquidTopographicTerrain } from './components/features/LiquidTopographicTerrain';
 import { FloatingPillNav } from './components/ui/FloatingPillNav';
 import { MagneticButton } from './components/ui/MagneticButton';
 import { Cpu, Zap, ShieldCheck, Terminal, Code2 } from 'lucide-react';
@@ -163,6 +164,32 @@ export const App: React.FC = () => {
         {/* 3D Quantum Field Showcase with GSAP, GLSL Shaders & Anime.js */}
         <section className="mb-20">
           <QuantumFieldShowcase />
+        </section>
+
+        {/* Liquid Topographic Potential Landscape */}
+        <section className="mb-20 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <span>Liquid Topographic Electrostatic Surface</span>
+                <span className="text-xs font-mono font-normal text-cyan-400">
+                  (GPU Simplex Potential Map)
+                </span>
+              </h2>
+              <p className="text-xs text-slate-400">
+                Visualizing voltage gradients and capacitive field lines as continuous liquid contours
+              </p>
+            </div>
+            {touch.active && (
+              <span className="inline-flex items-center gap-2 font-mono text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 px-3 py-1 rounded-full animate-pulse">
+                GROUND BASIN ACTIVE
+              </span>
+            )}
+          </div>
+          <LiquidTopographicTerrain
+            intensity={params.voltageV / 2.8}
+            isTouched={touch.active}
+          />
         </section>
 
         {/* Live Simulation & Metrics Section */}
