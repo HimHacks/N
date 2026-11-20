@@ -10,9 +10,10 @@ import { SimulationCanvas } from './components/simulation/SimulationCanvas';
 import { ParameterControls } from './components/simulation/ParameterControls';
 import { MetricsPanel } from './components/simulation/MetricsPanel';
 import { MechanismExplainer } from './components/features/MechanismExplainer';
-import { PhoneHero3D } from './components/features/PhoneHero3D';
+import { FuturePhoneExperience } from './components/features/FuturePhoneExperience';
 import { QuantumFieldShowcase } from './components/features/QuantumFieldShowcase';
 import { FloatingPillNav } from './components/ui/FloatingPillNav';
+import { MagneticButton } from './components/ui/MagneticButton';
 import { Cpu, Zap, ShieldCheck, Terminal, Code2 } from 'lucide-react';
 
 const DEFAULT_PARAMS: SimulationParams = {
@@ -149,13 +150,23 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Premier 3D Quantum Field Showcase with GSAP, GLSL Shaders & Anime.js */}
-        <section className="mb-16">
+        {/* Premier 5-Step Future Phone Cinematic Experience */}
+        <section id="phone-lab" className="mb-20">
+          <FuturePhoneExperience
+            onDeepDive={() => {
+              const el = document.getElementById('simulation-section');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+          />
+        </section>
+
+        {/* 3D Quantum Field Showcase with GSAP, GLSL Shaders & Anime.js */}
+        <section className="mb-20">
           <QuantumFieldShowcase />
         </section>
 
         {/* Live Simulation & Metrics Section */}
-        <section className="space-y-6 mb-16">
+        <section id="simulation-section" className="space-y-6 mb-20">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
