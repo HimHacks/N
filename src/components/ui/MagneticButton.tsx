@@ -1,5 +1,4 @@
-import React, { useRef, useState } from 'react';
-import { useSpring, animated } from '@react-spring/web';
+import React, { useState } from 'react';
 
 interface MagneticButtonProps {
   children: React.ReactNode;
@@ -14,31 +13,23 @@ export const MagneticButton: React.FC<MagneticButtonProps> = ({
   className = '',
   variant = 'primary',
 }) => {
-  const btnRef = useRef<HTMLButtonElement>(null);
+  const [offset, setOffset] = useState({ x: 0, y: 0, scale: 1 });
   const [isHovered, setIsHovered] = useState(false);
 
-  // React Spring physics spring for smooth magnetic pull
-  const [{ x, y, scale }, api] = useSpring(() => ({
-    x: 0,
-    y: 0,
-    scale: 1,
-    config: { mass: 0.15, tension: 350, friction: 18 },
-  }));
-
   const handleMouseMove = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (!btnRef.current) return;
-    const rect = btnRef.current.getBoundingClientRect();
+    const rect = e.currentTarget.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
-    const distanceX = (e.clientX - centerX) * 0.35;
-    const distanceY = (e.clientY - centerY) * 0.35;
-
-    api.start({ x: distanceX, y: distanceY, scale: 1.05 });
+    setOffset({
+      x: (e.clientX - centerX) * 0.35,
+      y: (e.clientY - centerY) * 0.35,
+      scale: 1.05,
+    });
   };
 
   const handleMouseLeave = () => {
     setIsHovered(false);
-    api.start({ x: 0, y: 0, scale: 1 });
+    setOffset({ x: 0, y: 0, scale: 1 });
   };
 
   const handleMouseEnter = () => {
@@ -57,22 +48,22 @@ export const MagneticButton: React.FC<MagneticButtonProps> = ({
   };
 
   return (
-    <animated.button
-      ref={btnRef}
+    <button
       style={{
-        transform: x.to((xVal) => `translate3d(${xVal}px, ${y.get()}px, 0px) scale(${scale.get()})`),
+        transform: `translate3d(${offset.x}px, ${offset.y}px, 0px) scale(${offset.scale})`,
+        transition: isHovered ? 'transform 0.08s ease-out' : 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
       }}
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
-      className={`relative inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 font-mono text-xs font-semibold tracking-wide transition-colors cursor-pointer select-none backdrop-blur-md overflow-hidden ${getVariantStyles()} ${className}`}
+      className={`relative inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 font-mono text-xs font-semibold tracking-wide cursor-pointer select-none backdrop-blur-md overflow-hidden ${getVariantStyles()} ${className}`}
     >
       {/* Liquid shine wave */}
       {isHovered && (
         <span className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none" />
       )}
       <span className="relative z-10 flex items-center gap-2">{children}</span>
-    </animated.button>
+    </button>
   );
 };

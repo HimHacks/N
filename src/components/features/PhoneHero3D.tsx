@@ -1,6 +1,7 @@
 import React, { useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { CanvasErrorBoundary } from '../ui/CanvasErrorBoundary';
 
 interface PhoneSceneProps {
   isTouched: boolean;
@@ -142,15 +143,17 @@ const PhoneModel: React.FC<PhoneSceneProps> = ({ isTouched }) => {
 export const PhoneHero3D: React.FC<PhoneSceneProps> = ({ isTouched }) => {
   return (
     <div className="relative h-[360px] w-full max-w-[360px] mx-auto">
-      <Canvas
-        camera={{ position: [0, 0, 5.5], fov: 45 }}
-        className="cursor-grab active:cursor-grabbing"
-      >
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[4, 5, 4]} intensity={1.4} color="#38bdf8" />
-        <pointLight position={[-4, -3, -2]} intensity={0.8} color="#818cf8" />
-        <PhoneModel isTouched={isTouched} />
-      </Canvas>
+      <CanvasErrorBoundary fallbackTitle="3D Phone Preview">
+        <Canvas
+          camera={{ position: [0, 0, 5.5], fov: 45 }}
+          className="cursor-grab active:cursor-grabbing"
+        >
+          <ambientLight intensity={0.6} />
+          <directionalLight position={[4, 5, 4]} intensity={1.4} color="#38bdf8" />
+          <pointLight position={[-4, -3, -2]} intensity={0.8} color="#818cf8" />
+          <PhoneModel isTouched={isTouched} />
+        </Canvas>
+      </CanvasErrorBoundary>
       <div className="absolute bottom-2 left-0 right-0 text-center font-mono text-[10px] text-slate-500 pointer-events-none">
         Three.js GLSL Custom Shader &bull; Procedural ITO Field Simulation
       </div>

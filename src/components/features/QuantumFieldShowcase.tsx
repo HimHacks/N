@@ -6,6 +6,7 @@ import { animate, stagger } from 'animejs';
 import { soundEngine } from '../../lib/audio/synthEngine';
 import { NumberTicker } from '../ui/NumberTicker';
 import { SpotlightCard } from '../ui/SpotlightCard';
+import { CanvasErrorBoundary } from '../ui/CanvasErrorBoundary';
 import {
   Play,
   RotateCcw,
@@ -437,32 +438,34 @@ export const QuantumFieldShowcase: React.FC = () => {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 items-center">
         {/* 3D Viewport with Three.js, Custom GLSL Shaders & Electron Cloud */}
         <div className="lg:col-span-8 relative h-[440px] w-full rounded-2xl border border-white/10 bg-[#05070c] overflow-hidden">
-          <Canvas
-            camera={{ position: [0, 0, 5.8], fov: 45 }}
-            className="cursor-grab active:cursor-grabbing w-full h-full"
-            onPointerDown={(e) => {
-              soundEngine.playTouchHaptic(frequency);
-              const rect = e.currentTarget.getBoundingClientRect();
-              const u = (e.clientX - rect.left) / rect.width;
-              const v = 1.0 - (e.clientY - rect.top) / rect.height;
-              setTouchPoint([u, v]);
-            }}
-          >
-            <ambientLight intensity={0.65} />
-            <directionalLight position={[4, 5, 4]} intensity={1.5} color="#38bdf8" />
-            <pointLight position={[-4, -3, -2]} intensity={0.9} color="#818cf8" />
-            
-            {/* 3D Device Mesh with Custom GLSL Shader */}
-            <DeviceModel
-              deviceGroupRef={deviceGroupRef}
-              surge={surge}
-              xray={xray}
-              touchPoint={touchPoint}
-            />
+          <CanvasErrorBoundary fallbackTitle="Quantum Electrodynamics Lab">
+            <Canvas
+              camera={{ position: [0, 0, 5.8], fov: 45 }}
+              className="cursor-grab active:cursor-grabbing w-full h-full"
+              onPointerDown={(e) => {
+                soundEngine.playTouchHaptic(frequency);
+                const rect = e.currentTarget.getBoundingClientRect();
+                const u = (e.clientX - rect.left) / rect.width;
+                const v = 1.0 - (e.clientY - rect.top) / rect.height;
+                setTouchPoint([u, v]);
+              }}
+            >
+              <ambientLight intensity={0.65} />
+              <directionalLight position={[4, 5, 4]} intensity={1.5} color="#38bdf8" />
+              <pointLight position={[-4, -3, -2]} intensity={0.9} color="#818cf8" />
+              
+              {/* 3D Device Mesh with Custom GLSL Shader */}
+              <DeviceModel
+                deviceGroupRef={deviceGroupRef}
+                surge={surge}
+                xray={xray}
+                touchPoint={touchPoint}
+              />
 
-            {/* Orbital Coulomb Electron Particle System */}
-            <ElectronCloud surge={surge} />
-          </Canvas>
+              {/* Orbital Coulomb Electron Particle System */}
+              <ElectronCloud surge={surge} />
+            </Canvas>
+          </CanvasErrorBoundary>
 
           {/* Interactive Overlay Badge */}
           <div className="absolute top-3 left-4 flex items-center gap-2 rounded-full border border-white/10 bg-[#07090e]/80 px-3 py-1 font-mono text-[11px] text-slate-300 backdrop-blur-md">

@@ -7,6 +7,7 @@ import { soundEngine } from '../../lib/audio/synthEngine';
 import { MagneticButton } from '../ui/MagneticButton';
 import { NumberTicker } from '../ui/NumberTicker';
 import { SpotlightCard } from '../ui/SpotlightCard';
+import { CanvasErrorBoundary } from '../ui/CanvasErrorBoundary';
 import {
   Play,
   RotateCcw,
@@ -175,8 +176,8 @@ const PhotorealisticPhone: React.FC<DeviceMeshProps> = ({
       </mesh>
 
       {/* 4. Top Optical Sensor Pill */}
-      <mesh position={[0, 2.05, 0.11]}>
-        <capsuleGeometry args={[0.045, 0.22, 16, 16]} />
+      <mesh position={[0, 2.05, 0.11]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.045, 0.045, 0.25, 16]} />
         <meshBasicMaterial color="#020617" />
       </mesh>
 
@@ -184,7 +185,7 @@ const PhotorealisticPhone: React.FC<DeviceMeshProps> = ({
       <group ref={fingerGroupRef} position={[0, 0, 2.2]}>
         {/* Finger tip pad */}
         <mesh position={[0, 0, 0]}>
-          <capsuleGeometry args={[0.18, 0.65, 16, 16]} />
+          <cylinderGeometry args={[0.18, 0.18, 0.65, 16]} />
           <meshStandardMaterial
             color="#38bdf8"
             emissive={touchActive > 0.3 ? '#f43f5e' : '#0284c7'}
@@ -411,19 +412,21 @@ export const FuturePhoneExperience: React.FC<{ onDeepDive: () => void }> = ({ on
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-center">
         {/* 3D WebGL Canvas */}
         <div className="lg:col-span-8 relative h-[480px] w-full rounded-2xl border border-white/10 bg-[#04060b] overflow-hidden shadow-2xl">
-          <Canvas camera={{ position: [0, 0, 5.8], fov: 45 }} className="w-full h-full cursor-grab">
-            <ambientLight intensity={0.7} />
-            <directionalLight position={[5, 6, 4]} intensity={1.6} color="#38bdf8" />
-            <pointLight position={[-4, -3, -2]} intensity={0.9} color="#818cf8" />
-            <PhotorealisticPhone
-              deviceGroupRef={deviceGroupRef}
-              fingerGroupRef={fingerGroupRef}
-              touchActive={touchActive}
-              rotationProgress={rotationProgress}
-              xray={xray}
-              touchCoords={touchCoords}
-            />
-          </Canvas>
+          <CanvasErrorBoundary fallbackTitle="3D Smartphone Viewport">
+            <Canvas camera={{ position: [0, 0, 5.8], fov: 45 }} className="w-full h-full cursor-grab">
+              <ambientLight intensity={0.7} />
+              <directionalLight position={[5, 6, 4]} intensity={1.6} color="#38bdf8" />
+              <pointLight position={[-4, -3, -2]} intensity={0.9} color="#818cf8" />
+              <PhotorealisticPhone
+                deviceGroupRef={deviceGroupRef}
+                fingerGroupRef={fingerGroupRef}
+                touchActive={touchActive}
+                rotationProgress={rotationProgress}
+                xray={xray}
+                touchCoords={touchCoords}
+              />
+            </Canvas>
+          </CanvasErrorBoundary>
 
           {/* Real-time State Badge */}
           <div className="absolute top-4 left-4 flex items-center gap-2 rounded-full border border-white/10 bg-[#07090e]/85 px-3.5 py-1.5 font-mono text-xs text-slate-300 backdrop-blur-md">
