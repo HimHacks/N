@@ -13,9 +13,8 @@ import { MechanismExplainer } from './components/features/MechanismExplainer';
 import { PhoneHero3D } from './components/features/PhoneHero3D';
 import { FuturePhoneExperience } from './components/features/FuturePhoneExperience';
 import { QuantumFieldShowcase } from './components/features/QuantumFieldShowcase';
-import { LiquidTopographicTerrain } from './components/features/LiquidTopographicTerrain';
+import { CombinedTopographicBackground } from './components/features/CombinedTopographicBackground';
 import { FloatingPillNav } from './components/ui/FloatingPillNav';
-import { MagneticButton } from './components/ui/MagneticButton';
 import { Cpu, Zap, ShieldCheck, Terminal, Code2 } from 'lucide-react';
 
 const DEFAULT_PARAMS: SimulationParams = {
@@ -50,45 +49,38 @@ export const App: React.FC = () => {
   const simState = calculateCapacitance(params, touch);
 
   return (
-    <div className="min-h-screen bg-[#07090e] text-[#f1f5f9]">
-      {/* Skiper UI Dynamic Floating Pill HUD */}
+    <CombinedTopographicBackground>
+      {/* Floating Pill HUD */}
       <FloatingPillNav state={simState} isTouched={touch.active} />
 
-      {/* Background ambient lighting */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-cyan-500/10 rounded-full blur-[140px]" />
-        <div className="absolute top-[45%] -left-40 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[140px]" />
-        <div className="absolute bottom-10 right-0 w-[450px] h-[450px] bg-rose-500/5 rounded-full blur-[120px]" />
-      </div>
-
       {/* Top Header */}
-      <header className="border-b border-white/5 bg-[#07090e]/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-black/10 bg-white/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-indigo-600 shadow-lg shadow-cyan-500/20">
-              <Cpu className="h-5 w-5 text-black" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600 shadow-lg shadow-cyan-500/20">
+              <Cpu className="h-5 w-5 text-white" />
             </div>
             <div>
-              <span className="font-bold tracking-tight text-white flex items-center gap-2">
-                CAPACITOR<span className="text-cyan-400">.IO</span>
-                <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2 py-0.5 text-[10px] font-mono text-cyan-300">
+              <span className="font-bold tracking-tight text-slate-950 flex items-center gap-2">
+                CAPACITOR<span className="text-cyan-600">.IO</span>
+                <span className="rounded-full border border-cyan-600/30 bg-cyan-50 px-2 py-0.5 text-[10px] font-mono text-cyan-700">
                   GVH 2026
                 </span>
               </span>
-              <p className="text-[10px] text-slate-400 font-mono">Unveiling Capacitive Touch Physics</p>
+              <p className="text-[10px] text-slate-500 font-mono">Unveiling Capacitive Touch Physics</p>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-400 font-mono">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
+            <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-emerald-600/20 bg-emerald-50 px-3 py-1 text-xs text-emerald-700 font-mono">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
               Real-Time Physics Engine Active
             </span>
             <a
               href="https://github.com/yashsva292-ops/Global-Virtual-Hackathon-repo"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300 transition hover:bg-white/10 hover:text-white"
+              className="flex items-center gap-2 rounded-xl border border-black/10 bg-white/90 px-3 py-1.5 text-xs text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-black"
             >
               <Code2 className="h-4 w-4" />
               <span>Repository</span>
@@ -99,15 +91,15 @@ export const App: React.FC = () => {
 
       {/* Hero Section */}
       <main className="relative z-10 mx-auto max-w-7xl px-6 py-12">
-        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 mb-16">
+        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 mb-20">
           <div className="lg:col-span-7 space-y-6">
             <motion.div
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3.5 py-1 text-xs font-mono text-cyan-300"
+              className="inline-flex items-center gap-2 rounded-full border border-cyan-600/30 bg-cyan-50/90 px-3.5 py-1 text-xs font-mono text-cyan-800 shadow-sm backdrop-blur-md"
             >
-              <Zap className="h-3.5 w-3.5" />
+              <Zap className="h-3.5 w-3.5 text-cyan-600" />
               Theme: Unveiling Technology
             </motion.div>
 
@@ -115,16 +107,20 @@ export const App: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-4xl font-extrabold tracking-tight sm:text-6xl text-white"
+              className="text-4xl font-extrabold tracking-tight sm:text-6xl text-slate-950"
             >
-              How Glass Feels Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-400">Touch</span>.
+              How Glass Feels Your{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 via-sky-600 to-indigo-600">
+                Touch
+              </span>
+              .
             </motion.h1>
 
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-base text-slate-300 leading-relaxed max-w-xl"
+              className="text-base text-slate-700 leading-relaxed max-w-xl font-medium"
             >
               Glass is an electrical insulator. Yet modern screens register sub-millimeter touches in under 20 milliseconds.
               Explore the real electrodynamics of mutual capacitance, transparent Indium Tin Oxide micro-electrodes, and how the human body acts as a virtual ground shunt.
@@ -136,12 +132,12 @@ export const App: React.FC = () => {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="flex flex-wrap gap-4 pt-2 font-mono text-xs"
             >
-              <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-slate-300">
-                <ShieldCheck className="h-4 w-4 text-cyan-400" />
+              <div className="flex items-center gap-2 rounded-lg border border-black/10 bg-white/90 px-3 py-2 text-slate-800 shadow-sm backdrop-blur-md">
+                <ShieldCheck className="h-4 w-4 text-cyan-600" />
                 <span>100% Client-Side Physics</span>
               </div>
-              <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-slate-300">
-                <Terminal className="h-4 w-4 text-indigo-400" />
+              <div className="flex items-center gap-2 rounded-lg border border-black/10 bg-white/90 px-3 py-2 text-slate-800 shadow-sm backdrop-blur-md">
+                <Terminal className="h-4 w-4 text-indigo-600" />
                 <span>Zero AI / Zero External Quota</span>
               </div>
             </motion.div>
@@ -167,48 +163,22 @@ export const App: React.FC = () => {
           <QuantumFieldShowcase />
         </section>
 
-        {/* Liquid Topographic Potential Landscape */}
-        <section className="mb-20 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <span>Liquid Topographic Electrostatic Surface</span>
-                <span className="text-xs font-mono font-normal text-cyan-400">
-                  (GPU Simplex Potential Map)
-                </span>
-              </h2>
-              <p className="text-xs text-slate-400">
-                Visualizing voltage gradients and capacitive field lines as continuous liquid contours
-              </p>
-            </div>
-            {touch.active && (
-              <span className="inline-flex items-center gap-2 font-mono text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 px-3 py-1 rounded-full animate-pulse">
-                GROUND BASIN ACTIVE
-              </span>
-            )}
-          </div>
-          <LiquidTopographicTerrain
-            intensity={params.voltageV / 2.8}
-            isTouched={touch.active}
-          />
-        </section>
-
         {/* Live Simulation & Metrics Section */}
         <section id="simulation-section" className="space-y-6 mb-20">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <h2 className="text-xl font-bold text-slate-950 flex items-center gap-2">
                 <span>Interactive Capacitive Matrix</span>
-                <span className="text-xs font-mono font-normal text-slate-400">
+                <span className="text-xs font-mono font-normal text-slate-600">
                   (Move pointer or finger over canvas)
                 </span>
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-600 font-medium">
                 Simulating electron drift velocity and electrostatic field lines shunting to ground
               </p>
             </div>
             {touch.active && (
-              <span className="inline-flex items-center gap-2 font-mono text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 px-3 py-1 rounded-full animate-pulse">
+              <span className="inline-flex items-center gap-2 font-mono text-xs text-rose-600 bg-rose-50 border border-rose-200 px-3 py-1 rounded-full shadow-sm animate-pulse font-semibold">
                 TOUCH REGISTERED: -{simState.deltaCapacitancePf.toFixed(2)} pF
               </span>
             )}
@@ -233,10 +203,10 @@ export const App: React.FC = () => {
         </section>
 
         {/* Three Step Educational Explainer Section with Anime.js Circuit Trace & Spotlight Cards */}
-        <section className="space-y-6 mb-16">
+        <section className="space-y-6 mb-20">
           <div className="text-center max-w-2xl mx-auto space-y-2">
-            <h3 className="text-2xl font-bold text-white">The Scientific Mechanism Explained</h3>
-            <p className="text-xs text-slate-400">
+            <h3 className="text-2xl font-bold text-slate-950">The Scientific Mechanism Explained</h3>
+            <p className="text-xs text-slate-600 font-medium">
               Understanding the 3 distinct phases that take place during a 20-millisecond screen tap
             </p>
           </div>
@@ -245,14 +215,14 @@ export const App: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/5 bg-[#05070a] py-8 text-xs text-slate-500">
+      <footer className="border-t border-black/10 bg-white/90 py-8 text-xs text-slate-600 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 sm:flex-row">
           <p>© 2026 Global Virtual Hackathon Submission — Canadian International School, Singapore.</p>
-          <p className="font-mono text-[11px] text-slate-400">
-            Powered by Vite, React 19, Motion, Three.js Custom Shaders, Anime.js & Lenis.
+          <p className="font-mono text-[11px] text-slate-500">
+            Powered by Vite, React 19, ReactDrops Topographic Flow, Motion, Three.js, Anime.js & Lenis.
           </p>
         </div>
       </footer>
-    </div>
+    </CombinedTopographicBackground>
   );
 };
