@@ -84,13 +84,13 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
               >
                 {/* 
                   ReactDrops SoapBubbleButton:
-                  Custom reflection palette strictly composed of Emerald, Cyan, Mint, and Deep Teal.
-                  Zero dispersion (no purple/orange fringe noise), calm wobble & silky fluid border dynamics.
+                  Palette focused on Emerald, Cyan, Mint, and Deep Teal — with amplified Cyan accents.
+                  Zero dispersion, calm wobble & silky fluid border dynamics.
                 */}
                 <SoapBubbleMaterial
                   backdrop={pageRef}
                   glass={0.95}
-                  iridescence={1.25}
+                  iridescence={1.3}
                   filmScale={4.5}
                   oilCoverage={0.9}
                   oilEdge={18}
@@ -108,25 +108,25 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                   environment="studio"
                   soapPalette="custom"
                   soapPaletteRed="#10b981"    // Emerald
-                  soapPaletteGold="#34d399"   // Mint
+                  soapPaletteGold="#2dd4bf"   // Cyan-Mint
                   soapPaletteGreen="#059669"  // Deep Emerald
-                  soapPaletteCyan="#06b6d4"   // Cyan
-                  soapPaletteBlue="#0f766e"   // Deep Teal
-                  soapPaletteViolet="#34d399" // Mint
-                  soapColor="#10b981"
+                  soapPaletteCyan="#22d3ee"   // Electric Cyan
+                  soapPaletteBlue="#06b6d4"   // Vibrant Cyan
+                  soapPaletteViolet="#0891b2" // Deep Oceanic Cyan
+                  soapColor="#06b6d4"         // Prominent Cyan film base
                   soapHighlightColor="rgba(255, 255, 255, 0.95)"
                 >
                   <SoapBubbleButton
                     interactive={0.2}
                     onClick={onNavigateToSimulator}
-                    className="flex items-center gap-2.5 px-8 py-3 text-sm font-medium text-white shadow-[0_12px_40px_rgba(0,0,0,0.65)] border border-white/20 hover:border-emerald-500/40 backdrop-blur-2xl transition-colors duration-200 cursor-pointer"
+                    className="flex items-center gap-2.5 px-8 py-3 text-sm font-medium text-white shadow-[0_12px_40px_rgba(0,0,0,0.65),0_0_24px_rgba(6,182,212,0.2)] border border-white/20 hover:border-cyan-400/50 hover:shadow-[0_12px_45px_rgba(0,0,0,0.7),0_0_32px_rgba(6,182,212,0.35)] backdrop-blur-2xl transition-all duration-200 cursor-pointer"
                     style={{
                       background: 'rgba(18, 22, 28, 0.85)',
                     }}
                   >
                     <span>Let's take a deep dive</span>
-                    {/* Stationary arrow */}
-                    <span className="text-white/80">&rarr;</span>
+                    {/* Cyan accented stationary arrow */}
+                    <span className="text-cyan-400 font-bold text-base">&rarr;</span>
                   </SoapBubbleButton>
                 </SoapBubbleMaterial>
               </motion.div>
