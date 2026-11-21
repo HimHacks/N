@@ -17,6 +17,8 @@ precision highp float;
 uniform vec2 uResolution;
 uniform float uTime;
 uniform vec3 uColor;
+uniform vec3 uAccentColor;
+uniform float uHasAccent;
 uniform vec2 uMouse;
 uniform float uAmplitude;
 uniform float uScale;
@@ -86,8 +88,16 @@ void main() {
     d += sin(uv.y * fi + a);
   }
   d += uTime * 0.5;
-  vec3 col = vec3(cos(uv * vec2(d, a)) * 0.6 + 0.4, cos(a + d) * 0.5 + 0.5);
-  col = cos(col * cos(vec3(d, a, 2.5)) * 0.5 + 0.5) * uColor;
+
+  vec3 waveCol = vec3(cos(uv * vec2(d, a)) * 0.6 + 0.4, cos(a + d) * 0.5 + 0.5);
+  vec3 baseFold = cos(waveCol * cos(vec3(d, a, 2.5)) * 0.5 + 0.5);
+
+  vec3 tint = uColor;
+  if (uHasAccent > 0.5) {
+    float foldBlend = sin(a * 1.5 + d * 0.8) * 0.5 + 0.5;
+    tint = mix(uColor, uAccentColor, foldBlend);
+  }
+  vec3 col = baseFold * tint;
 
   vec2 toPointer = (vUv - uPointer.xy) * aspect;
   col += col * uPointer.z * uSheen * 0.8 * exp(-dot(toPointer, toPointer) / 0.09);
@@ -128,6 +138,7 @@ const compile = (gl, type, source) => {
 
 const Iridescence = ({
   color = [1, 1, 1],
+  accentColor,
   speed = 1,
   amplitude = 0.1,
   mouseReact = true,
@@ -154,9 +165,12 @@ const Iridescence = ({
   const canvasRef = useRef(null);
   const wakeRef = useRef(null);
   const colorKey = Array.isArray(color) ? color.join(',') : String(color);
+  const accentColorKey = accentColor ? (Array.isArray(accentColor) ? accentColor.join(',') : String(accentColor)) : '';
   const settings = {
     colorKey,
     color,
+    accentColorKey,
+    accentColor,
     speed,
     amplitude,
     mouseReact,
@@ -208,6 +222,8 @@ const Iridescence = ({
       'uResolution',
       'uTime',
       'uColor',
+      'uAccentColor',
+      'uHasAccent',
       'uMouse',
       'uAmplitude',
       'uScale',
@@ -254,6 +270,9 @@ const Iridescence = ({
       presence: 0,
       color: [1, 1, 1],
       colorKey: '',
+      accentColor: [1, 1, 1],
+      accentColorKey: '',
+      hasAccent: 0.0,
       cols: 0,
       rows: 0,
       field: new Float32Array(0),
@@ -282,6 +301,27 @@ const Iridescence = ({
       probeCtx.fillRect(0, 0, 1, 1);
       const [r, g, b] = probeCtx.getImageData(0, 0, 1, 1).data;
       state.color = [r / 255, g / 255, b / 255];
+    };
+
+    const resolveAccentColor = s => {
+      if (!s.accentColor) {
+        state.hasAccent = 0.0;
+        return;
+      }
+      state.hasAccent = 1.0;
+      if (s.accentColorKey === state.accentColorKey) return;
+      state.accentColorKey = s.accentColorKey;
+      if (Array.isArray(s.accentColor)) {
+        state.accentColor = [0, 1, 2].map(i => clamp(Number(s.accentColor[i] ?? 1), 0, 1));
+        return;
+      }
+      if (!probeCtx) return;
+      probeCtx.clearRect(0, 0, 1, 1);
+      probeCtx.fillStyle = '#ffffff';
+      probeCtx.fillStyle = String(s.accentColor);
+      probeCtx.fillRect(0, 0, 1, 1);
+      const [r, g, b] = probeCtx.getImageData(0, 0, 1, 1).data;
+      state.accentColor = [r / 255, g / 255, b / 255];
     };
 
     const layoutField = () => {
@@ -352,6 +392,7 @@ const Iridescence = ({
     const render = () => {
       const s = settingsRef.current;
       resolveColor(s);
+      resolveAccentColor(s);
       layoutField();
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.activeTexture(gl.TEXTURE0);
@@ -367,6 +408,8 @@ const Iridescence = ({
       gl.uniform2f(uniforms.uResolution, state.width, state.height);
       gl.uniform1f(uniforms.uTime, state.phase);
       gl.uniform3f(uniforms.uColor, state.color[0], state.color[1], state.color[2]);
+      gl.uniform3f(uniforms.uAccentColor, state.accentColor[0], state.accentColor[1], state.accentColor[2]);
+      gl.uniform1f(uniforms.uHasAccent, state.hasAccent);
       gl.uniform2f(uniforms.uMouse, state.mouse[0], state.mouse[1]);
       gl.uniform1f(uniforms.uAmplitude, s.amplitude);
       gl.uniform1f(uniforms.uScale, s.scale);
