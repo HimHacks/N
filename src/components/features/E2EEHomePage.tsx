@@ -98,41 +98,41 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                 onMouseLeave={handleMouseLeave}
               >
                 {/* 
-                  ReactDrops SoapBubbleButton:
-                  - Dark obsidian glass (slightly less tinted black, not grey)
-                  - Clearly noticeable bubble membrane with smooth thin-film swirl on the border
-                  - Zero dispersion to prevent color disorientation / chromatic fringe
-                  - Calm wobble (0.08) so it doesn't over-respond to mouse
+                  SoapBubbleButton:
+                  - Completely color-free: iridescence=0, oilOpacity=0, oilCoverage=0 (removes all rainbow/purple/green film color)
+                  - Pure crystal monochrome liquid glass with clean white specular rim and highlights
+                  - Semi-translucent dark glass body with crisp white text
+                  - Calm motion (wobble 0.05, interactive 0.15)
                 */}
                 <SoapBubbleMaterial
                   backdrop={pageRef}
-                  glass={0.95}
-                  iridescence={0.85}
+                  glass={1.0}
+                  iridescence={0}
+                  oilOpacity={0}
+                  oilCoverage={0}
                   dispersion={0}
-                  oilOpacity={0.85}
-                  oilCoverage={0.92}
-                  oilEdge={16}
-                  oilEdgeFade={1.2}
-                  clearCenter={0.65}
+                  clearCenter={0.7}
                   thickness={480}
-                  drainage={0.2}
-                  swirl={0.35}
-                  speed={0.65}
-                  wobble={0.08}
-                  reflectivity={1.25}
-                  refraction={0.12}
-                  bevel={14}
-                  windowIntensity={1.05}
-                  tint="rgba(14, 18, 24, 0.72)"
-                  soapHighlightColor="rgba(255, 255, 255, 0.95)"
+                  drainage={0.05}
+                  swirl={0.15}
+                  speed={0.4}
+                  wobble={0.05}
+                  reflectivity={1.2}
+                  refraction={0.08}
+                  bevel={12}
+                  windowIntensity={1.0}
+                  tint="rgba(16, 20, 26, 0.75)"
+                  soapHighlightColor="rgba(255, 255, 255, 1.0)"
+                  soapShadeColor="rgba(255, 255, 255, 0.0)"
+                  soapColor="transparent"
                   environment="studio"
                 >
                   <SoapBubbleButton
-                    interactive={0.2}
+                    interactive={0.15}
                     onClick={onNavigateToSimulator}
-                    className="flex items-center gap-2.5 px-8 py-3 text-sm font-semibold text-white shadow-[0_12px_40px_rgba(0,0,0,0.65),inset_0_1px_1px_rgba(255,255,255,0.35)] border border-white/25 hover:border-white/50 backdrop-blur-2xl transition-all duration-300 cursor-pointer"
+                    className="flex items-center gap-2.5 px-8 py-3 text-sm font-semibold text-white shadow-[0_12px_40px_rgba(0,0,0,0.65),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-white/25 hover:border-white/50 backdrop-blur-2xl transition-all duration-300 cursor-pointer"
                     style={{
-                      background: 'rgba(14, 18, 24, 0.72)',
+                      background: 'rgba(16, 20, 26, 0.75)',
                       color: '#ffffff',
                     }}
                   >
