@@ -13,22 +13,24 @@ const ASCII_RUNES = ['Ø', '1', '&', '0', '!', '+', 'θ', '_', '%', 'cd', 'A', '
 interface AsciiParticle {
   id: number;
   char: string;
-  leftPercent: number; // Position strictly across 'Encryption' (12% to 94% or right edge >100%)
+  startXPercent: number; // Generated strictly around 'E', 'N', 'O', 'N'
+  midXPercent: number;   // Midpoint of semi-circular spiral arc
+  targetXPercent: number;// Absorbed into 'R', 'Y', 'P' (38% to 58%)
   startY: number;
+  arcPeakY: number;      // Peak of semi-circular curved trajectory
   targetY: number;
-  startX: number;
-  targetX: number;
   duration: number;
   delay: number;
   size: number;
   color: string;
+  rotationDir: number;
 }
 
 export const FloatingAsciiEncryption: React.FC = () => {
   const [particles, setParticles] = useState<AsciiParticle[]>([]);
 
-  // Generate border particles strictly around 'Encryption' (top, bottom, and right edges only).
-  // NO particles exist in the gap between 'End-to-End' and 'Encryption' (< 10%).
+  // Cryptographic ASCII runes generated strictly around 'E', 'N' (left) and 'O', 'N' (right)
+  // following smooth semi-circular curved spiral paths absorbed directly into 'R', 'Y', 'P'
   useEffect(() => {
     const colors = [
       '#22d3ee', // Cyan
@@ -41,54 +43,55 @@ export const FloatingAsciiEncryption: React.FC = () => {
 
     const generateParticles = () => {
       const list: AsciiParticle[] = [];
-      const count = 18;
+      const count = 16;
 
       for (let i = 0; i < count; i++) {
-        const side = i % 3; // 0: top border, 1: bottom border, 2: right edge
-        let leftPercent = 14;
-        let startX = 0;
-        let targetX = 0;
-        let startY = 0;
-        let targetY = 0;
+        // Half generate on the left ('E', 'N'), half on the right ('O', 'N')
+        const isLeft = i % 2 === 0;
+        const isTop = i % 4 < 2;
 
-        // Distribute evenly along the word 'Encryption' (from 14% to 94%)
-        const spread = 14 + (i / count) * 78;
-
-        if (side === 0) {
-          // Top border: starts 26px to 46px above the letters, absorbed downward into the letter body
-          leftPercent = spread;
-          startX = (Math.random() - 0.5) * 8;
-          targetX = 0;
-          startY = -26 - Math.random() * 22; // -26px to -48px
-          targetY = 2 + Math.random() * 6; // into the glyph
-        } else if (side === 1) {
-          // Bottom border: starts 26px to 46px below the letters, absorbed upward into the letter body
-          leftPercent = spread;
-          startX = (Math.random() - 0.5) * 8;
-          targetX = 0;
-          startY = 26 + Math.random() * 22; // +26px to +48px
-          targetY = -2 - Math.random() * 6; // into the glyph
+        let startXPercent: number;
+        if (isLeft) {
+          // Around 'E' (~8%) and 'N' (~18%)
+          startXPercent = i % 4 === 0 ? 7 + Math.random() * 5 : 16 + Math.random() * 6;
         } else {
-          // Right edge: starts just past the 'n' (102% to 118%), absorbed leftward into 'o' and 'n'
-          leftPercent = 101 + Math.random() * 16;
-          startX = 0;
-          targetX = -24 - Math.random() * 18; // drifts into rightmost characters
-          startY = (Math.random() - 0.5) * 26;
-          targetY = 0;
+          // Around 'O' (~84%) and 'N' (~92%) - snugly on the letters, never far away
+          startXPercent = i % 4 === 1 ? 83 + Math.random() * 4 : 90 + Math.random() * 4;
+        }
+
+        // Target: absorbed specifically into letters 'R', 'Y', 'P' (38% to 58%)
+        const targetXPercent = 38 + (i % 3) * 9 + Math.random() * 4; // 'R': ~39%, 'Y': ~48%, 'P': ~56%
+        const midXPercent = (startXPercent + targetXPercent) / 2;
+
+        // Semi-circular curved arc parameters
+        let startY: number;
+        let arcPeakY: number;
+        const targetY = (Math.random() - 0.5) * 4; // center absorption baseline
+
+        if (isTop) {
+          // Arc cresting above the letters
+          startY = -18 - Math.random() * 12; // -18px to -30px
+          arcPeakY = startY - 14 - Math.random() * 8; // -32px to -48px crest
+        } else {
+          // Arc swooping below the letters
+          startY = 18 + Math.random() * 12; // +18px to +30px
+          arcPeakY = startY + 14 + Math.random() * 8; // +32px to +48px swoop
         }
 
         list.push({
           id: i,
           char: ASCII_RUNES[Math.floor(Math.random() * ASCII_RUNES.length)],
-          leftPercent,
-          startX,
-          targetX,
+          startXPercent,
+          midXPercent,
+          targetXPercent,
           startY,
+          arcPeakY,
           targetY,
-          duration: 1.8 + Math.random() * 1.6, // 1.8s to 3.4s
-          delay: (i / count) * 2.0,
+          duration: 3.0 + Math.random() * 1.4, // 3.0s to 4.4s for smooth, elegant motion
+          delay: (i / count) * 2.8,
           size: Math.random() > 0.4 ? 12 : 10,
           color: colors[Math.floor(Math.random() * colors.length)],
+          rotationDir: isLeft ? 1 : -1,
         });
       }
       return list;
@@ -100,12 +103,12 @@ export const FloatingAsciiEncryption: React.FC = () => {
     const interval = setInterval(() => {
       setParticles(prev =>
         prev.map(p =>
-          Math.random() > 0.45
+          Math.random() > 0.4
             ? { ...p, char: ASCII_RUNES[Math.floor(Math.random() * ASCII_RUNES.length)] }
             : p
         )
       );
-    }, 1200);
+    }, 1400);
 
     return () => clearInterval(interval);
   }, []);
@@ -118,26 +121,32 @@ export const FloatingAsciiEncryption: React.FC = () => {
         className="absolute -inset-x-3 -inset-y-2 pointer-events-none rounded-xl blur-xl bg-cyan-400/15"
       />
 
-      {/* Floating & Inward Absorbing ASCII Particles (Strictly on 'Encryption', not in between) */}
+      {/* 
+        Floating & Spiraling ASCII Particles:
+        Generates around 'E', 'N' and 'O', 'N' -> curves along semi-circular path -> absorbed into 'R', 'Y', 'P'
+      */}
       {particles.map(p => (
         <motion.span
           key={p.id}
           initial={{
-            x: p.startX,
+            left: `${p.startXPercent}%`,
+            top: '50%',
             y: p.startY,
             opacity: 0,
-            scale: 0.8,
+            scale: 0.75,
+            rotate: 0,
           }}
           animate={{
-            x: [p.startX, p.startX * 0.5, p.targetX],
-            y: [p.startY, p.startY * 0.5, p.targetY],
-            opacity: [0, 0.95, 0.9, 0], // Fades out as it touches the glyph center (absorption)
-            scale: [0.8, 1.1, 0.85, 0.15], // Shrinks down into the letter
+            left: [`${p.startXPercent}%`, `${p.midXPercent}%`, `${p.targetXPercent}%`],
+            y: [p.startY, p.arcPeakY, p.targetY],
+            rotate: [0, p.rotationDir * 45, p.rotationDir * 140],
+            opacity: [0, 0.95, 0.9, 0], // Fades out completely as it absorbs into 'R', 'Y', 'P'
+            scale: [0.75, 1.1, 0.85, 0.12], // Smoothly compresses into the glyph center
             filter: [
               'blur(0px) brightness(1)',
               'blur(0px) brightness(1.2)',
-              'blur(0px) brightness(1.5)',
-              'blur(1px) brightness(2)',
+              'blur(0px) brightness(1.6)',
+              'blur(1px) brightness(2.2)',
             ],
           }}
           transition={{
@@ -148,8 +157,6 @@ export const FloatingAsciiEncryption: React.FC = () => {
           }}
           className="absolute z-20 pointer-events-none font-mono font-bold leading-none select-none"
           style={{
-            left: `${p.leftPercent}%`,
-            top: '50%',
             fontSize: `${p.size}px`,
             color: p.color,
             textShadow: `0 0 8px ${p.color}, 0 0 16px rgba(34, 211, 238, 0.85)`,
@@ -314,22 +321,22 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
         </div>
 
         {/* 
-          Bottom Hot Zone & Interactive SoapBubble Button:
-          Reverted to original text: "Let's take a deep dive →"
+          Interactive SoapBubble Button (Elevated slightly higher up on the screen):
+          "Let's take a deep dive →"
         */}
         <div
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          className="fixed bottom-0 left-0 right-0 h-28 z-40 flex items-center justify-center pointer-events-auto"
+          className="fixed bottom-12 sm:bottom-16 left-0 right-0 z-40 flex items-center justify-center pointer-events-auto"
         >
           <AnimatePresence>
             {showButton && (
               <motion.div
-                initial={{ y: 26, opacity: 0 }}
+                initial={{ y: 24, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                exit={{ y: 24, opacity: 0 }}
+                exit={{ y: 20, opacity: 0 }}
                 transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-                className="mb-8 pointer-events-auto"
+                className="pointer-events-auto"
               >
                 <SoapBubbleMaterial
                   backdrop={pageRef}
