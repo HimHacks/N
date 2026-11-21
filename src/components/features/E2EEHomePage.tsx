@@ -98,54 +98,63 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                 onMouseLeave={handleMouseLeave}
               >
                 {/* 
-                  SoapBubbleButton:
-                  - Completely glass white aesthetic with a delicate emerald/green accent
-                  - Zero rainbow iridescence: crisp monochrome specular reflections
-                  - Frosted white glass body with mint/emerald undertone
-                  - Clean dark slate text for high-contrast legibility + emerald arrow
-                  - Calm liquid motion (wobble 0.05, interactive 0.15)
+                  ReactDrops SoapBubbleButton:
+                  - Completely glass white (exact match to reference picture)
+                  - Light theme preset with windowLight arc specular reflection
+                  - Tinted milky white glass body (#f7f7f8 / rgba(250, 251, 253, 0.96))
+                  - Dark slate bold typography (#1b1d22) with subtle green accent arrow
+                  - Authentic liquid soap bubble rim physics
                 */}
-                <SoapBubbleMaterial
-                  backdrop={pageRef}
-                  glass={0.96}
-                  iridescence={0}
-                  oilOpacity={0}
-                  oilCoverage={0}
-                  dispersion={0}
-                  clearCenter={0.7}
-                  thickness={460}
-                  drainage={0.05}
-                  swirl={0.12}
-                  speed={0.35}
-                  wobble={0.05}
-                  reflectivity={1.15}
-                  refraction={0.08}
-                  bevel={12}
-                  windowIntensity={1.0}
-                  tint="rgba(240, 253, 244, 0.92)"
-                  soapHighlightColor="rgba(255, 255, 255, 1.0)"
-                  soapShadeColor="rgba(16, 185, 129, 0.18)"
-                  soapColor="transparent"
-                  environment="window"
-                >
-                  <SoapBubbleButton
-                    interactive={0.15}
-                    onClick={onNavigateToSimulator}
-                    className="flex items-center gap-2.5 px-8 py-3.5 text-sm font-bold shadow-[0_14px_40px_rgba(0,0,0,0.35),0_0_24px_rgba(16,185,129,0.22),inset_0_1px_2px_rgba(255,255,255,1)] border border-emerald-500/35 hover:border-emerald-500/60 hover:shadow-[0_16px_45px_rgba(0,0,0,0.4),0_0_35px_rgba(16,185,129,0.35),inset_0_1px_2px_rgba(255,255,255,1)] backdrop-blur-2xl transition-all duration-300 cursor-pointer"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(236, 253, 245, 0.90) 100%)',
-                      color: '#0f172a',
-                    }}
+                <div data-theme="light" className="relative flex items-center justify-center">
+                  <SoapBubbleMaterial
+                    backdrop={pageRef}
+                    iridescence={0.5}
+                    oilCoverage={0.73}
+                    oilEdgeFade={2.33}
+                    clearCenter={0.57}
+                    windowLight={true}
+                    windowLength={1.3}
+                    windowMargin={0.85}
+                    windowBend={0.75}
+                    windowSize={0.75}
+                    windowWidth={0.8}
+                    windowGradient={0.96}
+                    windowHead={0.7}
+                    windowTail={0.6}
+                    glintSize={1.65}
+                    glintIntensity={0}
+                    glintDistance={-0.45}
+                    glintHeight={0.65}
+                    windowIntensity={0.85}
+                    windowTwin={false}
+                    bottomShade={true}
+                    bottomShadeColor="#ffffff"
+                    tint="rgba(250, 251, 253, 0.96)"
+                    soapHighlightColor="#ffffff"
+                    glass={0.96}
+                    reflectivity={1.25}
+                    refraction={0.08}
+                    wobble={0.06}
+                    environment="window"
                   >
-                    <span className="tracking-wide text-slate-900 font-bold">
-                      Let's take a deep dive
-                    </span>
-                    {/* Tinted hint of green accent on the arrow */}
-                    <span className="text-emerald-600 font-extrabold text-base">
-                      &rarr;
-                    </span>
-                  </SoapBubbleButton>
-                </SoapBubbleMaterial>
+                    <SoapBubbleButton
+                      interactive={0.15}
+                      onClick={onNavigateToSimulator}
+                      className="flex items-center justify-center gap-2.5 px-10 py-3.5 text-base sm:text-lg font-bold text-[#1b1d22] cursor-pointer shadow-[0_16px_45px_rgba(0,0,0,0.35)]"
+                      style={{
+                        color: '#1b1d22',
+                      }}
+                    >
+                      <span className="tracking-tight text-[#1b1d22] font-bold">
+                        Let's take a deep dive
+                      </span>
+                      {/* Tinted hint of green accent arrow */}
+                      <span className="text-emerald-600 font-extrabold text-xl ml-1">
+                        &rarr;
+                      </span>
+                    </SoapBubbleButton>
+                  </SoapBubbleMaterial>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
