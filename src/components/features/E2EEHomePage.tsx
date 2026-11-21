@@ -1,23 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { E2EEPageBackground } from './E2EEPageBackground';
+import { SoapBubbleButton, SoapBubbleMaterial } from '../soap-bubble';
 
 interface E2EEHomePageProps {
   onNavigateToSimulator: () => void;
 }
 
 export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulator }) => {
+  const pageRef = useRef<HTMLDivElement>(null);
   const [isTimedActive, setIsTimedActive] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const dismissTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Timed pop-up logic:
-  // After ~5.5s (estimated reading time), the pop-up appears, stays for 4s, and auto-hides.
+  // After ~5.5s (estimated reading time), the pop-up appears, stays for 4s, and auto-dismisses smoothly.
   useEffect(() => {
     const entranceTimer = setTimeout(() => {
       setIsTimedActive(true);
 
-      // Dismiss after 4 seconds
+      // Auto-dismiss after 4 seconds
       dismissTimerRef.current = setTimeout(() => {
         setIsTimedActive(false);
       }, 4000);
@@ -29,13 +31,17 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
     };
   }, []);
 
-  // Show if either the initial 4-second timed window is active OR mouse is hovering in the bottom hot zone
+  // Show if either the initial 4-second window is active OR mouse is hovering in the bottom hot zone
   const showButton = isTimedActive || isHovered;
 
   return (
     <E2EEPageBackground preset="whatsapp-iridescent">
       {/* Main Viewport Container */}
-      <main className="relative flex min-h-screen flex-col items-center justify-center px-6 py-12 select-none">
+      <main
+        ref={pageRef}
+        data-theme="dark"
+        className="relative flex min-h-screen flex-col items-center justify-center px-6 py-12 select-none"
+      >
         {/* Floating Hero Typography — Matches Image 1 */}
         <div className="text-center space-y-4 max-w-2xl mx-auto -mt-12">
           {/* Presenter Line: Solid crisp white */}
@@ -57,42 +63,62 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
           </p>
         </div>
 
-        {/* Subtle 4-Point Star Accent from Image 1 */}
-        <div className="fixed bottom-8 right-8 pointer-events-none select-none opacity-25">
-          <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5L12 0Z" />
-          </svg>
-        </div>
-
         {/* 
           Invisible Hot Zone (Bottom Strip) — Matches Image 2 Architecture
-          Spans across the bottom 64px of the screen.
-          Hovering anywhere in this zone or directly over the button slides it up into view!
+          Spans across the bottom 80px of the screen.
+          Hovering anywhere in this zone or directly over the button smoothly slides it into view.
         */}
         <div
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          className="fixed bottom-0 left-0 right-0 h-24 z-30 flex items-center justify-center"
+          className="fixed bottom-0 left-0 right-0 h-24 z-30 flex items-center justify-center pointer-events-auto"
         >
           <AnimatePresence>
             {showButton && (
               <motion.div
-                initial={{ y: 50, opacity: 0, scale: 0.95 }}
-                animate={{ y: 0, opacity: 1, scale: 1 }}
-                exit={{ y: 50, opacity: 0, scale: 0.95 }}
-                transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-                className="mb-6"
+                initial={{ y: 22, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 20, opacity: 0 }}
+                transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+                className="mb-6 pointer-events-auto"
               >
-                {/* Dark Translucent Frosted Glass Pill Button — Matches Image 1 */}
-                <button
-                  onClick={onNavigateToSimulator}
-                  className="group flex items-center gap-2.5 rounded-full border border-white/20 bg-[#12161a]/85 hover:bg-[#1a2026] px-8 py-3 text-sm font-medium text-white shadow-[0_12px_40px_rgba(0,0,0,0.6)] backdrop-blur-2xl transition-all duration-200 hover:border-white/40 active:scale-95 cursor-pointer"
+                {/* 
+                  ReactDrops SoapBubbleButton:
+                  Thin-film interference along the border that flows naturally like a real liquid membrane,
+                  without being overly neon/saturated, wrapping a sleek dark pill button.
+                */}
+                <SoapBubbleMaterial
+                  backdrop={pageRef}
+                  glass={0.92}
+                  iridescence={1.3}
+                  filmScale={4.5}
+                  oilCoverage={0.85}
+                  oilEdge={18}
+                  oilEdgeFade={1.2}
+                  clearCenter={0.65}
+                  thickness={460}
+                  drainage={0.28}
+                  swirl={0.45}
+                  reflectivity={1.2}
+                  refraction={0.15}
+                  dispersion={0.8}
+                  bevel={14}
+                  wobble={0.35}
+                  windowIntensity={0.85}
+                  environment="studio"
                 >
-                  <span>Let's take a deep dive</span>
-                  <span className="text-white/80 transition-transform duration-200 group-hover:translate-x-1">
-                    &rarr;
-                  </span>
-                </button>
+                  <SoapBubbleButton
+                    onClick={onNavigateToSimulator}
+                    className="flex items-center gap-2.5 px-8 py-3 text-sm font-medium text-white shadow-[0_12px_40px_rgba(0,0,0,0.65)] border border-white/20 hover:border-white/40 backdrop-blur-2xl transition-colors duration-200 cursor-pointer"
+                    style={{
+                      background: 'rgba(18, 22, 28, 0.85)',
+                    }}
+                  >
+                    <span>Let's take a deep dive</span>
+                    {/* Stationary arrow — no hover animation */}
+                    <span className="text-white/80">&rarr;</span>
+                  </SoapBubbleButton>
+                </SoapBubbleMaterial>
               </motion.div>
             )}
           </AnimatePresence>
