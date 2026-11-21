@@ -84,38 +84,48 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
               >
                 {/* 
                   ReactDrops SoapBubbleButton:
-                  Thin-film interference along the border that flows naturally like a real liquid membrane,
-                  without being overly neon/saturated, wrapping a sleek dark pill button.
+                  Custom reflection palette strictly composed of Emerald, Cyan, Mint, and Deep Teal.
+                  Zero dispersion (no purple/orange fringe noise), calm wobble & silky fluid border dynamics.
                 */}
                 <SoapBubbleMaterial
                   backdrop={pageRef}
-                  glass={0.92}
-                  iridescence={1.3}
+                  glass={0.95}
+                  iridescence={1.25}
                   filmScale={4.5}
-                  oilCoverage={0.85}
+                  oilCoverage={0.9}
                   oilEdge={18}
                   oilEdgeFade={1.2}
                   clearCenter={0.65}
                   thickness={460}
-                  drainage={0.28}
+                  drainage={0.25}
                   swirl={0.45}
-                  reflectivity={1.2}
-                  refraction={0.15}
-                  dispersion={0.8}
+                  reflectivity={1.3}
+                  refraction={0.12}
+                  dispersion={0}
                   bevel={14}
-                  wobble={0.35}
-                  windowIntensity={0.85}
+                  wobble={0.08}
+                  windowIntensity={0.95}
                   environment="studio"
+                  soapPalette="custom"
+                  soapPaletteRed="#10b981"    // Emerald
+                  soapPaletteGold="#34d399"   // Mint
+                  soapPaletteGreen="#059669"  // Deep Emerald
+                  soapPaletteCyan="#06b6d4"   // Cyan
+                  soapPaletteBlue="#0f766e"   // Deep Teal
+                  soapPaletteViolet="#34d399" // Mint
+                  soapColor="#10b981"
+                  soapHighlightColor="rgba(255, 255, 255, 0.95)"
                 >
                   <SoapBubbleButton
+                    interactive={0.2}
                     onClick={onNavigateToSimulator}
-                    className="flex items-center gap-2.5 px-8 py-3 text-sm font-medium text-white shadow-[0_12px_40px_rgba(0,0,0,0.65)] border border-white/20 hover:border-white/40 backdrop-blur-2xl transition-colors duration-200 cursor-pointer"
+                    className="flex items-center gap-2.5 px-8 py-3 text-sm font-medium text-white shadow-[0_12px_40px_rgba(0,0,0,0.65)] border border-white/20 hover:border-emerald-500/40 backdrop-blur-2xl transition-colors duration-200 cursor-pointer"
                     style={{
                       background: 'rgba(18, 22, 28, 0.85)',
                     }}
                   >
                     <span>Let's take a deep dive</span>
-                    {/* Stationary arrow — no hover animation */}
+                    {/* Stationary arrow */}
                     <span className="text-white/80">&rarr;</span>
                   </SoapBubbleButton>
                 </SoapBubbleMaterial>
