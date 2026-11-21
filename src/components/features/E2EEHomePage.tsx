@@ -7,267 +7,77 @@ interface E2EEHomePageProps {
   onNavigateToSimulator: () => void;
 }
 
-// Authentic cryptographic ASCII runes extracted directly from the user's reference image
-const ASCII_RUNES = ['Ø', '1', '&', '0', '!', '+', 'θ', '_', '%', 'cd', 'A', 'X', 'H', 'λ', '§', '#', '?', '7', 'µ', '0', '1'];
-
-interface AsciiParticle {
-  id: number;
-  char: string;
-  startXPercent: number; // Generated strictly around 'E', 'N', 'O', 'N'
-  midXPercent: number;   // Midpoint of semi-circular spiral arc
-  targetXPercent: number;// Absorbed into 'R', 'Y', 'P' (38% to 58%)
-  startY: number;
-  arcPeakY: number;      // Peak of semi-circular curved trajectory
-  targetY: number;
-  duration: number;
-  delay: number;
-  size: number;
-  color: string;
-  rotationDir: number;
-}
-
-export const FloatingAsciiEncryption: React.FC = () => {
-  const [particles, setParticles] = useState<AsciiParticle[]>([]);
-
-  // Cryptographic ASCII runes generated strictly around 'E', 'N' (left) and 'O', 'N' (right)
-  // following smooth semi-circular curved spiral paths absorbed directly into 'R', 'Y', 'P'
-  useEffect(() => {
-    const colors = [
-      '#22d3ee', // Cyan
-      '#2dd4bf', // Mint
-      '#38bdf8', // Light Cyan
-      '#6ee7b7', // Mint-Emerald
-      '#a7f3d0', // Pale Mint
-      '#06b6d4', // Deep Cyan
-    ];
-
-    const generateParticles = () => {
-      const list: AsciiParticle[] = [];
-      const count = 16;
-
-      for (let i = 0; i < count; i++) {
-        // Half generate on the left ('E', 'N'), half on the right ('O', 'N')
-        const isLeft = i % 2 === 0;
-        const isTop = i % 4 < 2;
-
-        let startXPercent: number;
-        if (isLeft) {
-          // Around 'E' (~8%) and 'N' (~18%)
-          startXPercent = i % 4 === 0 ? 7 + Math.random() * 5 : 16 + Math.random() * 6;
-        } else {
-          // Around 'O' (~84%) and 'N' (~92%) - snugly on the letters, never far away
-          startXPercent = i % 4 === 1 ? 83 + Math.random() * 4 : 90 + Math.random() * 4;
-        }
-
-        // Target: absorbed specifically into letters 'R', 'Y', 'P' (38% to 58%)
-        const targetXPercent = 38 + (i % 3) * 9 + Math.random() * 4; // 'R': ~39%, 'Y': ~48%, 'P': ~56%
-        const midXPercent = (startXPercent + targetXPercent) / 2;
-
-        // Semi-circular curved arc parameters
-        let startY: number;
-        let arcPeakY: number;
-        const targetY = (Math.random() - 0.5) * 4; // center absorption baseline
-
-        if (isTop) {
-          // Arc cresting above the letters
-          startY = -18 - Math.random() * 12; // -18px to -30px
-          arcPeakY = startY - 14 - Math.random() * 8; // -32px to -48px crest
-        } else {
-          // Arc swooping below the letters
-          startY = 18 + Math.random() * 12; // +18px to +30px
-          arcPeakY = startY + 14 + Math.random() * 8; // +32px to +48px swoop
-        }
-
-        list.push({
-          id: i,
-          char: ASCII_RUNES[Math.floor(Math.random() * ASCII_RUNES.length)],
-          startXPercent,
-          midXPercent,
-          targetXPercent,
-          startY,
-          arcPeakY,
-          targetY,
-          duration: 3.0 + Math.random() * 1.4, // 3.0s to 4.4s for smooth, elegant motion
-          delay: (i / count) * 2.8,
-          size: Math.random() > 0.4 ? 12 : 10,
-          color: colors[Math.floor(Math.random() * colors.length)],
-          rotationDir: isLeft ? 1 : -1,
-        });
-      }
-      return list;
-    };
-
-    setParticles(generateParticles());
-
-    // Continuously cycle cryptographic runes
-    const interval = setInterval(() => {
-      setParticles(prev =>
-        prev.map(p =>
-          Math.random() > 0.4
-            ? { ...p, char: ASCII_RUNES[Math.floor(Math.random() * ASCII_RUNES.length)] }
-            : p
-        )
-      );
-    }, 1400);
-
-    return () => clearInterval(interval);
-  }, []);
-
+/**
+ * Art-Directed Typography for "Encryption"
+ * Features a bespoke, luxury-grade gradient blending crystalline sea-mint, rich WhatsApp emerald,
+ * deep oceanic teal, and subtle cyan highlights with an ultra-smooth, slow-breathing chromatic transition.
+ * Avoids generic AI neon glow and decorative gimmicks in favor of clean, authoritative editorial polish.
+ */
+export const ArtDirectedEncryption: React.FC = () => {
   return (
     <span className="relative inline-block select-none whitespace-nowrap shrink-0">
-      {/* Background Holographic Glow & Aura */}
+      {/* Subtle organic ambient depth (soft, non-diffuse back illumination) */}
       <span
         aria-hidden="true"
-        className="absolute -inset-x-3 -inset-y-2 pointer-events-none rounded-xl blur-xl bg-cyan-400/15"
+        className="absolute -inset-x-2 -inset-y-1 pointer-events-none rounded-xl blur-2xl bg-emerald-500/12"
       />
 
       {/* 
-        Floating & Spiraling ASCII Particles:
-        Generates around 'E', 'N' and 'O', 'N' -> curves along semi-circular path -> absorbed into 'R', 'Y', 'P'
+        Refined Emerald-Mint-Cyan Typography:
+        Continuous silky chromatic drift with crisp legibility against iridescent motion
       */}
-      {particles.map(p => (
-        <motion.span
-          key={p.id}
-          initial={{
-            left: `${p.startXPercent}%`,
-            top: '50%',
-            y: p.startY,
-            opacity: 0,
-            scale: 0.75,
-            rotate: 0,
-          }}
-          animate={{
-            left: [`${p.startXPercent}%`, `${p.midXPercent}%`, `${p.targetXPercent}%`],
-            y: [p.startY, p.arcPeakY, p.targetY],
-            rotate: [0, p.rotationDir * 45, p.rotationDir * 140],
-            opacity: [0, 0.95, 0.9, 0], // Fades out completely as it absorbs into 'R', 'Y', 'P'
-            scale: [0.75, 1.1, 0.85, 0.12], // Smoothly compresses into the glyph center
-            filter: [
-              'blur(0px) brightness(1)',
-              'blur(0px) brightness(1.2)',
-              'blur(0px) brightness(1.6)',
-              'blur(1px) brightness(2.2)',
-            ],
-          }}
-          transition={{
-            duration: p.duration,
-            delay: p.delay,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
-          className="absolute z-20 pointer-events-none font-mono font-bold leading-none select-none"
-          style={{
-            fontSize: `${p.size}px`,
-            color: p.color,
-            textShadow: `0 0 8px ${p.color}, 0 0 16px rgba(34, 211, 238, 0.85)`,
-          }}
-        >
-          {p.char}
-        </motion.span>
-      ))}
-
-      {/* 
-        Subtle greyed-out glitch lines on 'Encryption'
-        Smoothly sweeps from left to right across the typography with organic digital staggering
-      */}
-      <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden select-none mix-blend-screen">
-        {/* Hairline 1 - Upper slice */}
-        <motion.div
-          animate={{ x: ['-60%', '140%'], opacity: [0, 0.55, 0.7, 0] }}
-          transition={{ duration: 5.2, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute top-[22%] h-[1px] w-20 bg-gradient-to-r from-transparent via-slate-300/60 to-transparent"
-        />
-        {/* Hairline 2 - Mid-upper slice */}
-        <motion.div
-          animate={{ x: ['-80%', '150%'], opacity: [0, 0.5, 0.65, 0] }}
-          transition={{ duration: 6.4, repeat: Infinity, ease: 'easeInOut', delay: 1.2 }}
-          className="absolute top-[38%] h-[1.5px] w-28 bg-gradient-to-r from-transparent via-slate-200/50 to-transparent"
-        />
-        {/* Hairline 3 - Core center scanner */}
-        <motion.div
-          animate={{ x: ['-50%', '130%'], opacity: [0, 0.6, 0.75, 0] }}
-          transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut', delay: 2.1 }}
-          className="absolute top-[54%] h-[1px] w-24 bg-gradient-to-r from-transparent via-slate-300/70 to-transparent"
-        />
-        {/* Hairline 4 - Lower slice */}
-        <motion.div
-          animate={{ x: ['-70%', '140%'], opacity: [0, 0.45, 0.6, 0] }}
-          transition={{ duration: 5.8, repeat: Infinity, ease: 'easeInOut', delay: 3.0 }}
-          className="absolute top-[70%] h-[1.5px] w-28 bg-gradient-to-r from-transparent via-slate-200/50 to-transparent"
-        />
-        {/* Hairline 5 - Baseline slice */}
-        <motion.div
-          animate={{ x: ['-60%', '130%'], opacity: [0, 0.4, 0.55, 0] }}
-          transition={{ duration: 6.8, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
-          className="absolute top-[84%] h-[1px] w-32 bg-gradient-to-r from-transparent via-slate-300/45 to-transparent"
-        />
-        {/* Micro sweep beam */}
-        <motion.div
-          animate={{ x: ['-40%', '130%'], opacity: [0, 0.35, 0.35, 0] }}
-          transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut', delay: 1.8 }}
-          className="absolute inset-y-0 w-12 bg-gradient-to-r from-transparent via-slate-300/25 to-transparent blur-[1px]"
-        />
-      </div>
-
-      {/* Digital Scanline Glitch Slices (Matching Screenshot) */}
       <motion.span
-        aria-hidden="true"
-        animate={{ x: [0, 2, -1, 2, 0] }}
-        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute inset-0 z-20 pointer-events-none text-cyan-200 opacity-60 font-black tracking-tight"
+        animate={{
+          backgroundPosition: ['0% 35%', '100% 65%', '0% 35%'],
+        }}
+        transition={{
+          duration: 10,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+        className="relative z-10 inline-block font-black tracking-tight text-transparent bg-clip-text select-none drop-shadow-[0_2px_14px_rgba(3,38,30,0.65)] drop-shadow-[0_4px_24px_rgba(0,0,0,0.4)]"
         style={{
-          clipPath: 'polygon(0 15%, 100% 15%, 100% 22%, 0 22%, 0 54%, 100% 54%, 100% 60%, 0 60%)',
-          filter: 'drop-shadow(0 0 6px #22d3ee)',
+          backgroundImage:
+            'linear-gradient(135deg, #f0fdf4 0%, #a7f3d0 16%, #34d399 38%, #10b981 62%, #0d9488 82%, #06b6d4 100%)',
+          backgroundSize: '240% 240%',
         }}
       >
         Encryption
       </motion.span>
-      <motion.span
-        aria-hidden="true"
-        animate={{ x: [0, -2, 1, -2, 0] }}
-        transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-        className="absolute inset-0 z-20 pointer-events-none text-teal-300 opacity-50 font-black tracking-tight"
-        style={{
-          clipPath: 'polygon(0 38%, 100% 38%, 100% 44%, 0 44%, 0 78%, 100% 78%, 100% 84%, 0 84%)',
-          filter: 'drop-shadow(0 0 6px #2dd4bf)',
-        }}
-      >
-        Encryption
-      </motion.span>
-
-      {/* Primary Radiant 'Encryption' Text — Matches cyan/mint/teal in Src */}
-      <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-teal-300 via-cyan-300 to-emerald-300 font-black tracking-tight drop-shadow-[0_0_24px_rgba(34,211,238,0.55)]">
-        Encryption
-      </span>
     </span>
   );
 };
 
 export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulator }) => {
   const pageRef = useRef<HTMLDivElement>(null);
-  const [isTimedActive, setIsTimedActive] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const dismissTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const autoHideTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const readingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Timed pop-up logic:
-  // After ~4.5s (reading time), the interactive bubble button appears, stays for 6s, and auto-dismisses smoothly.
-  // Hovering over the bottom hotzone brings it back at any time.
+  // Helper to open the pop-up button for precisely ~5 seconds, then smoothly hide it
+  const triggerShowFor5Seconds = () => {
+    if (autoHideTimerRef.current) {
+      clearTimeout(autoHideTimerRef.current);
+    }
+    setIsOpen(true);
+    autoHideTimerRef.current = setTimeout(() => {
+      setIsOpen(false);
+    }, 5000);
+  };
+
+  // Lifecycle:
+  // 1. After ~4.5s (estimated reading time), pop-up appears, stays for 5s, and smoothly slides down.
+  // 2. Hovering over the bottom hotline area triggers it to pop up, stays for 5s, and slides back down.
   useEffect(() => {
-    const entranceTimer = setTimeout(() => {
-      setIsTimedActive(true);
-
-      dismissTimerRef.current = setTimeout(() => {
-        setIsTimedActive(false);
-      }, 6000);
+    readingTimerRef.current = setTimeout(() => {
+      triggerShowFor5Seconds();
     }, 4500);
 
     return () => {
-      clearTimeout(entranceTimer);
-      if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+      if (readingTimerRef.current) clearTimeout(readingTimerRef.current);
+      if (autoHideTimerRef.current) clearTimeout(autoHideTimerRef.current);
     };
   }, []);
-
-  const showButton = isTimedActive || isHovered;
 
   return (
     <E2EEPageBackground preset="whatsapp-iridescent">
@@ -291,7 +101,7 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
 
           {/* 
             Headline: Strictly in ONE SINGLE LINE across all viewports:
-            "End-to-End" in plain crisp solid white + "Encryption" with absorption ASCII particle animation
+            "End-to-End" in plain crisp solid white + Art-directed "Encryption"
           */}
           <motion.h1
             initial={{ opacity: 0, y: 16 }}
@@ -304,8 +114,8 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
               End-to-End
             </span>
 
-            {/* Glowing Cyan/Mint 'Encryption' with Absorption ASCII particles & Moving Grey Glitch Lines */}
-            <FloatingAsciiEncryption />
+            {/* Art-Directed Distinctive & Premium "Encryption" */}
+            <ArtDirectedEncryption />
           </motion.h1>
 
           {/* Overview text strictly formatted on 2 lines matching the original template */}
@@ -321,16 +131,16 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
         </div>
 
         {/* 
-          Interactive SoapBubble Button (Elevated slightly higher up on the screen):
-          "Let's take a deep dive →"
+          Interactive SoapBubble Button & Hotline Area:
+          - Pops up after estimated reading time (~4.5s), stays for 5s, and smoothly hides.
+          - Or triggers upon hovering the hotline area, stays for 5s, and smoothly hides.
         */}
         <div
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-          className="fixed bottom-12 sm:bottom-16 left-0 right-0 z-40 flex items-center justify-center pointer-events-auto"
+          onMouseEnter={triggerShowFor5Seconds}
+          className="fixed bottom-10 sm:bottom-14 left-0 right-0 h-24 z-40 flex items-center justify-center pointer-events-auto"
         >
           <AnimatePresence>
-            {showButton && (
+            {isOpen && (
               <motion.div
                 initial={{ y: 24, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
