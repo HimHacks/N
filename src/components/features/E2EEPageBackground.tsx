@@ -33,10 +33,10 @@ export const E2EEPageBackground: React.FC<E2EEPageBackgroundProps> = ({
   darkColor,
   whiteColor,
   hueShift,
-  speed = 0.75,
-  amplitude = 0.12,
-  stir = 0.45,
-  sheen = 0.35,
+  speed = 0.65,
+  amplitude = 0,
+  stir = 0,
+  sheen = 0,
   opacity = 0.92,
   className = '',
   iridescenceProps = {},
@@ -75,65 +75,9 @@ export const E2EEPageBackground: React.FC<E2EEPageBackgroundProps> = ({
     activeHue = activeHue ?? 90;
   }
 
-  // Forward viewport pointer events so cursor interaction stirs the liquid seamlessly
-  useEffect(() => {
-    let ticking = false;
-
-    const handlePointerMove = (e: PointerEvent) => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          const hostEl = containerRef.current?.querySelector('.iridescence-container');
-          if (hostEl) {
-            hostEl.dispatchEvent(
-              new PointerEvent('pointermove', {
-                clientX: e.clientX,
-                clientY: e.clientY,
-                pointerType: e.pointerType || 'mouse',
-                bubbles: false,
-              })
-            );
-          }
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    const handlePointerDown = (e: PointerEvent) => {
-      const hostEl = containerRef.current?.querySelector('.iridescence-container');
-      if (hostEl) {
-        hostEl.dispatchEvent(
-          new PointerEvent('pointerdown', {
-            clientX: e.clientX,
-            clientY: e.clientY,
-            pointerType: e.pointerType || 'mouse',
-            bubbles: false,
-          })
-        );
-      }
-    };
-
-    const handlePointerLeave = () => {
-      const hostEl = containerRef.current?.querySelector('.iridescence-container');
-      if (hostEl) {
-        hostEl.dispatchEvent(new PointerEvent('pointerleave', { bubbles: false }));
-      }
-    };
-
-    window.addEventListener('pointermove', handlePointerMove, { passive: true });
-    window.addEventListener('pointerdown', handlePointerDown, { passive: true });
-    window.addEventListener('pointerleave', handlePointerLeave, { passive: true });
-
-    return () => {
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerdown', handlePointerDown);
-      window.removeEventListener('pointerleave', handlePointerLeave);
-    };
-  }, []);
-
   return (
     <div className={`relative w-full min-h-screen text-white ${className}`}>
-      {/* Fixed Fullscreen Page Background Layer */}
+      {/* Fixed Fullscreen Page Background Layer (Non-interactive ambient canvas) */}
       <div
         ref={containerRef}
         className="fixed inset-0 -z-10 h-screen w-screen overflow-hidden pointer-events-none select-none bg-[#070b0e]"
@@ -146,9 +90,9 @@ export const E2EEPageBackground: React.FC<E2EEPageBackgroundProps> = ({
           whiteColor={activeWhite}
           hueShift={activeHue}
           speed={speed}
-          amplitude={amplitude}
-          stir={stir}
-          sheen={sheen}
+          amplitude={0}
+          stir={0}
+          sheen={0}
           scale={1}
           detail={5}
           warp={0.32}
@@ -156,12 +100,12 @@ export const E2EEPageBackground: React.FC<E2EEPageBackgroundProps> = ({
           saturation={1.05}
           contrast={1.05}
           brightness={1.18}
-          mouseReact={true}
-          clickSwirl={true}
+          mouseReact={false}
+          clickSwirl={false}
           grain={0}
           fade={0}
           opacity={opacity}
-          className="h-full w-full pointer-events-auto"
+          className="h-full w-full pointer-events-none"
           {...iridescenceProps}
         />
 
