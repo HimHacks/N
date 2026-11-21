@@ -277,7 +277,7 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-xs sm:text-sm font-bold tracking-[0.24em] text-white uppercase text-center mb-4"
+            className="text-sm sm:text-base md:text-lg font-bold tracking-[0.25em] text-white uppercase text-center mb-5 drop-shadow-[0_2px_12px_rgba(0,0,0,0.4)]"
           >
             THE SYNTAX UNVEILERS PRESENTS
           </motion.p>
