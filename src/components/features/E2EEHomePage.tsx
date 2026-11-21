@@ -99,54 +99,52 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
               >
                 {/* 
                   ReactDrops SoapBubbleButton:
-                  - Calm, subtle fluid physics (no erratic jitter or over-responding)
-                  - Zero dispersion to eliminate chromatic fringing / color disorientation
-                  - Translucent frosted white-glass aesthetic with luminous white border accent
+                  - Dark obsidian glass (slightly less tinted black, not grey)
+                  - Clearly noticeable bubble membrane with smooth thin-film swirl on the border
+                  - Zero dispersion to prevent color disorientation / chromatic fringe
+                  - Calm wobble (0.08) so it doesn't over-respond to mouse
                 */}
-                <div data-theme="light">
-                  <SoapBubbleMaterial
-                    backdrop={pageRef}
-                    glass={0.96}
-                    iridescence={0.2}
-                    dispersion={0}
-                    oilOpacity={0.25}
-                    oilCoverage={0.55}
-                    oilEdge={12}
-                    oilEdgeFade={2.2}
-                    clearCenter={0.75}
-                    thickness={420}
-                    drainage={0.04}
-                    swirl={0.1}
-                    speed={0.3}
-                    wobble={0.04}
-                    reflectivity={1.1}
-                    refraction={0.06}
-                    bevel={10}
-                    windowIntensity={0.9}
-                    tint="rgba(255, 255, 255, 0.3)"
-                    soapHighlightColor="rgba(255, 255, 255, 0.95)"
-                    soapColor="rgba(255, 255, 255, 0.3)"
-                    environment="window"
+                <SoapBubbleMaterial
+                  backdrop={pageRef}
+                  glass={0.95}
+                  iridescence={0.85}
+                  dispersion={0}
+                  oilOpacity={0.85}
+                  oilCoverage={0.92}
+                  oilEdge={16}
+                  oilEdgeFade={1.2}
+                  clearCenter={0.65}
+                  thickness={480}
+                  drainage={0.2}
+                  swirl={0.35}
+                  speed={0.65}
+                  wobble={0.08}
+                  reflectivity={1.25}
+                  refraction={0.12}
+                  bevel={14}
+                  windowIntensity={1.05}
+                  tint="rgba(14, 18, 24, 0.72)"
+                  soapHighlightColor="rgba(255, 255, 255, 0.95)"
+                  environment="studio"
+                >
+                  <SoapBubbleButton
+                    interactive={0.2}
+                    onClick={onNavigateToSimulator}
+                    className="flex items-center gap-2.5 px-8 py-3 text-sm font-semibold text-white shadow-[0_12px_40px_rgba(0,0,0,0.65),inset_0_1px_1px_rgba(255,255,255,0.35)] border border-white/25 hover:border-white/50 backdrop-blur-2xl transition-all duration-300 cursor-pointer"
+                    style={{
+                      background: 'rgba(14, 18, 24, 0.72)',
+                      color: '#ffffff',
+                    }}
                   >
-                    <SoapBubbleButton
-                      interactive={0.12}
-                      onClick={onNavigateToSimulator}
-                      className="flex items-center gap-2.5 px-8 py-3 text-sm font-semibold text-white shadow-[0_12px_36px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.7),0_0_24px_rgba(255,255,255,0.14)] border border-white/40 hover:border-white/75 hover:shadow-[0_12px_40px_rgba(0,0,0,0.5),inset_0_1px_2px_rgba(255,255,255,0.9),0_0_32px_rgba(255,255,255,0.25)] backdrop-blur-2xl transition-all duration-300 cursor-pointer"
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.15)',
-                        color: '#ffffff',
-                      }}
-                    >
-                      <span className="tracking-wide drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
-                        Let's take a deep dive
-                      </span>
-                      {/* Stationary arrow */}
-                      <span className="text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
-                        &rarr;
-                      </span>
-                    </SoapBubbleButton>
-                  </SoapBubbleMaterial>
-                </div>
+                    <span className="tracking-wide drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                      Let's take a deep dive
+                    </span>
+                    {/* Stationary arrow */}
+                    <span className="text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                      &rarr;
+                    </span>
+                  </SoapBubbleButton>
+                </SoapBubbleMaterial>
               </motion.div>
             )}
           </AnimatePresence>
