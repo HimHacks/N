@@ -6,11 +6,14 @@ export type WhatsAppBackgroundPreset =
   | 'whatsapp-dual'
   | 'whatsapp-dark';
 
-interface E2EEPageBackgroundProps {
+export interface E2EEPageBackgroundProps {
   children?: React.ReactNode;
   preset?: WhatsAppBackgroundPreset;
   color?: string | [number, number, number];
   accentColor?: string | [number, number, number];
+  cyanColor?: string | [number, number, number];
+  darkColor?: string | [number, number, number];
+  whiteColor?: string | [number, number, number];
   hueShift?: number;
   speed?: number;
   amplitude?: number;
@@ -26,33 +29,49 @@ export const E2EEPageBackground: React.FC<E2EEPageBackgroundProps> = ({
   preset = 'whatsapp-iridescent',
   color,
   accentColor,
+  cyanColor,
+  darkColor,
+  whiteColor,
   hueShift,
-  speed = 0.85,
-  amplitude = 0.1,
+  speed = 0.75,
+  amplitude = 0.12,
   stir = 0.45,
-  sheen = 0.25,
-  opacity = 0.85,
+  sheen = 0.35,
+  opacity = 0.92,
   className = '',
   iridescenceProps = {},
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Muted, non-oversaturated WhatsApp color configurations
+  // WhatsApp & Cyan silk color configurations
   let activeColor = color;
   let activeAccent = accentColor;
+  let activeCyan = cyanColor;
+  let activeDark = darkColor;
+  let activeWhite = whiteColor;
   let activeHue = hueShift;
 
   if (preset === 'whatsapp-iridescent') {
-    // Elegant desaturated WhatsApp emerald and teal spectrum
-    activeColor = activeColor ?? '#ffffff';
-    activeHue = activeHue ?? 125;
+    // Signature WhatsApp primary green, emerald, electric cyan hints, deep crease, and silk glints
+    activeColor = activeColor ?? '#1da860';
+    activeAccent = activeAccent ?? '#10b981';
+    activeCyan = activeCyan ?? '#00f0c0';
+    activeDark = activeDark ?? '#031a14';
+    activeWhite = activeWhite ?? '#ffffff';
+    activeHue = activeHue ?? 0;
   } else if (preset === 'whatsapp-dual') {
     activeColor = activeColor ?? '#064e3b';
     activeAccent = activeAccent ?? '#10b981';
+    activeCyan = activeCyan ?? '#06b6d4';
+    activeDark = activeDark ?? '#02130e';
+    activeWhite = activeWhite ?? '#ffffff';
     activeHue = activeHue ?? 0;
   } else if (preset === 'whatsapp-dark') {
     activeColor = activeColor ?? '#080e12';
     activeAccent = activeAccent ?? '#0f766e';
+    activeCyan = activeCyan ?? '#22d3ee';
+    activeDark = activeDark ?? '#040b08';
+    activeWhite = activeWhite ?? '#ffffff';
     activeHue = activeHue ?? 90;
   }
 
@@ -122,6 +141,9 @@ export const E2EEPageBackground: React.FC<E2EEPageBackgroundProps> = ({
         <Iridescence
           color={activeColor}
           accentColor={activeAccent}
+          cyanColor={activeCyan}
+          darkColor={activeDark}
+          whiteColor={activeWhite}
           hueShift={activeHue}
           speed={speed}
           amplitude={amplitude}
@@ -129,27 +151,27 @@ export const E2EEPageBackground: React.FC<E2EEPageBackgroundProps> = ({
           sheen={sheen}
           scale={1}
           detail={8}
-          warp={1.1}
-          rotation={-10}
-          saturation={0.62} // Desaturated per user instruction
-          contrast={0.95}
-          brightness={1.05}
+          warp={0.85}
+          rotation={-38}
+          saturation={1.05}
+          contrast={1.15}
+          brightness={1.3}
           mouseReact={true}
           clickSwirl={true}
-          grain={0} // No grain texture per user instruction
+          grain={0}
           fade={0}
           opacity={opacity}
           className="h-full w-full pointer-events-auto"
           {...iridescenceProps}
         />
 
-        {/* Soft dark vignette */}
+        {/* Soft dark crease vignette that preserves the silk ripples */}
         <div
           className="pointer-events-none absolute inset-0"
           style={{
             backgroundImage: `
-              radial-gradient(circle at 50% 30%, rgba(7, 11, 14, 0.4) 0%, rgba(7, 11, 14, 0.85) 100%),
-              linear-gradient(to bottom, rgba(7, 11, 14, 0.6) 0%, transparent 40%, rgba(7, 11, 14, 0.9) 100%)
+              radial-gradient(circle at 50% 35%, rgba(3, 16, 12, 0.15) 0%, rgba(3, 16, 12, 0.55) 100%),
+              linear-gradient(to bottom, rgba(3, 14, 10, 0.35) 0%, transparent 40%, rgba(2, 10, 8, 0.65) 100%)
             `,
           }}
         />

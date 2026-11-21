@@ -18,6 +18,9 @@ uniform vec2 uResolution;
 uniform float uTime;
 uniform vec3 uColor;
 uniform vec3 uAccentColor;
+uniform vec3 uCyanColor;
+uniform vec3 uDarkColor;
+uniform vec3 uWhiteColor;
 uniform float uHasAccent;
 uniform vec2 uMouse;
 uniform float uAmplitude;
@@ -89,18 +92,30 @@ void main() {
   }
   d += uTime * 0.5;
 
-  vec3 waveCol = vec3(cos(uv * vec2(d, a)) * 0.6 + 0.4, cos(a + d) * 0.5 + 0.5);
-  vec3 baseFold = cos(waveCol * cos(vec3(d, a, 2.5)) * 0.5 + 0.5);
+  // Compute scalar harmonic fluid elevation from wave folding
+  float fold = sin(a * 1.3 + d * 0.7) * 0.5 + 0.5;
+  float waveX = cos(uv.x * d * 0.4 + a) * 0.5 + 0.5;
+  float waveY = sin(uv.y * a * 0.4 + d) * 0.5 + 0.5;
+  float t = clamp(fold * 0.6 + (waveX * waveY) * 0.4, 0.0, 1.0);
 
-  vec3 tint = uColor;
-  if (uHasAccent > 0.5) {
-    float foldBlend = sin(a * 1.5 + d * 0.8) * 0.5 + 0.5;
-    tint = mix(uColor, uAccentColor, foldBlend);
+  // 5-stop harmonic silk palette across WhatsApp Green, Emerald, Vibrant Cyan, Deep Crease, and Crisp White
+  vec3 accent = (uHasAccent > 0.5) ? uAccentColor : uColor;
+  vec3 col;
+  if (t < 0.28) {
+    col = mix(uDarkColor, uColor, smoothstep(0.0, 0.28, t));
+  } else if (t < 0.56) {
+    col = mix(uColor, accent, smoothstep(0.28, 0.56, t));
+  } else if (t < 0.82) {
+    col = mix(accent, uCyanColor, smoothstep(0.56, 0.82, t));
+  } else {
+    col = mix(uCyanColor, uWhiteColor, smoothstep(0.82, 1.0, t));
   }
-  vec3 col = baseFold * tint;
 
+  // Specular cursor sheen highlight with vibrant cyan-tinted white
   vec2 toPointer = (vUv - uPointer.xy) * aspect;
-  col += col * uPointer.z * uSheen * 0.8 * exp(-dot(toPointer, toPointer) / 0.09);
+  float pDist = dot(toPointer, toPointer);
+  vec3 sheenCol = mix(uWhiteColor, uCyanColor, 0.45);
+  col += sheenCol * uPointer.z * uSheen * 0.95 * exp(-pDist / 0.08);
 
   col = hueRotate(col, uHue);
   float luma = dot(col, vec3(0.2126, 0.7152, 0.0722));
@@ -137,21 +152,24 @@ const compile = (gl, type, source) => {
 };
 
 const Iridescence = ({
-  color = [1, 1, 1],
-  accentColor,
-  speed = 1,
-  amplitude = 0.1,
+  color = '#1da860',
+  accentColor = '#10b981',
+  cyanColor = '#00f0c0',
+  darkColor = '#031a14',
+  whiteColor = '#ffffff',
+  speed = 0.75,
+  amplitude = 0.12,
   mouseReact = true,
   scale = 1,
   detail = 8,
-  rotation = 0,
-  warp = 1,
+  rotation = -40,
+  warp = 0.85,
   hueShift = 0,
-  saturation = 1,
-  brightness = 1.5,
-  contrast = 1,
-  stir = 0.5,
-  sheen = 0.3,
+  saturation = 1.05,
+  brightness = 1.35,
+  contrast = 1.15,
+  stir = 0.45,
+  sheen = 0.35,
   clickSwirl = true,
   grain = 0,
   fade = 0,
@@ -166,11 +184,20 @@ const Iridescence = ({
   const wakeRef = useRef(null);
   const colorKey = Array.isArray(color) ? color.join(',') : String(color);
   const accentColorKey = accentColor ? (Array.isArray(accentColor) ? accentColor.join(',') : String(accentColor)) : '';
+  const cyanColorKey = cyanColor ? (Array.isArray(cyanColor) ? cyanColor.join(',') : String(cyanColor)) : '';
+  const darkColorKey = darkColor ? (Array.isArray(darkColor) ? darkColor.join(',') : String(darkColor)) : '';
+  const whiteColorKey = whiteColor ? (Array.isArray(whiteColor) ? whiteColor.join(',') : String(whiteColor)) : '';
   const settings = {
     colorKey,
     color,
     accentColorKey,
     accentColor,
+    cyanColorKey,
+    cyanColor,
+    darkColorKey,
+    darkColor,
+    whiteColorKey,
+    whiteColor,
     speed,
     amplitude,
     mouseReact,
@@ -223,6 +250,9 @@ const Iridescence = ({
       'uTime',
       'uColor',
       'uAccentColor',
+      'uCyanColor',
+      'uDarkColor',
+      'uWhiteColor',
       'uHasAccent',
       'uMouse',
       'uAmplitude',
@@ -268,11 +298,17 @@ const Iridescence = ({
       phase: 0,
       mouse: [0.5, 0.5],
       presence: 0,
-      color: [1, 1, 1],
+      color: [0.1137, 0.6588, 0.3765],
       colorKey: '',
-      accentColor: [1, 1, 1],
+      accentColor: [0.0627, 0.7255, 0.5059],
       accentColorKey: '',
-      hasAccent: 0.0,
+      cyanColor: [0.0, 0.9412, 0.7529],
+      cyanColorKey: '',
+      darkColor: [0.0118, 0.1020, 0.0784],
+      darkColorKey: '',
+      whiteColor: [1, 1, 1],
+      whiteColorKey: '',
+      hasAccent: 1.0,
       cols: 0,
       rows: 0,
       field: new Float32Array(0),
@@ -287,41 +323,49 @@ const Iridescence = ({
     let visible = true;
     let alive = true;
 
-    const resolveColor = s => {
-      if (s.colorKey === state.colorKey) return;
-      state.colorKey = s.colorKey;
-      if (Array.isArray(s.color)) {
-        state.color = [0, 1, 2].map(i => clamp(Number(s.color[i] ?? 1), 0, 1));
-        return;
+    const parseColorToRgb = (input, fallbackHex) => {
+      if (Array.isArray(input)) {
+        const is255 = input.some(v => v > 1);
+        return [0, 1, 2].map(i => {
+          const val = Number(input[i] ?? (is255 ? 255 : 1));
+          return clamp(is255 ? val / 255 : val, 0, 1);
+        });
       }
-      if (!probeCtx) return;
+      if (!probeCtx) {
+        return [1, 1, 1];
+      }
       probeCtx.clearRect(0, 0, 1, 1);
-      probeCtx.fillStyle = '#ffffff';
-      probeCtx.fillStyle = String(s.color);
+      probeCtx.fillStyle = fallbackHex;
+      if (input) {
+        probeCtx.fillStyle = String(input);
+      }
       probeCtx.fillRect(0, 0, 1, 1);
       const [r, g, b] = probeCtx.getImageData(0, 0, 1, 1).data;
-      state.color = [r / 255, g / 255, b / 255];
+      return [r / 255, g / 255, b / 255];
     };
 
-    const resolveAccentColor = s => {
-      if (!s.accentColor) {
-        state.hasAccent = 0.0;
-        return;
+    const resolveColors = s => {
+      if (s.colorKey !== state.colorKey) {
+        state.colorKey = s.colorKey;
+        state.color = parseColorToRgb(s.color, '#1da860');
       }
-      state.hasAccent = 1.0;
-      if (s.accentColorKey === state.accentColorKey) return;
-      state.accentColorKey = s.accentColorKey;
-      if (Array.isArray(s.accentColor)) {
-        state.accentColor = [0, 1, 2].map(i => clamp(Number(s.accentColor[i] ?? 1), 0, 1));
-        return;
+      if (s.accentColorKey !== state.accentColorKey) {
+        state.accentColorKey = s.accentColorKey;
+        state.hasAccent = s.accentColor ? 1.0 : 0.0;
+        state.accentColor = parseColorToRgb(s.accentColor, '#10b981');
       }
-      if (!probeCtx) return;
-      probeCtx.clearRect(0, 0, 1, 1);
-      probeCtx.fillStyle = '#ffffff';
-      probeCtx.fillStyle = String(s.accentColor);
-      probeCtx.fillRect(0, 0, 1, 1);
-      const [r, g, b] = probeCtx.getImageData(0, 0, 1, 1).data;
-      state.accentColor = [r / 255, g / 255, b / 255];
+      if (s.cyanColorKey !== state.cyanColorKey) {
+        state.cyanColorKey = s.cyanColorKey;
+        state.cyanColor = parseColorToRgb(s.cyanColor, '#00f0c0');
+      }
+      if (s.darkColorKey !== state.darkColorKey) {
+        state.darkColorKey = s.darkColorKey;
+        state.darkColor = parseColorToRgb(s.darkColor, '#031a14');
+      }
+      if (s.whiteColorKey !== state.whiteColorKey) {
+        state.whiteColorKey = s.whiteColorKey;
+        state.whiteColor = parseColorToRgb(s.whiteColor, '#ffffff');
+      }
     };
 
     const layoutField = () => {
@@ -391,8 +435,7 @@ const Iridescence = ({
 
     const render = () => {
       const s = settingsRef.current;
-      resolveColor(s);
-      resolveAccentColor(s);
+      resolveColors(s);
       layoutField();
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.activeTexture(gl.TEXTURE0);
@@ -409,6 +452,9 @@ const Iridescence = ({
       gl.uniform1f(uniforms.uTime, state.phase);
       gl.uniform3f(uniforms.uColor, state.color[0], state.color[1], state.color[2]);
       gl.uniform3f(uniforms.uAccentColor, state.accentColor[0], state.accentColor[1], state.accentColor[2]);
+      gl.uniform3f(uniforms.uCyanColor, state.cyanColor[0], state.cyanColor[1], state.cyanColor[2]);
+      gl.uniform3f(uniforms.uDarkColor, state.darkColor[0], state.darkColor[1], state.darkColor[2]);
+      gl.uniform3f(uniforms.uWhiteColor, state.whiteColor[0], state.whiteColor[1], state.whiteColor[2]);
       gl.uniform1f(uniforms.uHasAccent, state.hasAccent);
       gl.uniform2f(uniforms.uMouse, state.mouse[0], state.mouse[1]);
       gl.uniform1f(uniforms.uAmplitude, s.amplitude);
