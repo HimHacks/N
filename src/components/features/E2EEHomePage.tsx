@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { E2EEPageBackground } from './E2EEPageBackground';
 import { SoapBubbleButton, SoapBubbleMaterial } from '../soap-bubble';
@@ -7,74 +7,172 @@ interface E2EEHomePageProps {
   onNavigateToSimulator: () => void;
 }
 
-const ASCII_CHARS = '01#@$%&*<>[]{}~=+/\\_|^!?XYZ0101';
+// Authentic cryptographic ASCII runes extracted directly from the user's reference image
+const ASCII_RUNES = ['Ø', '1', '&', '0', '!', '+', 'θ', '_', '%', 'cd', 'A', 'X', 'H', 'λ', '§', '#', '?', '7', 'µ', '0', '1'];
 
-export const AsciiGlitchText: React.FC<{ text: string }> = ({ text }) => {
-  const [displayText, setDisplayText] = useState(text);
-  const [isGlitching, setIsGlitching] = useState(false);
-  const frameRef = useRef<number | null>(null);
+interface AsciiParticle {
+  id: number;
+  char: string;
+  startX: number;
+  startY: number;
+  targetX: number;
+  targetY: number;
+  duration: number;
+  delay: number;
+  size: number;
+  color: string;
+}
 
-  const triggerGlitch = useCallback(() => {
-    if (isGlitching) return;
-    setIsGlitching(true);
-    let iteration = 0;
-    const totalSteps = text.length * 3;
+export const FloatingAsciiEncryption: React.FC = () => {
+  const [particles, setParticles] = useState<AsciiParticle[]>([]);
 
-    const step = () => {
-      setDisplayText(
-        text
-          .split('')
-          .map((char, index) => {
-            if (char === ' ') return ' ';
-            if (index < iteration / 3) {
-              return text[index];
-            }
-            return ASCII_CHARS[Math.floor(Math.random() * ASCII_CHARS.length)];
-          })
-          .join('')
-      );
-
-      iteration++;
-      if (iteration <= totalSteps) {
-        frameRef.current = requestAnimationFrame(step);
-      } else {
-        setDisplayText(text);
-        setIsGlitching(false);
-      }
-    };
-
-    frameRef.current = requestAnimationFrame(step);
-  }, [text, isGlitching]);
-
-  // Periodic cryptographic scramble every 4.2 seconds + trigger on hover
+  // Generate 16 distinct border particles that drift inward into the word 'Encryption'
   useEffect(() => {
-    const interval = setInterval(() => {
-      triggerGlitch();
-    }, 4200);
-    return () => {
-      clearInterval(interval);
-      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    const colors = [
+      '#22d3ee', // Cyan
+      '#2dd4bf', // Mint
+      '#38bdf8', // Light Cyan
+      '#6ee7b7', // Mint-Emerald
+      '#a7f3d0', // Pale Mint
+      '#06b6d4', // Deep Cyan
+    ];
+
+    const generateParticles = () => {
+      const list: AsciiParticle[] = [];
+      const count = 18;
+
+      for (let i = 0; i < count; i++) {
+        // Distribute around top, bottom, and edges of 'Encryption'
+        const side = i % 4; // 0: top, 1: bottom, 2: right, 3: dispersed top-right
+        let startX = 0;
+        let startY = 0;
+        let targetX = 0;
+        let targetY = 0;
+
+        const xSpread = (i / count) * 100; // 0% to 100% across the word
+
+        if (side === 0) {
+          // Floating down from top border into the letters
+          startX = (Math.random() - 0.5) * 160 + xSpread * 1.8 - 90;
+          startY = -22 - Math.random() * 26; // -22px to -48px above
+          targetX = startX * 0.45;
+          targetY = -2 + Math.random() * 6;
+        } else if (side === 1) {
+          // Floating up from bottom border into the letters
+          startX = (Math.random() - 0.5) * 160 + xSpread * 1.8 - 90;
+          startY = 24 + Math.random() * 24; // +24px to +48px below
+          targetX = startX * 0.45;
+          targetY = -2 - Math.random() * 6;
+        } else if (side === 2) {
+          // Floating in from right edge
+          startX = 70 + Math.random() * 35;
+          startY = (Math.random() - 0.5) * 40;
+          targetX = 35 + Math.random() * 15;
+          targetY = (Math.random() - 0.5) * 12;
+        } else {
+          // Dispersed top-right / ambient perimeter
+          startX = (Math.random() - 0.2) * 180 - 40;
+          startY = -18 - Math.random() * 20;
+          targetX = startX * 0.6;
+          targetY = 0;
+        }
+
+        list.push({
+          id: i,
+          char: ASCII_RUNES[Math.floor(Math.random() * ASCII_RUNES.length)],
+          startX,
+          startY,
+          targetX,
+          targetY,
+          duration: 1.8 + Math.random() * 1.8, // 1.8s to 3.6s
+          delay: (i / count) * 2.2, // Staggered entry
+          size: Math.random() > 0.4 ? 12 : 10,
+          color: colors[Math.floor(Math.random() * colors.length)],
+        });
+      }
+      return list;
     };
-  }, [triggerGlitch]);
+
+    setParticles(generateParticles());
+
+    // Continuously cycle and randomize ASCII glyphs to simulate live cryptographic data streaming
+    const interval = setInterval(() => {
+      setParticles(prev =>
+        prev.map(p =>
+          Math.random() > 0.4
+            ? { ...p, char: ASCII_RUNES[Math.floor(Math.random() * ASCII_RUNES.length)] }
+            : p
+        )
+      );
+    }, 1400);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <span
-      onMouseEnter={triggerGlitch}
-      className={`inline-block cursor-pointer select-none transition-all duration-150 ${
-        isGlitching
-          ? 'text-emerald-400 font-mono tracking-wider'
-          : 'text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300'
-      }`}
-      style={
-        isGlitching
-          ? {
-              textShadow:
-                '0 0 14px rgba(16, 185, 129, 0.95), 2px 2px 0px #021a14, -2px -2px 0px #021a14, 0 0 24px rgba(6, 182, 212, 0.65)',
-            }
-          : undefined
-      }
-    >
-      {displayText}
+    <span className="relative inline-block select-none">
+      {/* Background Holographic Glow & Aura */}
+      <span
+        aria-hidden="true"
+        className="absolute -inset-x-4 -inset-y-2 pointer-events-none rounded-xl blur-xl bg-cyan-400/15"
+      />
+
+      {/* Floating Inward-Drifting ASCII Particle Cloud */}
+      {particles.map(p => (
+        <motion.span
+          key={p.id}
+          initial={{ x: p.startX, y: p.startY, opacity: 0, scale: 0.75 }}
+          animate={{
+            x: [p.startX, p.startX * 0.7, p.targetX],
+            y: [p.startY, p.startY * 0.6, p.targetY],
+            opacity: [0, 0.95, 0.85, 0],
+            scale: [0.75, 1.05, 0.9, 0.6],
+          }}
+          transition={{
+            duration: p.duration,
+            delay: p.delay,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+          className="absolute z-20 pointer-events-none font-mono font-bold leading-none select-none"
+          style={{
+            fontSize: `${p.size}px`,
+            color: p.color,
+            textShadow: `0 0 8px ${p.color}, 0 0 16px rgba(34, 211, 238, 0.85)`,
+          }}
+        >
+          {p.char}
+        </motion.span>
+      ))}
+
+      {/* Digital Scanline Glitch Slices (Matching Screenshot) */}
+      <span
+        aria-hidden="true"
+        className="absolute inset-0 z-20 pointer-events-none text-cyan-200 opacity-60 font-black tracking-tight"
+        style={{
+          clipPath: 'polygon(0 15%, 100% 15%, 100% 22%, 0 22%, 0 54%, 100% 54%, 100% 60%, 0 60%)',
+          transform: 'translateX(2px)',
+          filter: 'drop-shadow(0 0 6px #22d3ee)',
+        }}
+      >
+        Encryption
+      </span>
+      <span
+        aria-hidden="true"
+        className="absolute inset-0 z-20 pointer-events-none text-teal-300 opacity-50 font-black tracking-tight"
+        style={{
+          clipPath: 'polygon(0 38%, 100% 38%, 100% 44%, 0 44%, 0 78%, 100% 78%, 100% 84%, 0 84%)',
+          transform: 'translateX(-2px)',
+          filter: 'drop-shadow(0 0 6px #2dd4bf)',
+        }}
+      >
+        Encryption
+      </span>
+
+      {/* Primary Radiant 'Encryption' Text — Matches cyan/mint/teal in Src */}
+      <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-teal-300 via-cyan-300 to-emerald-300 font-black tracking-tight drop-shadow-[0_0_24px_rgba(34,211,238,0.55)]">
+        Encryption
+      </span>
     </span>
   );
 };
@@ -111,48 +209,54 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
       <main
         ref={pageRef}
         data-theme="dark"
-        className="relative flex min-h-screen flex-col items-center justify-center px-6 sm:px-12 py-12 select-none overflow-hidden"
+        className="relative flex min-h-screen flex-col items-center justify-center px-4 sm:px-8 py-12 select-none overflow-hidden"
       >
         {/* Centered Hero Content Section */}
         <div className="relative z-10 w-full max-w-5xl mx-auto flex flex-col items-center justify-center text-center -mt-8">
-          {/* Presenter Line: Exactly as originally written */}
+          {/* Presenter Line: Exactly as in Src (THE SYNTAX UNVEILERS PRESENTS) */}
           <motion.p
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-xs sm:text-sm font-bold tracking-[0.25em] text-white uppercase text-center mb-4"
+            className="text-xs sm:text-sm font-bold tracking-[0.24em] text-white uppercase text-center mb-4"
           >
-            THE SYNTAX UNVEILERS Presents
+            THE SYNTAX UNVEILERS PRESENTS
           </motion.p>
 
-          {/* Headline: Huge, Bold, Centered with communicate-without-limits Gradient and ASCII Glitch on ENCRYPTION */}
+          {/* 
+            Headline: In ONE SINGLE LINE:
+            "End-to-End" in plain crisp solid white + "Encryption" with floating ASCII particle animation
+          */}
           <motion.h1
-            initial={{ opacity: 0, y: 18 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1 }}
-            className="text-5xl sm:text-7xl lg:text-8xl xl:text-9xl font-black tracking-tight text-center leading-[1.08]"
+            className="flex items-center justify-center flex-wrap sm:flex-nowrap gap-x-3 text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black tracking-tight text-center leading-none"
           >
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300">
-              END-TO-END{' '}
+            {/* Plain crisp solid white 'End-to-End' */}
+            <span className="text-white font-black drop-shadow-[0_2px_15px_rgba(0,0,0,0.5)]">
+              End-to-End
             </span>
-            <br className="hidden sm:inline" />
-            <AsciiGlitchText text="ENCRYPTION" />
+
+            {/* Glowing Cyan/Mint 'Encryption' with Live Inflowing Border ASCII particles */}
+            <FloatingAsciiEncryption />
           </motion.h1>
 
-          {/* Clean shortened overview */}
+          {/* Overview text formatted on 2 lines matching Src */}
           <motion.p
-            initial={{ opacity: 0, y: 18 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-sm sm:text-base md:text-lg text-slate-300/90 leading-relaxed font-normal max-w-xl mx-auto text-center mt-6"
+            className="text-sm sm:text-base md:text-lg text-slate-200/95 leading-relaxed font-normal max-w-xl mx-auto text-center mt-6"
           >
-            Messages are encrypted directly on your device. Only you and the recipient hold the keys.
+            Messages are encrypted directly on your device. Only you and the recipient
+            <br className="hidden sm:inline" /> hold the keys.
           </motion.p>
         </div>
 
         {/* 
-          Bottom Hot Zone & Interactive SoapBubble Button (Src 5):
-          Appears automatically after reading time or when hovering anywhere across the bottom strip.
+          Bottom Hot Zone & Interactive SoapBubble Button:
+          Reverted to original text: "Let's take a deep dive →"
         */}
         <div
           onMouseEnter={() => setIsHovered(true)}
@@ -168,11 +272,6 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                 transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
                 className="mb-8 pointer-events-auto"
               >
-                {/* 
-                  ReactDrops SoapBubbleButton:
-                  Palette focused on Emerald, Cyan, Mint, and Deep Teal.
-                  Zero dispersion, calm wobble & silky fluid border dynamics.
-                */}
                 <SoapBubbleMaterial
                   backdrop={pageRef}
                   glass={0.95}
@@ -205,18 +304,28 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                   <SoapBubbleButton
                     interactive={0.2}
                     onClick={onNavigateToSimulator}
-                    className="flex items-center gap-3 px-8 py-3.5 text-sm font-semibold text-white shadow-[0_12px_45px_rgba(0,0,0,0.7),0_0_28px_rgba(6,182,212,0.3)] border border-white/20 hover:border-cyan-400/60 hover:shadow-[0_12px_50px_rgba(0,0,0,0.8),0_0_36px_rgba(6,182,212,0.45)] backdrop-blur-2xl transition-all duration-200 cursor-pointer"
+                    className="flex items-center gap-2.5 px-7 py-3 text-sm font-medium text-white shadow-[0_12px_45px_rgba(0,0,0,0.7),0_0_28px_rgba(6,182,212,0.3)] border border-white/20 hover:border-cyan-400/60 hover:shadow-[0_12px_50px_rgba(0,0,0,0.8),0_0_36px_rgba(6,182,212,0.45)] backdrop-blur-2xl transition-all duration-200 cursor-pointer"
                     style={{
-                      background: 'rgba(12, 18, 22, 0.88)',
+                      background: 'rgba(14, 22, 24, 0.82)',
                     }}
                   >
-                    <span>Take a deep dive into E2EE</span>
+                    <span>Let's take a deep dive</span>
                     <span className="text-cyan-400 font-bold text-base">&rarr;</span>
                   </SoapBubbleButton>
                 </SoapBubbleMaterial>
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+
+        {/* Subtle 4-Point Sparkle Star in Bottom-Right Corner (Matches Src) */}
+        <div className="fixed bottom-6 right-8 pointer-events-none z-20 opacity-60">
+          <svg
+            className="w-6 h-6 text-cyan-200 fill-current drop-shadow-[0_0_10px_rgba(34,211,238,0.6)]"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
+          </svg>
         </div>
       </main>
     </E2EEPageBackground>
