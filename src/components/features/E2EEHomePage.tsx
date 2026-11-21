@@ -11,18 +11,22 @@ interface E2EEHomePageProps {
  * Art-Directed Typography for "Encryption"
  * Features a distinctive, non-uniform gradient transitioning from luminous mint highlights
  * into rich WhatsApp emerald and refined deep emerald base tones.
- * Tuned for maximum legibility across all letterforms (ensuring full clarity on descenders like 'y' and 'p')
- * with zero generic glow, distortion, or decorative fluff.
+ * Tuned with explicit descender headroom and balanced kerning so 'y' and 'p' render fully with zero cutoff.
  */
 export const ArtDirectedEncryption: React.FC = () => {
   return (
-    <span className="relative inline-block select-none whitespace-nowrap shrink-0 py-1">
+    <span className="relative inline-block select-none whitespace-nowrap shrink-0 overflow-visible">
       <span
-        className="relative z-10 inline-block font-black tracking-tight text-transparent bg-clip-text select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.55)] pb-1"
+        className="relative z-10 inline-block font-black tracking-normal text-transparent bg-clip-text select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.55)] overflow-visible"
         style={{
           backgroundImage:
-            'linear-gradient(155deg, #a7f3d0 0%, #34d399 26%, #10b981 54%, #059669 82%, #047857 100%)',
+            'linear-gradient(155deg, #a7f3d0 0%, #34d399 28%, #10b981 56%, #059669 82%, #047857 100%)',
           WebkitBackgroundClip: 'text',
+          WebkitBoxDecorationBreak: 'clone',
+          boxDecorationBreak: 'clone',
+          paddingBottom: '0.18em',
+          marginBottom: '-0.18em',
+          paddingRight: '0.04em',
         }}
       >
         Encryption
@@ -98,7 +102,7 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1 }}
-            className="flex items-center justify-center whitespace-nowrap flex-nowrap gap-x-2 sm:gap-x-4 md:gap-x-5 text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight text-center leading-none select-none max-w-full"
+            className="flex items-center justify-center whitespace-nowrap flex-nowrap gap-x-2 sm:gap-x-4 md:gap-x-5 text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight text-center leading-[1.12] select-none max-w-full overflow-visible py-1"
           >
             {/* Plain crisp solid white 'End-to-End' */}
             <span className="text-white font-black drop-shadow-[0_2px_15px_rgba(0,0,0,0.5)] whitespace-nowrap shrink-0">
