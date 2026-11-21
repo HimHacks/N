@@ -13,10 +13,11 @@ const ASCII_RUNES = ['Ø', '1', '&', '0', '!', '+', 'θ', '_', '%', 'cd', 'A', '
 interface AsciiParticle {
   id: number;
   char: string;
-  startX: number;
+  leftPercent: number; // Position strictly across 'Encryption' (12% to 94% or right edge >100%)
   startY: number;
-  targetX: number;
   targetY: number;
+  startX: number;
+  targetX: number;
   duration: number;
   delay: number;
   size: number;
@@ -26,7 +27,8 @@ interface AsciiParticle {
 export const FloatingAsciiEncryption: React.FC = () => {
   const [particles, setParticles] = useState<AsciiParticle[]>([]);
 
-  // Generate 16 distinct border particles that drift inward into the word 'Encryption'
+  // Generate border particles strictly around 'Encryption' (top, bottom, and right edges only).
+  // NO particles exist in the gap between 'End-to-End' and 'Encryption' (< 10%).
   useEffect(() => {
     const colors = [
       '#22d3ee', // Cyan
@@ -42,50 +44,49 @@ export const FloatingAsciiEncryption: React.FC = () => {
       const count = 18;
 
       for (let i = 0; i < count; i++) {
-        // Distribute around top, bottom, and edges of 'Encryption'
-        const side = i % 4; // 0: top, 1: bottom, 2: right, 3: dispersed top-right
+        const side = i % 3; // 0: top border, 1: bottom border, 2: right edge
+        let leftPercent = 14;
         let startX = 0;
-        let startY = 0;
         let targetX = 0;
+        let startY = 0;
         let targetY = 0;
 
-        const xSpread = (i / count) * 100; // 0% to 100% across the word
+        // Distribute evenly along the word 'Encryption' (from 14% to 94%)
+        const spread = 14 + (i / count) * 78;
 
         if (side === 0) {
-          // Floating down from top border into the letters
-          startX = (Math.random() - 0.5) * 160 + xSpread * 1.8 - 90;
-          startY = -22 - Math.random() * 26; // -22px to -48px above
-          targetX = startX * 0.45;
-          targetY = -2 + Math.random() * 6;
+          // Top border: starts 26px to 46px above the letters, absorbed downward into the letter body
+          leftPercent = spread;
+          startX = (Math.random() - 0.5) * 8;
+          targetX = 0;
+          startY = -26 - Math.random() * 22; // -26px to -48px
+          targetY = 2 + Math.random() * 6; // into the glyph
         } else if (side === 1) {
-          // Floating up from bottom border into the letters
-          startX = (Math.random() - 0.5) * 160 + xSpread * 1.8 - 90;
-          startY = 24 + Math.random() * 24; // +24px to +48px below
-          targetX = startX * 0.45;
-          targetY = -2 - Math.random() * 6;
-        } else if (side === 2) {
-          // Floating in from right edge
-          startX = 70 + Math.random() * 35;
-          startY = (Math.random() - 0.5) * 40;
-          targetX = 35 + Math.random() * 15;
-          targetY = (Math.random() - 0.5) * 12;
+          // Bottom border: starts 26px to 46px below the letters, absorbed upward into the letter body
+          leftPercent = spread;
+          startX = (Math.random() - 0.5) * 8;
+          targetX = 0;
+          startY = 26 + Math.random() * 22; // +26px to +48px
+          targetY = -2 - Math.random() * 6; // into the glyph
         } else {
-          // Dispersed top-right / ambient perimeter
-          startX = (Math.random() - 0.2) * 180 - 40;
-          startY = -18 - Math.random() * 20;
-          targetX = startX * 0.6;
+          // Right edge: starts just past the 'n' (102% to 118%), absorbed leftward into 'o' and 'n'
+          leftPercent = 101 + Math.random() * 16;
+          startX = 0;
+          targetX = -24 - Math.random() * 18; // drifts into rightmost characters
+          startY = (Math.random() - 0.5) * 26;
           targetY = 0;
         }
 
         list.push({
           id: i,
           char: ASCII_RUNES[Math.floor(Math.random() * ASCII_RUNES.length)],
+          leftPercent,
           startX,
-          startY,
           targetX,
+          startY,
           targetY,
-          duration: 1.8 + Math.random() * 1.8, // 1.8s to 3.6s
-          delay: (i / count) * 2.2, // Staggered entry
+          duration: 1.8 + Math.random() * 1.6, // 1.8s to 3.4s
+          delay: (i / count) * 2.0,
           size: Math.random() > 0.4 ? 12 : 10,
           color: colors[Math.floor(Math.random() * colors.length)],
         });
@@ -95,38 +96,49 @@ export const FloatingAsciiEncryption: React.FC = () => {
 
     setParticles(generateParticles());
 
-    // Continuously cycle and randomize ASCII glyphs to simulate live cryptographic data streaming
+    // Continuously cycle cryptographic runes
     const interval = setInterval(() => {
       setParticles(prev =>
         prev.map(p =>
-          Math.random() > 0.4
+          Math.random() > 0.45
             ? { ...p, char: ASCII_RUNES[Math.floor(Math.random() * ASCII_RUNES.length)] }
             : p
         )
       );
-    }, 1400);
+    }, 1200);
 
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <span className="relative inline-block select-none">
+    <span className="relative inline-block select-none whitespace-nowrap shrink-0">
       {/* Background Holographic Glow & Aura */}
       <span
         aria-hidden="true"
-        className="absolute -inset-x-4 -inset-y-2 pointer-events-none rounded-xl blur-xl bg-cyan-400/15"
+        className="absolute -inset-x-3 -inset-y-2 pointer-events-none rounded-xl blur-xl bg-cyan-400/15"
       />
 
-      {/* Floating Inward-Drifting ASCII Particle Cloud */}
+      {/* Floating & Inward Absorbing ASCII Particles (Strictly on 'Encryption', not in between) */}
       {particles.map(p => (
         <motion.span
           key={p.id}
-          initial={{ x: p.startX, y: p.startY, opacity: 0, scale: 0.75 }}
+          initial={{
+            x: p.startX,
+            y: p.startY,
+            opacity: 0,
+            scale: 0.8,
+          }}
           animate={{
-            x: [p.startX, p.startX * 0.7, p.targetX],
-            y: [p.startY, p.startY * 0.6, p.targetY],
-            opacity: [0, 0.95, 0.85, 0],
-            scale: [0.75, 1.05, 0.9, 0.6],
+            x: [p.startX, p.startX * 0.5, p.targetX],
+            y: [p.startY, p.startY * 0.5, p.targetY],
+            opacity: [0, 0.95, 0.9, 0], // Fades out as it touches the glyph center (absorption)
+            scale: [0.8, 1.1, 0.85, 0.15], // Shrinks down into the letter
+            filter: [
+              'blur(0px) brightness(1)',
+              'blur(0px) brightness(1.2)',
+              'blur(0px) brightness(1.5)',
+              'blur(1px) brightness(2)',
+            ],
           }}
           transition={{
             duration: p.duration,
@@ -136,6 +148,8 @@ export const FloatingAsciiEncryption: React.FC = () => {
           }}
           className="absolute z-20 pointer-events-none font-mono font-bold leading-none select-none"
           style={{
+            left: `${p.leftPercent}%`,
+            top: '50%',
             fontSize: `${p.size}px`,
             color: p.color,
             textShadow: `0 0 8px ${p.color}, 0 0 16px rgba(34, 211, 238, 0.85)`,
@@ -145,29 +159,75 @@ export const FloatingAsciiEncryption: React.FC = () => {
         </motion.span>
       ))}
 
+      {/* 
+        Small greyed-out glitch lines on the word 'Encryption'
+        Animated moving smoothly from left to right as requested
+      */}
+      <div className="absolute inset-0 z-25 pointer-events-none overflow-hidden select-none">
+        {/* Greyed-out slice line 1 (top slice) moving left-to-right */}
+        <motion.div
+          animate={{ x: ['-50%', '130%'], opacity: [0.2, 0.65, 0.65, 0.2] }}
+          transition={{ duration: 3.2, repeat: Infinity, ease: 'linear' }}
+          className="absolute top-[18%] h-[1.5px] w-28 bg-gradient-to-r from-transparent via-slate-400/60 to-transparent"
+        />
+        {/* Greyed-out slice line 2 (upper-mid slice) moving left-to-right */}
+        <motion.div
+          animate={{ x: ['-70%', '140%'], opacity: [0.15, 0.55, 0.55, 0.15] }}
+          transition={{ duration: 4.0, repeat: Infinity, ease: 'linear', delay: 0.6 }}
+          className="absolute top-[36%] h-[2px] w-36 bg-gradient-to-r from-transparent via-slate-300/50 to-transparent"
+        />
+        {/* Greyed-out slice line 3 (center glitch scanline) moving left-to-right */}
+        <motion.div
+          animate={{ x: ['-45%', '135%'], opacity: [0.25, 0.7, 0.7, 0.25] }}
+          transition={{ duration: 2.8, repeat: Infinity, ease: 'linear', delay: 1.1 }}
+          className="absolute top-[52%] h-[1.5px] w-32 bg-gradient-to-r from-transparent via-slate-400/70 to-transparent"
+        />
+        {/* Greyed-out slice line 4 (lower slice) moving left-to-right */}
+        <motion.div
+          animate={{ x: ['-65%', '125%'], opacity: [0.2, 0.5, 0.5, 0.2] }}
+          transition={{ duration: 3.6, repeat: Infinity, ease: 'linear', delay: 1.7 }}
+          className="absolute top-[68%] h-[1.5px] w-32 bg-gradient-to-r from-transparent via-slate-300/55 to-transparent"
+        />
+        {/* Greyed-out slice line 5 (baseline slice) moving left-to-right */}
+        <motion.div
+          animate={{ x: ['-40%', '140%'], opacity: [0.15, 0.45, 0.45, 0.15] }}
+          transition={{ duration: 4.4, repeat: Infinity, ease: 'linear', delay: 0.4 }}
+          className="absolute top-[82%] h-[1px] w-40 bg-gradient-to-r from-transparent via-slate-400/45 to-transparent"
+        />
+
+        {/* Subtle holographic beam sweeping across 'Encryption' from left to right */}
+        <motion.div
+          animate={{ x: ['-30%', '120%'], opacity: [0, 0.5, 0.5, 0] }}
+          transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
+          className="absolute inset-y-0 w-20 bg-gradient-to-r from-transparent via-slate-200/20 to-transparent mix-blend-screen"
+        />
+      </div>
+
       {/* Digital Scanline Glitch Slices (Matching Screenshot) */}
-      <span
+      <motion.span
         aria-hidden="true"
+        animate={{ x: [0, 2, -1, 2, 0] }}
+        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
         className="absolute inset-0 z-20 pointer-events-none text-cyan-200 opacity-60 font-black tracking-tight"
         style={{
           clipPath: 'polygon(0 15%, 100% 15%, 100% 22%, 0 22%, 0 54%, 100% 54%, 100% 60%, 0 60%)',
-          transform: 'translateX(2px)',
           filter: 'drop-shadow(0 0 6px #22d3ee)',
         }}
       >
         Encryption
-      </span>
-      <span
+      </motion.span>
+      <motion.span
         aria-hidden="true"
+        animate={{ x: [0, -2, 1, -2, 0] }}
+        transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
         className="absolute inset-0 z-20 pointer-events-none text-teal-300 opacity-50 font-black tracking-tight"
         style={{
           clipPath: 'polygon(0 38%, 100% 38%, 100% 44%, 0 44%, 0 78%, 100% 78%, 100% 84%, 0 84%)',
-          transform: 'translateX(-2px)',
           filter: 'drop-shadow(0 0 6px #2dd4bf)',
         }}
       >
         Encryption
-      </span>
+      </motion.span>
 
       {/* Primary Radiant 'Encryption' Text — Matches cyan/mint/teal in Src */}
       <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-teal-300 via-cyan-300 to-emerald-300 font-black tracking-tight drop-shadow-[0_0_24px_rgba(34,211,238,0.55)]">
@@ -224,21 +284,21 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
           </motion.p>
 
           {/* 
-            Headline: In ONE SINGLE LINE:
-            "End-to-End" in plain crisp solid white + "Encryption" with floating ASCII particle animation
+            Headline: Strictly in ONE SINGLE LINE across all viewports:
+            "End-to-End" in plain crisp solid white + "Encryption" with absorption ASCII particle animation
           */}
           <motion.h1
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1 }}
-            className="flex items-center justify-center flex-wrap sm:flex-nowrap gap-x-3 text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black tracking-tight text-center leading-none"
+            className="flex items-center justify-center whitespace-nowrap flex-nowrap gap-x-2 sm:gap-x-4 md:gap-x-5 text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight text-center leading-none select-none max-w-full"
           >
             {/* Plain crisp solid white 'End-to-End' */}
-            <span className="text-white font-black drop-shadow-[0_2px_15px_rgba(0,0,0,0.5)]">
+            <span className="text-white font-black drop-shadow-[0_2px_15px_rgba(0,0,0,0.5)] whitespace-nowrap shrink-0">
               End-to-End
             </span>
 
-            {/* Glowing Cyan/Mint 'Encryption' with Live Inflowing Border ASCII particles */}
+            {/* Glowing Cyan/Mint 'Encryption' with Absorption ASCII particles & Moving Grey Glitch Lines */}
             <FloatingAsciiEncryption />
           </motion.h1>
 
@@ -316,16 +376,6 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
-
-        {/* Subtle 4-Point Sparkle Star in Bottom-Right Corner (Matches Src) */}
-        <div className="fixed bottom-6 right-8 pointer-events-none z-20 opacity-60">
-          <svg
-            className="w-6 h-6 text-cyan-200 fill-current drop-shadow-[0_0_10px_rgba(34,211,238,0.6)]"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
-          </svg>
         </div>
       </main>
     </E2EEPageBackground>
