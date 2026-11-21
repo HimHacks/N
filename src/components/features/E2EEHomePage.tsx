@@ -12,6 +12,7 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
   const [isTimedActive, setIsTimedActive] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const dismissTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Timed pop-up logic:
   // After ~5.5s (estimated reading time), the pop-up appears, stays for 4s, and auto-dismisses smoothly.
@@ -28,10 +29,23 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
     return () => {
       clearTimeout(entranceTimer);
       if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     };
   }, []);
 
-  // Show if either the initial 4-second window is active OR mouse is hovering in the bottom hot zone
+  // Calm hover handlers with gentle debounce so it doesn't trigger jittery re-animations
+  const handleMouseEnter = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsHovered(false);
+    }, 350);
+  };
+
+  // Show if either the initial timed window is active OR mouse is hovering in the bottom hot zone
   const showButton = isTimedActive || isHovered;
 
   return (
@@ -39,7 +53,6 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
       {/* Main Viewport Container */}
       <main
         ref={pageRef}
-        data-theme="dark"
         className="relative flex min-h-screen flex-col items-center justify-center px-6 py-12 select-none"
       >
         {/* Floating Hero Typography — Matches Image 1 */}
@@ -69,56 +82,71 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
           Hovering anywhere in this zone or directly over the button smoothly slides it into view.
         */}
         <div
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
           className="fixed bottom-0 left-0 right-0 h-24 z-30 flex items-center justify-center pointer-events-auto"
         >
           <AnimatePresence>
             {showButton && (
               <motion.div
-                initial={{ y: 22, opacity: 0 }}
+                initial={{ y: 14, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                exit={{ y: 20, opacity: 0 }}
-                transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+                exit={{ y: 12, opacity: 0 }}
+                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                 className="mb-6 pointer-events-auto"
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
               >
                 {/* 
                   ReactDrops SoapBubbleButton:
-                  Thin-film interference along the border that flows naturally like a real liquid membrane,
-                  without being overly neon/saturated, wrapping a sleek dark pill button.
+                  - Calm, subtle fluid physics (no erratic jitter or over-responding)
+                  - Zero dispersion to eliminate chromatic fringing / color disorientation
+                  - Translucent frosted white-glass aesthetic with luminous white border accent
                 */}
-                <SoapBubbleMaterial
-                  backdrop={pageRef}
-                  glass={0.92}
-                  iridescence={1.3}
-                  filmScale={4.5}
-                  oilCoverage={0.85}
-                  oilEdge={18}
-                  oilEdgeFade={1.2}
-                  clearCenter={0.65}
-                  thickness={460}
-                  drainage={0.28}
-                  swirl={0.45}
-                  reflectivity={1.2}
-                  refraction={0.15}
-                  dispersion={0.8}
-                  bevel={14}
-                  wobble={0.35}
-                  windowIntensity={0.85}
-                  environment="studio"
-                >
-                  <SoapBubbleButton
-                    onClick={onNavigateToSimulator}
-                    className="flex items-center gap-2.5 px-8 py-3 text-sm font-medium text-white shadow-[0_12px_40px_rgba(0,0,0,0.65)] border border-white/20 hover:border-white/40 backdrop-blur-2xl transition-colors duration-200 cursor-pointer"
-                    style={{
-                      background: 'rgba(18, 22, 28, 0.85)',
-                    }}
+                <div data-theme="light">
+                  <SoapBubbleMaterial
+                    backdrop={pageRef}
+                    glass={0.96}
+                    iridescence={0.2}
+                    dispersion={0}
+                    oilOpacity={0.25}
+                    oilCoverage={0.55}
+                    oilEdge={12}
+                    oilEdgeFade={2.2}
+                    clearCenter={0.75}
+                    thickness={420}
+                    drainage={0.04}
+                    swirl={0.1}
+                    speed={0.3}
+                    wobble={0.04}
+                    reflectivity={1.1}
+                    refraction={0.06}
+                    bevel={10}
+                    windowIntensity={0.9}
+                    tint="rgba(255, 255, 255, 0.3)"
+                    soapHighlightColor="rgba(255, 255, 255, 0.95)"
+                    soapColor="rgba(255, 255, 255, 0.3)"
+                    environment="window"
                   >
-                    <span>Let's take a deep dive</span>
-                    {/* Stationary arrow — no hover animation */}
-                    <span className="text-white/80">&rarr;</span>
-                  </SoapBubbleButton>
-                </SoapBubbleMaterial>
+                    <SoapBubbleButton
+                      interactive={0.12}
+                      onClick={onNavigateToSimulator}
+                      className="flex items-center gap-2.5 px-8 py-3 text-sm font-semibold text-white shadow-[0_12px_36px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.7),0_0_24px_rgba(255,255,255,0.14)] border border-white/40 hover:border-white/75 hover:shadow-[0_12px_40px_rgba(0,0,0,0.5),inset_0_1px_2px_rgba(255,255,255,0.9),0_0_32px_rgba(255,255,255,0.25)] backdrop-blur-2xl transition-all duration-300 cursor-pointer"
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.15)',
+                        color: '#ffffff',
+                      }}
+                    >
+                      <span className="tracking-wide drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
+                        Let's take a deep dive
+                      </span>
+                      {/* Stationary arrow */}
+                      <span className="text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
+                        &rarr;
+                      </span>
+                    </SoapBubbleButton>
+                  </SoapBubbleMaterial>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
