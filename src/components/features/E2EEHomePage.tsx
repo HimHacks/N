@@ -160,46 +160,45 @@ export const FloatingAsciiEncryption: React.FC = () => {
       ))}
 
       {/* 
-        Small greyed-out glitch lines on the word 'Encryption'
-        Animated moving smoothly from left to right as requested
+        Subtle greyed-out glitch lines on 'Encryption'
+        Smoothly sweeps from left to right across the typography with organic digital staggering
       */}
-      <div className="absolute inset-0 z-25 pointer-events-none overflow-hidden select-none">
-        {/* Greyed-out slice line 1 (top slice) moving left-to-right */}
+      <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden select-none mix-blend-screen">
+        {/* Hairline 1 - Upper slice */}
         <motion.div
-          animate={{ x: ['-50%', '130%'], opacity: [0.2, 0.65, 0.65, 0.2] }}
-          transition={{ duration: 3.2, repeat: Infinity, ease: 'linear' }}
-          className="absolute top-[18%] h-[1.5px] w-28 bg-gradient-to-r from-transparent via-slate-400/60 to-transparent"
+          animate={{ x: ['-60%', '140%'], opacity: [0, 0.55, 0.7, 0] }}
+          transition={{ duration: 5.2, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute top-[22%] h-[1px] w-20 bg-gradient-to-r from-transparent via-slate-300/60 to-transparent"
         />
-        {/* Greyed-out slice line 2 (upper-mid slice) moving left-to-right */}
+        {/* Hairline 2 - Mid-upper slice */}
         <motion.div
-          animate={{ x: ['-70%', '140%'], opacity: [0.15, 0.55, 0.55, 0.15] }}
-          transition={{ duration: 4.0, repeat: Infinity, ease: 'linear', delay: 0.6 }}
-          className="absolute top-[36%] h-[2px] w-36 bg-gradient-to-r from-transparent via-slate-300/50 to-transparent"
+          animate={{ x: ['-80%', '150%'], opacity: [0, 0.5, 0.65, 0] }}
+          transition={{ duration: 6.4, repeat: Infinity, ease: 'easeInOut', delay: 1.2 }}
+          className="absolute top-[38%] h-[1.5px] w-28 bg-gradient-to-r from-transparent via-slate-200/50 to-transparent"
         />
-        {/* Greyed-out slice line 3 (center glitch scanline) moving left-to-right */}
+        {/* Hairline 3 - Core center scanner */}
         <motion.div
-          animate={{ x: ['-45%', '135%'], opacity: [0.25, 0.7, 0.7, 0.25] }}
-          transition={{ duration: 2.8, repeat: Infinity, ease: 'linear', delay: 1.1 }}
-          className="absolute top-[52%] h-[1.5px] w-32 bg-gradient-to-r from-transparent via-slate-400/70 to-transparent"
+          animate={{ x: ['-50%', '130%'], opacity: [0, 0.6, 0.75, 0] }}
+          transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut', delay: 2.1 }}
+          className="absolute top-[54%] h-[1px] w-24 bg-gradient-to-r from-transparent via-slate-300/70 to-transparent"
         />
-        {/* Greyed-out slice line 4 (lower slice) moving left-to-right */}
+        {/* Hairline 4 - Lower slice */}
         <motion.div
-          animate={{ x: ['-65%', '125%'], opacity: [0.2, 0.5, 0.5, 0.2] }}
-          transition={{ duration: 3.6, repeat: Infinity, ease: 'linear', delay: 1.7 }}
-          className="absolute top-[68%] h-[1.5px] w-32 bg-gradient-to-r from-transparent via-slate-300/55 to-transparent"
+          animate={{ x: ['-70%', '140%'], opacity: [0, 0.45, 0.6, 0] }}
+          transition={{ duration: 5.8, repeat: Infinity, ease: 'easeInOut', delay: 3.0 }}
+          className="absolute top-[70%] h-[1.5px] w-28 bg-gradient-to-r from-transparent via-slate-200/50 to-transparent"
         />
-        {/* Greyed-out slice line 5 (baseline slice) moving left-to-right */}
+        {/* Hairline 5 - Baseline slice */}
         <motion.div
-          animate={{ x: ['-40%', '140%'], opacity: [0.15, 0.45, 0.45, 0.15] }}
-          transition={{ duration: 4.4, repeat: Infinity, ease: 'linear', delay: 0.4 }}
-          className="absolute top-[82%] h-[1px] w-40 bg-gradient-to-r from-transparent via-slate-400/45 to-transparent"
+          animate={{ x: ['-60%', '130%'], opacity: [0, 0.4, 0.55, 0] }}
+          transition={{ duration: 6.8, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
+          className="absolute top-[84%] h-[1px] w-32 bg-gradient-to-r from-transparent via-slate-300/45 to-transparent"
         />
-
-        {/* Subtle holographic beam sweeping across 'Encryption' from left to right */}
+        {/* Micro sweep beam */}
         <motion.div
-          animate={{ x: ['-30%', '120%'], opacity: [0, 0.5, 0.5, 0] }}
-          transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
-          className="absolute inset-y-0 w-20 bg-gradient-to-r from-transparent via-slate-200/20 to-transparent mix-blend-screen"
+          animate={{ x: ['-40%', '130%'], opacity: [0, 0.35, 0.35, 0] }}
+          transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut', delay: 1.8 }}
+          className="absolute inset-y-0 w-12 bg-gradient-to-r from-transparent via-slate-300/25 to-transparent blur-[1px]"
         />
       </div>
 
@@ -302,15 +301,15 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
             <FloatingAsciiEncryption />
           </motion.h1>
 
-          {/* Overview text formatted on 2 lines matching Src */}
+          {/* Overview text strictly formatted on 2 lines matching the original template */}
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-sm sm:text-base md:text-lg text-slate-200/95 leading-relaxed font-normal max-w-xl mx-auto text-center mt-6"
+            className="text-sm sm:text-base md:text-lg text-slate-200/95 leading-relaxed font-normal max-w-2xl mx-auto text-center mt-6 select-none"
           >
-            Messages are encrypted directly on your device. Only you and the recipient
-            <br className="hidden sm:inline" /> hold the keys.
+            <span className="block">Messages are encrypted directly on your device. Only you and the recipient</span>
+            <span className="block mt-0.5">hold the keys.</span>
           </motion.p>
         </div>
 
