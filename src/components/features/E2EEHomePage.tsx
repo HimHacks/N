@@ -9,41 +9,22 @@ interface E2EEHomePageProps {
 
 /**
  * Art-Directed Typography for "Encryption"
- * Features a bespoke, luxury-grade gradient blending crystalline sea-mint, rich WhatsApp emerald,
- * deep oceanic teal, and subtle cyan highlights with an ultra-smooth, slow-breathing chromatic transition.
- * Avoids generic AI neon glow and decorative gimmicks in favor of clean, authoritative editorial polish.
+ * Features a distinctive, non-uniform gradient transitioning from luminous mint highlights
+ * into rich WhatsApp emerald and deep forest emerald base tones.
+ * Clean, authoritative, and grounded with zero generic glow, distortion, or decorative fluff.
  */
 export const ArtDirectedEncryption: React.FC = () => {
   return (
     <span className="relative inline-block select-none whitespace-nowrap shrink-0">
-      {/* Subtle organic ambient depth (soft, non-diffuse back illumination) */}
       <span
-        aria-hidden="true"
-        className="absolute -inset-x-2 -inset-y-1 pointer-events-none rounded-xl blur-2xl bg-emerald-500/12"
-      />
-
-      {/* 
-        Refined Emerald-Mint-Cyan Typography:
-        Continuous silky chromatic drift with crisp legibility against iridescent motion
-      */}
-      <motion.span
-        animate={{
-          backgroundPosition: ['0% 35%', '100% 65%', '0% 35%'],
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-        className="relative z-10 inline-block font-black tracking-tight text-transparent bg-clip-text select-none drop-shadow-[0_2px_14px_rgba(3,38,30,0.65)] drop-shadow-[0_4px_24px_rgba(0,0,0,0.4)]"
+        className="relative z-10 inline-block font-black tracking-tight text-transparent bg-clip-text select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.55)]"
         style={{
           backgroundImage:
-            'linear-gradient(135deg, #f0fdf4 0%, #a7f3d0 16%, #34d399 38%, #10b981 62%, #0d9488 82%, #06b6d4 100%)',
-          backgroundSize: '240% 240%',
+            'linear-gradient(155deg, #a7f3d0 0%, #34d399 22%, #10b981 48%, #059669 75%, #064e3b 100%)',
         }}
       >
         Encryption
-      </motion.span>
+      </span>
     </span>
   );
 };
