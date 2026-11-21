@@ -99,53 +99,55 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
               >
                 {/* 
                   ReactDrops SoapBubbleButton:
-                  - Bubble UI with 3D liquid membrane, curved window specular arc & bevel reflections
-                  - Translucent "Glass White" aesthetic (NOT solid/opaque white paint)
-                  - Zero rainbow iridescence for clean, monochrome crystal clarity
-                  - Calm motion (wobble 0.05, interactive 0.15)
+                  - Luminous Frosted "Glass White" (NOT dark grey, NOT flat opaque paint)
+                  - High brightness & saturation glass diffusion with white edge specular lighting
+                  - Crystal clear bevel, window arc highlight, and subtle liquid physics
+                  - Crisp high-contrast typography with stationary arrow
                 */}
                 <SoapBubbleMaterial
                   backdrop={pageRef}
                   glass={1.0}
-                  seeThrough={0.85}
-                  mirage={0.8}
-                  refraction={0.12}
-                  reflectivity={1.3}
-                  bevel={14}
+                  seeThrough={0.7}
+                  mirage={0.9}
+                  refraction={0.14}
+                  reflectivity={1.6}
+                  bevel={16}
                   iridescence={0}
                   oilOpacity={0}
                   oilCoverage={0}
                   dispersion={0}
-                  clearCenter={0.7}
-                  thickness={450}
+                  clearCenter={0.65}
+                  thickness={480}
                   drainage={0.05}
                   swirl={0.15}
                   speed={0.35}
                   wobble={0.05}
                   windowLight={true}
-                  windowLength={1.2}
+                  windowLength={1.3}
                   windowMargin={0.85}
                   windowBend={0.75}
-                  windowIntensity={0.85}
-                  tint="rgba(255, 255, 255, 0.12)"
+                  windowIntensity={1.1}
+                  bottomShade={true}
+                  bottomShadeColor="rgba(255, 255, 255, 0.7)"
+                  tint="rgba(255, 255, 255, 0.42)"
                   soapHighlightColor="rgba(255, 255, 255, 1.0)"
-                  soapShadeColor="transparent"
-                  soapColor="transparent"
                   environment="window"
                 >
                   <SoapBubbleButton
                     interactive={0.15}
                     onClick={onNavigateToSimulator}
-                    className="flex items-center gap-2.5 px-8 py-3.5 text-sm font-semibold text-white cursor-pointer shadow-[0_12px_40px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.45),0_0_24px_rgba(255,255,255,0.12)] border border-white/35 hover:border-white/60 backdrop-blur-2xl transition-all duration-300"
+                    className="flex items-center gap-2.5 px-9 py-3.5 text-sm sm:text-base font-bold text-slate-900 cursor-pointer shadow-[0_16px_40px_rgba(0,0,0,0.35),0_0_30px_rgba(255,255,255,0.4),inset_0_1px_2px_rgba(255,255,255,1),inset_0_-1px_2px_rgba(255,255,255,0.5)] border border-white/80 hover:border-white hover:shadow-[0_20px_50px_rgba(0,0,0,0.4),0_0_40px_rgba(255,255,255,0.55),inset_0_1px_2px_rgba(255,255,255,1)] transition-all duration-300"
                     style={{
-                      background: 'rgba(255, 255, 255, 0.10)',
-                      color: '#ffffff',
+                      background: 'rgba(255, 255, 255, 0.38)',
+                      backdropFilter: 'blur(24px) saturate(190%) brightness(125%)',
+                      WebkitBackdropFilter: 'blur(24px) saturate(190%) brightness(125%)',
+                      color: '#0f172a',
                     }}
                   >
-                    <span className="tracking-wide drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+                    <span className="tracking-tight text-slate-900 font-bold drop-shadow-[0_1px_1px_rgba(255,255,255,0.6)]">
                       Let's take a deep dive
                     </span>
-                    <span className="text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+                    <span className="text-slate-900 font-extrabold text-base ml-1">
                       &rarr;
                     </span>
                   </SoapBubbleButton>
