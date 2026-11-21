@@ -10,17 +10,19 @@ interface E2EEHomePageProps {
 /**
  * Art-Directed Typography for "Encryption"
  * Features a distinctive, non-uniform gradient transitioning from luminous mint highlights
- * into rich WhatsApp emerald and deep forest emerald base tones.
- * Clean, authoritative, and grounded with zero generic glow, distortion, or decorative fluff.
+ * into rich WhatsApp emerald and refined deep emerald base tones.
+ * Tuned for maximum legibility across all letterforms (ensuring full clarity on descenders like 'y' and 'p')
+ * with zero generic glow, distortion, or decorative fluff.
  */
 export const ArtDirectedEncryption: React.FC = () => {
   return (
-    <span className="relative inline-block select-none whitespace-nowrap shrink-0">
+    <span className="relative inline-block select-none whitespace-nowrap shrink-0 py-1">
       <span
-        className="relative z-10 inline-block font-black tracking-tight text-transparent bg-clip-text select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.55)]"
+        className="relative z-10 inline-block font-black tracking-tight text-transparent bg-clip-text select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.55)] pb-1"
         style={{
           backgroundImage:
-            'linear-gradient(155deg, #a7f3d0 0%, #34d399 22%, #10b981 48%, #059669 75%, #064e3b 100%)',
+            'linear-gradient(155deg, #a7f3d0 0%, #34d399 26%, #10b981 54%, #059669 82%, #047857 100%)',
+          WebkitBackgroundClip: 'text',
         }}
       >
         Encryption
@@ -44,6 +46,14 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
     autoHideTimerRef.current = setTimeout(() => {
       setIsOpen(false);
     }, 5000);
+  };
+
+  // When leaving the hotline range, immediately close the pop-up button
+  const handleHotlineLeave = () => {
+    if (autoHideTimerRef.current) {
+      clearTimeout(autoHideTimerRef.current);
+    }
+    setIsOpen(false);
   };
 
   // Lifecycle:
@@ -113,11 +123,13 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
 
         {/* 
           Interactive SoapBubble Button & Hotline Area:
-          - Pops up after estimated reading time (~4.5s), stays for 5s, and smoothly hides.
-          - Or triggers upon hovering the hotline area, stays for 5s, and smoothly hides.
+          - Automatically triggers after ~4.5s reading time, staying for 5s then smoothly hiding.
+          - Hovering the hotline area shows the button.
+          - Leaving the hotline area immediately closes the pop-up button.
         */}
         <div
           onMouseEnter={triggerShowFor5Seconds}
+          onMouseLeave={handleHotlineLeave}
           className="fixed bottom-10 sm:bottom-14 left-0 right-0 h-24 z-40 flex items-center justify-center pointer-events-auto"
         >
           <AnimatePresence>
