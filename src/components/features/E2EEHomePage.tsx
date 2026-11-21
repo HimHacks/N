@@ -1,12 +1,83 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShieldCheck, Lock, Sparkles, ArrowRight, KeyRound } from 'lucide-react';
 import { E2EEPageBackground } from './E2EEPageBackground';
 import { SoapBubbleButton, SoapBubbleMaterial } from '../soap-bubble';
 
 interface E2EEHomePageProps {
   onNavigateToSimulator: () => void;
 }
+
+const ASCII_CHARS = '01#@$%&*<>[]{}~=+/\\_|^!?XYZ0101';
+
+export const AsciiGlitchText: React.FC<{ text: string }> = ({ text }) => {
+  const [displayText, setDisplayText] = useState(text);
+  const [isGlitching, setIsGlitching] = useState(false);
+  const frameRef = useRef<number | null>(null);
+
+  const triggerGlitch = useCallback(() => {
+    if (isGlitching) return;
+    setIsGlitching(true);
+    let iteration = 0;
+    const totalSteps = text.length * 3;
+
+    const step = () => {
+      setDisplayText(
+        text
+          .split('')
+          .map((char, index) => {
+            if (char === ' ') return ' ';
+            if (index < iteration / 3) {
+              return text[index];
+            }
+            return ASCII_CHARS[Math.floor(Math.random() * ASCII_CHARS.length)];
+          })
+          .join('')
+      );
+
+      iteration++;
+      if (iteration <= totalSteps) {
+        frameRef.current = requestAnimationFrame(step);
+      } else {
+        setDisplayText(text);
+        setIsGlitching(false);
+      }
+    };
+
+    frameRef.current = requestAnimationFrame(step);
+  }, [text, isGlitching]);
+
+  // Periodic cryptographic scramble every 4.2 seconds + trigger on hover
+  useEffect(() => {
+    const interval = setInterval(() => {
+      triggerGlitch();
+    }, 4200);
+    return () => {
+      clearInterval(interval);
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    };
+  }, [triggerGlitch]);
+
+  return (
+    <span
+      onMouseEnter={triggerGlitch}
+      className={`inline-block cursor-pointer select-none transition-all duration-150 ${
+        isGlitching
+          ? 'text-emerald-400 font-mono tracking-wider'
+          : 'text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300'
+      }`}
+      style={
+        isGlitching
+          ? {
+              textShadow:
+                '0 0 14px rgba(16, 185, 129, 0.95), 2px 2px 0px #021a14, -2px -2px 0px #021a14, 0 0 24px rgba(6, 182, 212, 0.65)',
+            }
+          : undefined
+      }
+    >
+      {displayText}
+    </span>
+  );
+};
 
 export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulator }) => {
   const pageRef = useRef<HTMLDivElement>(null);
@@ -15,8 +86,8 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
   const dismissTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Timed pop-up logic:
-  // After ~5.5s (reading time), the interactive bubble button appears, stays for 6s, and auto-dismisses smoothly.
-  // Hovering over the bottom strip brings it back at any time.
+  // After ~4.5s (reading time), the interactive bubble button appears, stays for 6s, and auto-dismisses smoothly.
+  // Hovering over the bottom hotzone brings it back at any time.
   useEffect(() => {
     const entranceTimer = setTimeout(() => {
       setIsTimedActive(true);
@@ -36,142 +107,52 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
 
   return (
     <E2EEPageBackground preset="whatsapp-iridescent">
-      {/* Viewport Frame */}
+      {/* Centered Main Viewport Container */}
       <main
         ref={pageRef}
         data-theme="dark"
-        className="relative flex min-h-screen flex-col justify-between px-6 sm:px-12 py-8 select-none overflow-hidden"
+        className="relative flex min-h-screen flex-col items-center justify-center px-6 sm:px-12 py-12 select-none overflow-hidden"
       >
-        {/* Top Navigation Bar — Matches React Bits Pro Lumen Architecture (Image 1) */}
-        <header className="relative z-20 flex items-center justify-between w-full max-w-7xl mx-auto">
-          {/* Brand Logo & Identifier */}
-          <div className="flex items-center gap-3 cursor-default">
-            <div className="relative flex items-center justify-center w-8 h-8 rounded-full border border-emerald-400/60 bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-            </div>
-            <span className="text-sm font-semibold tracking-wide text-white/95">
-              The Syntax Unveilers
-            </span>
-          </div>
-
-          {/* Frosted Glass Navigation Pill */}
-          <nav className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-full bg-white/[0.08] backdrop-blur-xl border border-white/15 shadow-[0_4px_24px_rgba(0,0,0,0.3)]">
-            <span className="hidden md:inline-block px-3 py-1 text-xs font-semibold tracking-wider text-white/70 hover:text-white transition-colors cursor-pointer">
-              OVERVIEW
-            </span>
-            <span className="hidden md:inline-block px-3 py-1 text-xs font-semibold tracking-wider text-white/70 hover:text-white transition-colors cursor-pointer">
-              ARCHITECTURE
-            </span>
-            <span className="hidden sm:inline-block px-3 py-1 text-xs font-semibold tracking-wider text-white/70 hover:text-white transition-colors cursor-pointer">
-              SECURITY
-            </span>
-            <button
-              type="button"
-              onClick={onNavigateToSimulator}
-              className="px-4 py-1.5 rounded-full bg-black/90 hover:bg-black text-white text-xs font-bold tracking-wider shadow-md hover:shadow-cyan-500/20 transition-all cursor-pointer flex items-center gap-1.5 border border-white/10 hover:border-cyan-400/40"
-            >
-              <span>EXPLORE</span>
-              <ArrowRight className="w-3 h-3 text-cyan-400" />
-            </button>
-          </nav>
-        </header>
-
-        {/* Hero Content Section — Direct Lumen Layout & Scale (Image 1) */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto my-auto py-12 flex flex-col items-start justify-center text-left">
-          {/* Eyebrow Presenter Line */}
-          <motion.div
+        {/* Centered Hero Content Section */}
+        <div className="relative z-10 w-full max-w-5xl mx-auto flex flex-col items-center justify-center text-center -mt-8">
+          {/* Presenter Line: Exactly as originally written */}
+          <motion.p
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="flex items-center gap-2 mb-4"
+            className="text-xs sm:text-sm font-bold tracking-[0.25em] text-white uppercase text-center mb-4"
           >
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-[11px] font-bold tracking-widest text-emerald-300 uppercase">
-              <Lock className="w-3 h-3 text-emerald-400" />
-              E2EE Architecture
-            </span>
-            <span className="text-xs font-bold tracking-widest text-white/60 uppercase">
-              Canadian International School Singapore
-            </span>
-          </motion.div>
+            THE SYNTAX UNVEILERS Presents
+          </motion.p>
 
-          {/* Headline: Huge, Bold, Heroic Typography */}
+          {/* Headline: Huge, Bold, Centered with communicate-without-limits Gradient and ASCII Glitch on ENCRYPTION */}
           <motion.h1
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1 }}
-            className="text-4xl sm:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight text-white leading-[1.04] max-w-5xl"
+            className="text-5xl sm:text-7xl lg:text-8xl xl:text-9xl font-black tracking-tight text-center leading-[1.08]"
           >
-            Protect what matters, <br className="hidden sm:inline" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300">
-              communicate without limits.
+              END-TO-END{' '}
             </span>
+            <br className="hidden sm:inline" />
+            <AsciiGlitchText text="ENCRYPTION" />
           </motion.h1>
 
-          {/* Subtitle Overview */}
+          {/* Clean shortened overview */}
           <motion.p
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-base sm:text-lg lg:text-xl text-slate-200/90 leading-relaxed font-normal max-w-2xl mt-6"
+            className="text-sm sm:text-base md:text-lg text-slate-300/90 leading-relaxed font-normal max-w-xl mx-auto text-center mt-6"
           >
-            The all-in-one cryptographic showcase for modern secure communication.
-            Messages are encrypted on-device using the Signal Protocol and AES-256-GCM — zero trust, zero leakage, impenetrable by design.
+            Messages are encrypted directly on your device. Only you and the recipient hold the keys.
           </motion.p>
         </div>
 
-        {/* Bottom Bar: Status Badges & Interactive Explorer Button */}
-        <footer className="relative z-20 flex flex-col sm:flex-row items-center justify-between w-full max-w-7xl mx-auto pt-6 gap-4">
-          {/* Left: Cryptographic Verification Badges */}
-          <div className="flex items-center gap-3 text-xs text-white/70">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] backdrop-blur-md border border-white/10">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              AES-256-GCM &bull; Signal Protocol
-            </span>
-            <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] backdrop-blur-md border border-white/10">
-              <KeyRound className="w-3.5 h-3.5 text-cyan-400" />
-              Client-Side Key Sovereignty
-            </span>
-          </div>
-
-          {/* Right: Quick Action Explorer Button (Always Visible in Lumen Style) */}
-          <div className="flex items-center gap-4">
-            <button
-              type="button"
-              onClick={onNavigateToSimulator}
-              className="group flex items-center gap-3 px-6 py-3 rounded-xl bg-white hover:bg-slate-100 text-black text-xs sm:text-sm font-bold tracking-wider shadow-2xl hover:shadow-[0_0_35px_rgba(6,182,212,0.4)] transition-all duration-200 cursor-pointer"
-            >
-              <span>EXPLORE THE SIMULATOR</span>
-              <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-black text-white group-hover:translate-x-1 transition-transform">
-                <ArrowRight className="w-3.5 h-3.5 text-cyan-400" />
-              </span>
-            </button>
-          </div>
-        </footer>
-
         {/* 
-          Right-Edge Floating Icons — Matches Image 1 Controls
-        */}
-        <aside className="hidden lg:flex fixed right-6 top-1/2 -translate-y-1/2 z-30 flex-col gap-3">
-          <button
-            type="button"
-            title="Cryptographic Integrity Verified"
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-black/40 backdrop-blur-xl border border-white/15 text-emerald-400 shadow-lg hover:border-emerald-400/60 hover:text-emerald-300 transition-all cursor-pointer"
-          >
-            <ShieldCheck className="w-5 h-5" />
-          </button>
-          <button
-            type="button"
-            onClick={onNavigateToSimulator}
-            title="Launch Phone Simulator"
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-black/40 backdrop-blur-xl border border-white/15 text-cyan-400 shadow-lg hover:border-cyan-400/60 hover:text-cyan-300 transition-all cursor-pointer"
-          >
-            <Sparkles className="w-5 h-5" />
-          </button>
-        </aside>
-
-        {/* 
-          Bottom Hot Zone & Interactive SoapBubble Button:
-          Appears automatically or when hovering across bottom strip.
+          Bottom Hot Zone & Interactive SoapBubble Button (Src 5):
+          Appears automatically after reading time or when hovering anywhere across the bottom strip.
         */}
         <div
           onMouseEnter={() => setIsHovered(true)}
@@ -181,7 +162,7 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
           <AnimatePresence>
             {showButton && (
               <motion.div
-                initial={{ y: 28, opacity: 0 }}
+                initial={{ y: 26, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: 24, opacity: 0 }}
                 transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
@@ -189,7 +170,7 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
               >
                 {/* 
                   ReactDrops SoapBubbleButton:
-                  Palette focused on Emerald, Cyan, Mint, and Deep Teal — with amplified Cyan accents.
+                  Palette focused on Emerald, Cyan, Mint, and Deep Teal.
                   Zero dispersion, calm wobble & silky fluid border dynamics.
                 */}
                 <SoapBubbleMaterial

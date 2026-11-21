@@ -82,40 +82,41 @@ void main() {
   uv = mat2(c, -s, s, c) * uv / uScale;
   uv += (uMouse - vec2(0.5)) * uAmplitude;
 
-  float d = -uTime * 0.5;
+  float d = -uTime * 0.45;
   float a = 0.0;
-  for (int i = 0; i < 24; i++) {
+  for (int i = 0; i < 16; i++) {
     if (i >= uDetail) break;
     float fi = float(i);
     a += cos(fi - d - a * uv.x * uWarp);
-    d += sin(uv.y * fi + a);
+    d += sin(uv.y * fi + a * 0.5);
   }
-  d += uTime * 0.5;
+  d += uTime * 0.45;
 
-  // Compute scalar harmonic fluid elevation from wave folding
-  float fold = sin(a * 1.3 + d * 0.7) * 0.5 + 0.5;
-  float waveX = cos(uv.x * d * 0.4 + a) * 0.5 + 0.5;
-  float waveY = sin(uv.y * a * 0.4 + d) * 0.5 + 0.5;
-  float t = clamp(fold * 0.6 + (waveX * waveY) * 0.4, 0.0, 1.0);
+  // Gentle, smooth harmonic silk elevation without clutter or tight wrinkles
+  float fold = sin(a * 1.1 + d * 0.6) * 0.5 + 0.5;
+  float waveX = cos(uv.x * d * 0.3 + a * 0.7) * 0.5 + 0.5;
+  float waveY = sin(uv.y * a * 0.3 + d * 0.7) * 0.5 + 0.5;
+  float t = clamp(fold * 0.65 + (waveX * waveY) * 0.35, 0.0, 1.0);
 
-  // 5-stop harmonic silk palette across WhatsApp Green, Emerald, Vibrant Cyan, Deep Crease, and Crisp White
+  // Smooth harmonic silk palette:
+  // Deep Emerald (#03261e) -> WhatsApp Green (#1da860) -> Radiant Mint (#2dd4bf) -> Oceanic Cyan (#06b6d4) -> Soft Silk Glint (#dcfce7)
   vec3 accent = (uHasAccent > 0.5) ? uAccentColor : uColor;
   vec3 col;
-  if (t < 0.28) {
-    col = mix(uDarkColor, uColor, smoothstep(0.0, 0.28, t));
-  } else if (t < 0.56) {
-    col = mix(uColor, accent, smoothstep(0.28, 0.56, t));
-  } else if (t < 0.82) {
-    col = mix(accent, uCyanColor, smoothstep(0.56, 0.82, t));
+  if (t < 0.24) {
+    col = mix(uDarkColor, uColor, smoothstep(0.0, 0.24, t));
+  } else if (t < 0.50) {
+    col = mix(uColor, accent, smoothstep(0.24, 0.50, t));
+  } else if (t < 0.76) {
+    col = mix(accent, uCyanColor, smoothstep(0.50, 0.76, t));
   } else {
-    col = mix(uCyanColor, uWhiteColor, smoothstep(0.82, 1.0, t));
+    col = mix(uCyanColor, uWhiteColor, smoothstep(0.76, 1.0, t));
   }
 
-  // Specular cursor sheen highlight with vibrant cyan-tinted white
+  // Specular cursor sheen highlight with soft cyan-tinted luminous glint
   vec2 toPointer = (vUv - uPointer.xy) * aspect;
   float pDist = dot(toPointer, toPointer);
-  vec3 sheenCol = mix(uWhiteColor, uCyanColor, 0.45);
-  col += sheenCol * uPointer.z * uSheen * 0.95 * exp(-pDist / 0.08);
+  vec3 sheenCol = mix(uWhiteColor, uCyanColor, 0.5);
+  col += sheenCol * uPointer.z * uSheen * 0.55 * exp(-pDist / 0.1);
 
   col = hueRotate(col, uHue);
   float luma = dot(col, vec3(0.2126, 0.7152, 0.0722));
@@ -153,23 +154,23 @@ const compile = (gl, type, source) => {
 
 const Iridescence = ({
   color = '#1da860',
-  accentColor = '#10b981',
-  cyanColor = '#00f0c0',
-  darkColor = '#031a14',
-  whiteColor = '#ffffff',
-  speed = 0.75,
-  amplitude = 0.12,
+  accentColor = '#2dd4bf',
+  cyanColor = '#06b6d4',
+  darkColor = '#03261e',
+  whiteColor = '#dcfce7',
+  speed = 0.65,
+  amplitude = 0.08,
   mouseReact = true,
   scale = 1,
-  detail = 8,
-  rotation = -40,
-  warp = 0.85,
+  detail = 5,
+  rotation = -35,
+  warp = 0.32,
   hueShift = 0,
   saturation = 1.05,
-  brightness = 1.35,
-  contrast = 1.15,
+  brightness = 1.18,
+  contrast = 1.05,
   stir = 0.45,
-  sheen = 0.35,
+  sheen = 0.28,
   clickSwirl = true,
   grain = 0,
   fade = 0,
@@ -352,19 +353,19 @@ const Iridescence = ({
       if (s.accentColorKey !== state.accentColorKey) {
         state.accentColorKey = s.accentColorKey;
         state.hasAccent = s.accentColor ? 1.0 : 0.0;
-        state.accentColor = parseColorToRgb(s.accentColor, '#10b981');
+        state.accentColor = parseColorToRgb(s.accentColor, '#2dd4bf');
       }
       if (s.cyanColorKey !== state.cyanColorKey) {
         state.cyanColorKey = s.cyanColorKey;
-        state.cyanColor = parseColorToRgb(s.cyanColor, '#00f0c0');
+        state.cyanColor = parseColorToRgb(s.cyanColor, '#06b6d4');
       }
       if (s.darkColorKey !== state.darkColorKey) {
         state.darkColorKey = s.darkColorKey;
-        state.darkColor = parseColorToRgb(s.darkColor, '#031a14');
+        state.darkColor = parseColorToRgb(s.darkColor, '#03261e');
       }
       if (s.whiteColorKey !== state.whiteColorKey) {
         state.whiteColorKey = s.whiteColorKey;
-        state.whiteColor = parseColorToRgb(s.whiteColor, '#ffffff');
+        state.whiteColor = parseColorToRgb(s.whiteColor, '#dcfce7');
       }
     };
 

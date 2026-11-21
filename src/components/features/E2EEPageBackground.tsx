@@ -52,12 +52,12 @@ export const E2EEPageBackground: React.FC<E2EEPageBackgroundProps> = ({
   let activeHue = hueShift;
 
   if (preset === 'whatsapp-iridescent') {
-    // Signature WhatsApp primary green, emerald, electric cyan hints, deep crease, and silk glints
+    // Harmonious blend of WhatsApp green, radiant mint, oceanic cyan, deep emerald, and soft silk glints
     activeColor = activeColor ?? '#1da860';
-    activeAccent = activeAccent ?? '#10b981';
-    activeCyan = activeCyan ?? '#00f0c0';
-    activeDark = activeDark ?? '#031a14';
-    activeWhite = activeWhite ?? '#ffffff';
+    activeAccent = activeAccent ?? '#2dd4bf';
+    activeCyan = activeCyan ?? '#06b6d4';
+    activeDark = activeDark ?? '#03261e';
+    activeWhite = activeWhite ?? '#dcfce7';
     activeHue = activeHue ?? 0;
   } else if (preset === 'whatsapp-dual') {
     activeColor = activeColor ?? '#064e3b';
@@ -150,12 +150,12 @@ export const E2EEPageBackground: React.FC<E2EEPageBackgroundProps> = ({
           stir={stir}
           sheen={sheen}
           scale={1}
-          detail={8}
-          warp={0.85}
-          rotation={-38}
+          detail={5}
+          warp={0.32}
+          rotation={-35}
           saturation={1.05}
-          contrast={1.15}
-          brightness={1.3}
+          contrast={1.05}
+          brightness={1.18}
           mouseReact={true}
           clickSwirl={true}
           grain={0}
