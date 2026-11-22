@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { SoapBubbleButton, SoapBubbleMaterial } from '../soap-bubble';
-import { LumenBloomBackground } from './LumenBloomBackground';
+import { LumenInteractiveShader } from './LumenInteractiveShader';
 
 interface E2EEHomePageProps {
   onNavigateToSimulator: (origin?: { x: number; y: number }) => void;
@@ -10,44 +10,57 @@ interface E2EEHomePageProps {
 export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulator }) => {
   const pageRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [canHover, setCanHover] = useState(false);
+  const [isReadingOver, setIsReadingOver] = useState(false);
   const autoHideTimerRef = useRef<NodeJS.Timeout | null>(null);
   const readingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isHoveredRef = useRef(false);
 
-  // Helper to open the pop-up button for precisely 5 seconds, then smoothly hide it
-  const triggerShowFor5Seconds = () => {
+  // Helper to open the pop-up button for precisely 5 seconds, then smoothly hide it unless hovered
+  const triggerAutoShow = () => {
     if (autoHideTimerRef.current) {
       clearTimeout(autoHideTimerRef.current);
     }
     setIsOpen(true);
     autoHideTimerRef.current = setTimeout(() => {
-      setIsOpen(false);
+      // Only auto-hide if user isn't hovering directly over the hotline zone
+      if (!isHoveredRef.current) {
+        setIsOpen(false);
+      }
     }, 5000);
   };
 
-  // Hovering anywhere in the bottom-right hotline zone triggers the pop-up button (after 6s reading time)
+  // Hovering anywhere in the bottom-right hotline zone triggers and keeps the pop-up button
   const handleHotlineEnter = () => {
-    if (!canHover) return;
-    triggerShowFor5Seconds();
-  };
-
-  // Leaving the hotline zone immediately closes the pop-up button
-  const handleHotlineLeave = () => {
+    if (!isReadingOver) return;
+    isHoveredRef.current = true;
     if (autoHideTimerRef.current) {
       clearTimeout(autoHideTimerRef.current);
     }
-    setIsOpen(false);
+    setIsOpen(true);
+  };
+
+  // Leaving the hotline zone gives a brief grace period then smoothly closes
+  const handleHotlineLeave = () => {
+    isHoveredRef.current = false;
+    if (autoHideTimerRef.current) {
+      clearTimeout(autoHideTimerRef.current);
+    }
+    autoHideTimerRef.current = setTimeout(() => {
+      if (!isHoveredRef.current) {
+        setIsOpen(false);
+      }
+    }, 400);
   };
 
   // Estimated reading time requirement:
   // The pop-up button will NOT appear until the 6-second reading time completes.
   // After 6 seconds, it pops up automatically, stays for 5 seconds, and drops down.
-  // After that, the hotline zone is active so hovering brings it right back up.
+  // After that, hovering anywhere in the bottom-right hotline zone reliably brings it up.
   useEffect(() => {
     readingTimerRef.current = setTimeout(() => {
-      setCanHover(true);
-      triggerShowFor5Seconds();
-    }, 6000); // Strict 6 seconds estimated reading time
+      setIsReadingOver(true);
+      triggerAutoShow();
+    }, 6000); // Exactly 6 seconds estimated reading time
 
     return () => {
       if (readingTimerRef.current) clearTimeout(readingTimerRef.current);
@@ -60,54 +73,41 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
       ref={pageRef}
       className="relative w-full min-h-screen overflow-x-hidden font-sans select-none"
       style={{
-        backgroundColor: '#03140e',
+        backgroundColor: '#043e2e',
         color: '#ffffff',
         fontFamily:
           '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
       }}
     >
       {/* 
-        Full-Screen Lumen WebGL2 Background (Soft Bloom Mode from the reference template video):
-        Calibrated to the exact green contrast translation:
-        - Pink -> Deep Forest Green (#042b1f)
-        - Blue -> Deep Emerald (#02402e)
-        - Purple -> Deep Signal Green (#00a884)
-        - Orange -> Slight Green / Mint (#25d366, #34d399)
-        - Background -> Deep Dark Forest (#03140e)
+        Full-Screen Interactive WebGL Fluid Background (Lumen Interactive Shader):
+        Calibrated with exact user requested color translations:
+        - Pink -> Deep Emerald (#043e2e)
+        - Light Blue -> Emerald (#059669)
+        - Purple -> Biscotti Cream (#eed9c4)
+        - Orange-yellowish -> Graphite Enamel (#242b2e)
+        - Orange -> Mint Lacquer (#4ade80)
       */}
       <div className="fixed inset-0 -z-10 w-full h-full pointer-events-none overflow-hidden">
-        <LumenBloomBackground
-          config={{
-            c1: '#00a884', // Deep Signal Emerald
-            c2: '#25d366', // Vibrant WhatsApp Green (Orange equivalent)
-            c3: '#043b2c', // Deep Emerald (Blue equivalent)
-            c4: '#34d399', // Mint / Slight Green
-            bg: '#03140e', // Deep Dark Forest Canvas
-            scale: 1.15,
-            warp: 0.95,
-            flow: 0.35,
-            soft: 1.25,
-            loop: 8.0,
-          }}
-        />
+        <LumenInteractiveShader />
 
-        {/* Soft edge & center vignette preserving typography readability */}
+        {/* Soft subtle edge vignette preserving crisp typography readability */}
         <div
           className="pointer-events-none absolute inset-0"
           style={{
             backgroundImage: `
-              radial-gradient(circle at 50% 35%, rgba(3, 20, 14, 0.1) 0%, rgba(3, 20, 14, 0.45) 100%),
-              linear-gradient(to bottom, rgba(3, 20, 14, 0.25) 0%, transparent 40%, rgba(2, 16, 11, 0.55) 100%)
+              radial-gradient(circle at 50% 40%, rgba(4, 62, 46, 0.05) 0%, rgba(4, 62, 46, 0.4) 100%),
+              linear-gradient(to bottom, rgba(4, 62, 46, 0.2) 0%, transparent 40%, rgba(4, 62, 46, 0.5) 100%)
             `,
           }}
         />
       </div>
 
       {/* 
-        Main Layout: Exactly matching the template from the video:
-        - Main text left-aligned in the hero section ("THE SYNTAX UNVEILERS PRESENTS", "End-to-End Encryption")
-        - Description copy on the bottom-left
-        - Soap Bubble Button on the bottom-right (pops up after 6s, and hoverable in the hotline zone)
+        Main Layout: Exactly matching the template reference layout:
+        - Left-aligned hero: "THE SYNTAX UNVEILERS PRESENTS" and "End-to-End Encryption"
+        - Bottom-left: Description copy
+        - Bottom-right: Soap Bubble Button (pops up after 6s, and re-accessible anytime via hotline)
       */}
       <main className="relative z-20 flex flex-col justify-between min-h-screen px-6 sm:px-12 md:px-20 py-12 w-full max-w-7xl mx-auto">
         {/* Top/Hero Left-Aligned Section */}
@@ -117,19 +117,17 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-xs sm:text-sm md:text-base font-bold tracking-[0.25em] text-[#34d399] uppercase text-left mb-4 drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)]"
+            className="text-xs sm:text-sm md:text-base font-bold tracking-[0.25em] text-[#a7f3d0] uppercase text-left mb-4 drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]"
           >
             THE SYNTAX UNVEILERS PRESENTS
           </motion.p>
 
-          {/* 
-            Headline: Single line across viewports with Art-directed / Optical Refracted Encryption
-          */}
+          {/* Headline: Single line across viewports with Art-directed / Optical Refracted Encryption */}
           <motion.h1
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1 }}
-            className="flex items-center text-left whitespace-nowrap flex-nowrap gap-x-2 sm:gap-x-3 md:gap-x-4 text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[1.04] select-none max-w-full overflow-visible py-1 drop-shadow-[0_4px_30px_rgba(0,0,0,0.35)]"
+            className="flex items-center text-left whitespace-nowrap flex-nowrap gap-x-2 sm:gap-x-3 md:gap-x-4 text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[1.04] select-none max-w-full overflow-visible py-1 drop-shadow-[0_4px_30px_rgba(0,0,0,0.45)]"
           >
             <span className="text-white font-black whitespace-nowrap shrink-0">
               End-to-End
@@ -139,7 +137,7 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                 className="relative z-10 inline-block font-black tracking-tight text-transparent bg-clip-text select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.55)] overflow-visible"
                 style={{
                   backgroundImage:
-                    'linear-gradient(155deg, #a7f3d0 0%, #34d399 32%, #10b981 58%, #059669 82%, #047857 100%)',
+                    'linear-gradient(155deg, #a7f3d0 0%, #4ade80 32%, #10b981 58%, #059669 82%, #047857 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitBoxDecorationBreak: 'clone',
                   boxDecorationBreak: 'clone',
@@ -152,7 +150,7 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
               </span>
               <span
                 aria-hidden="true"
-                className="absolute inset-0 z-20 pointer-events-none inline-block font-black tracking-tight text-transparent bg-clip-text select-none overflow-visible mix-blend-screen opacity-85"
+                className="absolute inset-0 z-20 pointer-events-none inline-block font-black tracking-tight text-transparent bg-clip-text select-none overflow-visible mix-blend-screen opacity-90"
                 style={{
                   backgroundImage:
                     'linear-gradient(125deg, transparent 10%, rgba(110,231,183,0.5) 28%, rgba(45,212,191,0.85) 42%, rgba(255,255,255,0.92) 50%, rgba(34,211,238,0.85) 58%, rgba(5,150,105,0.4) 72%, transparent 90%)',
@@ -179,20 +177,21 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-base sm:text-lg md:text-xl text-slate-100 font-normal max-w-xl text-left select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.4)]"
+            className="text-base sm:text-lg md:text-xl text-slate-100 font-normal max-w-xl text-left select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)]"
           >
             <span className="block">Messages are encrypted directly on your device. Only you and the recipient</span>
             <span className="block mt-0.5">hold the keys.</span>
           </motion.p>
 
           {/* 
-            Right-hand Hotline Zone (Generous 260px wide × 120px tall hitbox):
+            Right-hand Hotline Zone:
             - Before 6s: hidden, non-interactive.
             - At 6s: triggers automatic pop-up for 5 seconds.
             - After 6s: permanently active, so hovering anywhere in this zone reveals the button!
           */}
           <div
             onMouseEnter={handleHotlineEnter}
+            onMouseMove={handleHotlineEnter}
             onMouseLeave={handleHotlineLeave}
             className="relative h-28 w-full md:w-80 flex items-center justify-start md:justify-end pointer-events-auto cursor-pointer"
           >
@@ -205,7 +204,7 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                     opacity: 1,
                     scale: 1,
                     transition: {
-                      duration: 1.15,
+                      duration: 0.75,
                       ease: [0.16, 1, 0.3, 1],
                     },
                   }}
@@ -214,7 +213,7 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                     opacity: 0,
                     scale: 0.88,
                     transition: {
-                      duration: 0.5,
+                      duration: 0.45,
                       ease: [0.32, 0, 0.67, 0],
                     },
                   }}
@@ -274,6 +273,16 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
           </div>
         </div>
       </main>
+
+      {/* Persistent global hotline overlay after 6s in bottom-right corner to catch any hover approach */}
+      {isReadingOver && !isOpen && (
+        <div
+          onMouseEnter={handleHotlineEnter}
+          onMouseMove={handleHotlineEnter}
+          className="fixed bottom-0 right-0 w-80 h-32 z-30 pointer-events-auto cursor-pointer"
+          title="Hover to reveal button"
+        />
+      )}
 
       <style>{`
         @keyframes calibratedDispersion25 {
