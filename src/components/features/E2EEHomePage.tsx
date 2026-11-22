@@ -234,12 +234,12 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                   },
                 }}
                 exit={{
-                  y: 80,
+                  y: 40,
                   opacity: 0,
-                  scale: 0.8,
+                  scale: 0.88,
                   transition: {
-                    duration: 1.25,
-                    ease: [0.16, 1, 0.3, 1],
+                    duration: 0.55,
+                    ease: [0.32, 0, 0.67, 0],
                   },
                 }}
                 className="pointer-events-auto"
