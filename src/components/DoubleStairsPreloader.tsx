@@ -113,12 +113,12 @@ const DIGIT_PATTERNS: Record<string, number[][]> = {
   ],
 };
 
-// Dot Matrix Digit Component: Individual dots toggle crisply in place (zero blur, zero whole-digit slide)
+// Dot Matrix Digit Component: Pure bold black dots without any animation, blur, or grey transitions
 const SmoothDotMatrixDigit: React.FC<{
   char: string;
   dotSize?: number;
   color?: string;
-}> = ({ char, dotSize = 6, color = '#0f172a' }) => {
+}> = ({ char, dotSize = 6, color = '#000000' }) => {
   const pattern = DIGIT_PATTERNS[char] || DIGIT_PATTERNS['0'];
 
   return (
@@ -127,13 +127,12 @@ const SmoothDotMatrixDigit: React.FC<{
         row.map((active, cIdx) => (
           <div
             key={`${rIdx}-${cIdx}`}
-            className="rounded-full transition-all duration-120 ease-out"
+            className="rounded-full"
             style={{
               width: dotSize,
               height: dotSize,
-              backgroundColor: active ? color : '#f1f5f9',
-              opacity: active ? 1 : 0.18,
-              transform: active ? 'scale(1)' : 'scale(0.55)',
+              backgroundColor: active ? color : 'transparent',
+              opacity: active ? 1 : 0,
             }}
           />
         ))
@@ -272,35 +271,43 @@ export const DoubleStairsPreloader: React.FC<DoubleStairsPreloaderProps> = ({
                   Sized smaller (~82% max-width, ~78% max-height) with wide visible emerald perimeter border 
                 */}
                 <div className="relative w-full max-w-4xl h-[78vh] max-h-[580px] bg-[#fcfcfc] rounded-3xl shadow-[0_30px_90px_rgba(0,0,0,0.65)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-slate-200/60">
-                  {/* Top Bar Navigation */}
-                  <div className="flex items-center justify-between w-full text-xs font-mono tracking-wider text-slate-500 uppercase border-b border-slate-200/80 pb-3">
+                  {/* Top Bar Navigation: Mac window controls (red, yellow, green) */}
+                  <div className="flex items-center justify-between w-full border-b border-slate-200/80 pb-3.5">
+                    {/* Mac Window Control Buttons */}
                     <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="font-bold text-slate-900">GVH // SECURITY LAB</span>
-                    </div>
-                    <div className="hidden sm:flex items-center gap-5 text-[11px] font-medium text-slate-400">
-                      <span>PROTOCOL E2EE</span>
-                      <span>DIFFIE-HELLMAN</span>
-                      <span>3D SIMULATOR</span>
+                      <span className="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e]/50 shadow-sm cursor-pointer" />
+                      <span className="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea123]/50 shadow-sm cursor-pointer" />
+                      <span className="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29]/50 shadow-sm cursor-pointer" />
                     </div>
                   </div>
 
                   {/* Center Dot-Matrix Loading Telemetry */}
                   <div className="flex flex-col md:flex-row items-center justify-between my-auto w-full gap-8">
                     {/* Left: Status & Micro-Copy */}
-                    <div className="flex flex-col gap-4">
-                      <div className="inline-flex items-center gap-2">
-                        <span className="text-[11px] font-mono text-emerald-700 font-bold uppercase tracking-widest bg-emerald-50 px-3 py-1 rounded-full border border-emerald-300/60">
-                          INITIALIZING SIMULATOR...
-                        </span>
+                    <div className="flex flex-col gap-6">
+                      {/* Animated jumping letters: "initializing..." */}
+                      <div className="inline-flex items-center select-none">
+                        {'initializing...'.split('').map((letter, idx) => (
+                          <motion.span
+                            key={idx}
+                            className="font-mono text-sm sm:text-base font-bold text-slate-900 tracking-wider inline-block"
+                            animate={{
+                              y: [0, -6, 0],
+                            }}
+                            transition={{
+                              duration: 0.65,
+                              repeat: Infinity,
+                              ease: 'easeInOut',
+                              delay: idx * 0.05,
+                            }}
+                          >
+                            {letter}
+                          </motion.span>
+                        ))}
                       </div>
 
-                      <p className="max-w-sm text-xs font-mono text-slate-500 leading-relaxed uppercase">
-                        Compiling 3D phone physics model, capacitive touch matrix, and session keys.
-                      </p>
-
-                      {/* Directional Dot-Matrix Arrow */}
-                      <div className="flex items-center gap-3 mt-1">
+                      {/* Directional Dot-Matrix Arrow + Compiling */}
+                      <div className="flex items-center gap-3">
                         <div className="grid grid-cols-5 gap-[3px]">
                           {[
                             [0, 0, 1, 0, 0],
@@ -320,20 +327,20 @@ export const DoubleStairsPreloader: React.FC<DoubleStairsPreloaderProps> = ({
                             ))
                           )}
                         </div>
-                        <span className="text-[11px] font-mono text-slate-400 uppercase tracking-widest font-semibold">
-                          PROCESSING MATRIX
+                        <span className="text-xs font-mono text-slate-500 uppercase tracking-widest font-semibold">
+                          COMPILING...
                         </span>
                       </div>
                     </div>
 
-                    {/* Right: Big Dot-Matrix Counter with per-digit animation */}
+                    {/* Right: Big Dot-Matrix Counter with direct bold black numbers */}
                     <div className="flex items-center gap-2 sm:gap-3 bg-slate-100/90 px-6 py-5 rounded-2xl border border-slate-200/90 shadow-inner">
                       {digits.map((ch, idx) => (
                         <SmoothDotMatrixDigit
                           key={idx}
                           char={ch}
                           dotSize={6}
-                          color="#0f172a"
+                          color="#000000"
                         />
                       ))}
                     </div>
@@ -342,9 +349,6 @@ export const DoubleStairsPreloader: React.FC<DoubleStairsPreloaderProps> = ({
                   {/* Bottom Footer Telemetry */}
                   <div className="flex items-center justify-between w-full text-xs font-mono text-slate-400 border-t border-slate-200/80 pt-3.5">
                     <span className="text-slate-500 font-medium">THE SYNTAX UNVEILERS</span>
-                    <span className="text-emerald-600 font-bold tracking-wider">
-                      {progress < 100 ? 'PREPARING ASSETS...' : 'DEEP DIVE READY →'}
-                    </span>
                   </div>
                 </div>
               </motion.div>
