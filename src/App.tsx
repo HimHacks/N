@@ -1,28 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { E2EEHomePage } from './components/features/E2EEHomePage';
 import { E2EESimulatorPortal } from './components/features/E2EESimulatorPortal';
 import { DoubleStairsPreloader } from './components/DoubleStairsPreloader';
 
 export const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<'home' | 'simulator'>('home');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isPreloaderActive, setIsPreloaderActive] = useState(false);
 
-  useEffect(() => {
-    // Elegant entrance preloader timer (1.4s display before cascading double-stairs split)
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1400);
+  // Triggered when user clicks the "Let's take a deep dive" button
+  const handleStartDeepDive = () => {
+    setIsPreloaderActive(true);
+  };
 
-    return () => clearTimeout(timer);
-  }, []);
+  // Called when double stairs curtain finishes closing
+  const handlePreloaderComplete = () => {
+    // Switch to simulator view, then unlock the curtains
+    setCurrentView('simulator');
+    setTimeout(() => {
+      setIsPreloaderActive(false);
+    }, 200);
+  };
 
   return (
     <>
-      <DoubleStairsPreloader isLoading={isLoading} />
+      <DoubleStairsPreloader
+        isActive={isPreloaderActive}
+        onTransitionComplete={handlePreloaderComplete}
+      />
       {currentView === 'simulator' ? (
         <E2EESimulatorPortal onBackToHome={() => setCurrentView('home')} />
       ) : (
-        <E2EEHomePage onNavigateToSimulator={() => setCurrentView('simulator')} />
+        <E2EEHomePage onNavigateToSimulator={handleStartDeepDive} />
       )}
     </>
   );

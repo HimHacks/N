@@ -310,7 +310,7 @@ export function RefractedText({
     fontWeight: typography.fontWeight,
     letterSpacing: typography.letterSpacing,
     aspectRatio: `${virtualWidth} / 318`,
-    '--refracted-width': `${letters.length * 1.28}em`,
+    '--refracted-width': style?.width ? String(style.width) : `${letters.length * 0.72}em`,
   };
 
   useEffect(() => {

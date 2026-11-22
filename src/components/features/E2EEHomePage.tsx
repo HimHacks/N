@@ -41,7 +41,13 @@ export const ArtDirectedEncryption: React.FC = () => {
  */
 export const RefractedEncryption: React.FC = () => {
   return (
-    <span className="relative inline-flex items-center select-none whitespace-nowrap shrink-0 overflow-visible align-middle">
+    <span
+      className="relative inline-flex items-center justify-center select-none whitespace-nowrap shrink-0 overflow-visible align-middle"
+      style={{
+        fontSize: '1em',
+        lineHeight: 1,
+      }}
+    >
       <RefractedText
         text="Encryption"
         theme="dark"
@@ -66,6 +72,7 @@ export const RefractedEncryption: React.FC = () => {
         fixedBeam={false}
         paused={false}
         cursorMovesBeam={false}
+        fontSize="1em"
         fontFamily="'ReactDrops Square Display', 'Arial Black', sans-serif"
         fontWeight={900}
         letterSpacing="normal"
@@ -74,7 +81,7 @@ export const RefractedEncryption: React.FC = () => {
         cornerRounding={1}
         className="align-middle drop-shadow-[0_2px_14px_rgba(0,0,0,0.65)]"
         style={{
-          width: '7.8em',
+          width: '7.1em',
           height: '1.05em',
         }}
       />
