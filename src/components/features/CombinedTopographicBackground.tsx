@@ -90,10 +90,10 @@ export const CombinedTopographicBackground: React.FC<CombinedTopographicBackgrou
         )}
 
         {/* 
-          Layer 2: ReactDrops Topographic Flow with equal 1:1:1 ratio:
-          - Crisp Solid Black lines
-          - WhatsApp Emerald / Mint Green lines
-          - Security Crimson Red lines
+          Layer 2: ReactDrops Topographic Flow with exact 33.33% : 33.33% : 33.33% ratio:
+          - 33.33% Pure Solid Black lines (#000000)
+          - 33.33% WhatsApp Vibrant Green lines (#25D366)
+          - 33.33% WhatsApp Dark Emerald Green lines (#0b5c48)
         */}
         <TopographicFlow
           animateEntrance={true}
@@ -120,9 +120,9 @@ export const CombinedTopographicBackground: React.FC<CombinedTopographicBackgrou
           lineColor={'#000000'}
           accentColor={'#25D366'}
           linePalette={[
-            '#000000', // Pure Solid Black
-            '#25D366', // WhatsApp Vibrant Green
-            '#991b1b', // Security Crimson Red
+            '#000000', // Pure Solid Black (33.33%)
+            '#25D366', // WhatsApp Vibrant Green (33.33%)
+            '#0b5c48', // WhatsApp Deep Dark Green (33.33%)
           ]}
           lineStyle={'solid'}
           className="h-full w-full"
