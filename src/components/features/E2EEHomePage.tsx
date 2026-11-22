@@ -36,22 +36,23 @@ export const ArtDirectedEncryption: React.FC = () => {
 
 /**
  * Refracted Glass Optical Typography for "Encryption"
- * Implements a pure, lightweight CSS optical glass refraction effect:
- * - Crisp native typography perfectly matching "End-to-End"
- * - Multi-layer internal caustic beam that gently sweeps across the letter contours
- * - Subtle chromatic aberration / optical dispersion (emerald, mint, hints of cyan)
- * - Transparent optical material feel with zero blurriness, no chrome, no liquid distortion
+ * Implements an extremely subtle, low-intensity optical refraction:
+ * - NO traveling shine or left-to-right sweep across the letters
+ * - Crisp native Plus Jakarta Sans typography perfectly matching "End-to-End"
+ * - Deep, intentional emerald-to-mint glass body
+ * - Very delicate, stationary internal chromatic refraction with an ultra-slow breathing optical dispersion
+ * - Only perceptible on close inspection, preserving a refined, professional look
  */
 export const OpticalRefractedEncryption: React.FC = () => {
   return (
     <span className="relative inline-block select-none whitespace-nowrap shrink-0 overflow-visible align-baseline">
-      {/* Base Glass Material Layer with internal deep-emerald to bright-mint distribution */}
+      {/* Base Glass Material Layer: Rich, restrained emerald to mint palette */}
       <span
         className="relative z-10 inline-block font-black tracking-tight text-transparent bg-clip-text select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.55)] overflow-visible"
         style={{
           fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
           backgroundImage:
-            'linear-gradient(160deg, #a7f3d0 0%, #34d399 30%, #10b981 60%, #059669 82%, #047857 100%)',
+            'linear-gradient(155deg, #a7f3d0 0%, #34d399 32%, #10b981 58%, #059669 82%, #047857 100%)',
           WebkitBackgroundClip: 'text',
           WebkitBoxDecorationBreak: 'clone',
           boxDecorationBreak: 'clone',
@@ -63,19 +64,18 @@ export const OpticalRefractedEncryption: React.FC = () => {
         Encryption
       </span>
 
-      {/* Internal Optical Refraction Light Beam (Sweeps slowly across letter surfaces like light through optical glass) */}
+      {/* Extremely subtle stationary optical refraction dispersion (mint & subtle cyan hue shift) */}
       <span
         aria-hidden="true"
-        className="absolute inset-0 z-20 pointer-events-none inline-block font-black tracking-tight text-transparent bg-clip-text select-none overflow-visible mix-blend-screen opacity-75"
+        className="absolute inset-0 z-20 pointer-events-none inline-block font-black tracking-tight text-transparent bg-clip-text select-none overflow-visible mix-blend-screen opacity-25"
         style={{
           fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
           backgroundImage:
-            'linear-gradient(115deg, transparent 20%, rgba(110,231,183,0.3) 38%, rgba(45,212,191,0.85) 48%, rgba(255,255,255,0.95) 52%, rgba(34,211,238,0.7) 56%, rgba(16,185,129,0.25) 65%, transparent 80%)',
-          backgroundSize: '250% 100%',
+            'radial-gradient(ellipse 80% 60% at 50% 40%, rgba(45,212,191,0.5) 0%, rgba(16,185,129,0.2) 50%, transparent 100%)',
           WebkitBackgroundClip: 'text',
           WebkitBoxDecorationBreak: 'clone',
           boxDecorationBreak: 'clone',
-          animation: 'opticalRefractBeam 11s cubic-bezier(0.4, 0, 0.2, 1) infinite',
+          animation: 'subtleOpticalBreathe 9s ease-in-out infinite alternate',
           paddingBottom: '0.18em',
           marginBottom: '-0.18em',
           paddingRight: '0.04em',
@@ -84,14 +84,14 @@ export const OpticalRefractedEncryption: React.FC = () => {
         Encryption
       </span>
 
-      {/* Subtle glass edge highlight providing physical optical depth */}
+      {/* Delicate physical glass refraction rim: provides tactile optical clarity */}
       <span
         aria-hidden="true"
-        className="absolute inset-0 z-10 pointer-events-none inline-block font-black tracking-tight text-transparent bg-clip-text select-none overflow-visible opacity-30 mix-blend-overlay"
+        className="absolute inset-0 z-10 pointer-events-none inline-block font-black tracking-tight text-transparent bg-clip-text select-none overflow-visible opacity-20 mix-blend-overlay"
         style={{
           fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
           backgroundImage:
-            'linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, transparent 60%)',
+            'linear-gradient(175deg, rgba(255,255,255,0.7) 0%, rgba(167,243,208,0.2) 35%, transparent 70%)',
           WebkitBackgroundClip: 'text',
           WebkitBoxDecorationBreak: 'clone',
           boxDecorationBreak: 'clone',
@@ -104,15 +104,14 @@ export const OpticalRefractedEncryption: React.FC = () => {
       </span>
 
       <style>{`
-        @keyframes opticalRefractBeam {
-          0%, 15% {
-            background-position: 150% 0%;
-          }
-          50%, 65% {
-            background-position: -40% 0%;
+        @keyframes subtleOpticalBreathe {
+          0% {
+            opacity: 0.18;
+            filter: contrast(100%);
           }
           100% {
-            background-position: -40% 0%;
+            opacity: 0.32;
+            filter: contrast(105%);
           }
         }
       `}</style>
