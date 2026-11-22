@@ -5,13 +5,6 @@ export interface LumenInteractiveShaderProps {
   style?: React.CSSProperties;
 }
 
-// User specified exact color palette translations:
-// Pink -> Deep Emerald: #043e2e / [0.016, 0.243, 0.180]
-// Light Blue -> Emerald: #059669 / [0.020, 0.588, 0.412]
-// Purple -> Biscotti Cream: #eed9c4 / [0.933, 0.851, 0.769]
-// Orange-yellowish -> Graphite Enamel: #242b2e / [0.141, 0.169, 0.180]
-// Orange -> Mint Lacquer: #4ade80 / [0.290, 0.870, 0.500]
-
 const VERT_SHADER = `
 attribute vec2 position;
 varying vec2 v;
@@ -105,7 +98,6 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
     const container = containerRef.current;
     if (!container) return;
 
-    // Create canvas matching upstream
     const canvas = document.createElement('canvas');
     canvas.style.position = 'absolute';
     canvas.style.inset = '0';
@@ -154,7 +146,7 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
 
     gl.useProgram(program);
 
-    // Big fullscreen triangle geometry [-1, -1, 3, -1, -1, 3] from upstream Triangle class
+    // Big fullscreen triangle geometry [-1, -1, 3, -1, -1, 3] from upstream
     const buf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     gl.bufferData(
@@ -180,23 +172,21 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
     const u_pal_rgScale = gl.getUniformLocation(program, 'u_pal_rgScale');
     const u_brightness = gl.getUniformLocation(program, 'u_brightness');
 
-    // Set colors matching user specification:
-    // Pink -> Deep Emerald: [0.016, 0.243, 0.180]
-    // Purple -> Biscotti Cream: [0.933, 0.851, 0.769]
-    // Orange-yellowish -> Graphite Enamel: [0.141, 0.169, 0.180]
-    // Orange -> Mint Lacquer: [0.290, 0.870, 0.500]
-    // Cursor glow (Light Blue -> Emerald): [0.020, 0.588, 0.412]
-    gl.uniform3f(u_pal_base, 0.016, 0.243, 0.180);   // Deep Emerald
-    gl.uniform3f(u_pal_warm, 0.933, 0.851, 0.769);   // Biscotti Cream
-    gl.uniform3f(u_pal_mid, 0.141, 0.169, 0.180);    // Graphite Enamel
-    gl.uniform3f(u_pal_cool, 0.290, 0.870, 0.500);   // Mint Lacquer
-    gl.uniform3f(u_pal_cursor, 0.020, 0.588, 0.412); // Emerald
+    // Vibrant calibrated green translation of upstream "Warm" (brightness: 2.5):
+    // 1. base (deep forest green canvas): [0.015, 0.08, 0.045]
+    // 2. warm (rich vibrant deep emerald replacing coral/pink): [0.04, 0.75, 0.45]
+    // 3. mid (warm luminous biscotti cream & mint replacing peach/golden): [0.88, 0.82, 0.65]
+    // 4. cool (vibrant emerald green replacing sky blue): [0.05, 0.65, 0.35]
+    // 5. cursor (electric mint & cyan glint wake): [0.12, 0.45, 0.35]
+    gl.uniform3f(u_pal_base, 0.015, 0.08, 0.045);
+    gl.uniform3f(u_pal_warm, 0.04, 0.75, 0.45);
+    gl.uniform3f(u_pal_mid, 0.88, 0.82, 0.65);
+    gl.uniform3f(u_pal_cool, 0.05, 0.65, 0.35);
+    gl.uniform3f(u_pal_cursor, 0.12, 0.45, 0.35);
     gl.uniform3f(u_pal_rgScale, 1.0, 1.0, 1.0);
-    gl.uniform1f(u_brightness, 1.85);
+    gl.uniform1f(u_brightness, 2.5); // Exact upstream brightness
 
-    // Exact pointer tracking matching upstream:
-    // k = target pointer coords in canvas pixels, M = smoothed pointer coords
-    // T = target cursor intensity (1 when inside, 0 when out), E = smoothed intensity
+    // Pointer tracking matching upstream:
     let k = [0, 0];
     let M = [0, 0];
     let T = 0;
@@ -216,7 +206,7 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
       const x = (e.clientX - rect.left) * (canvas.width / rect.width);
       const y = (e.clientY - rect.top) * (canvas.height / rect.height);
       k[0] = x;
-      k[1] = canvas.height - y; // Flip Y for WebGL
+      k[1] = canvas.height - y;
       T = 1;
     };
 
@@ -259,14 +249,11 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
     });
     resizeObserver.observe(container);
 
-    // Exact 60fps delta-timed animation loop from upstream:
-    // t: (now - N) * 0.001
-    // pointer lerp: 1 - Math.pow(0.88, dt / R)
-    // intensity lerp: 1 - Math.pow(0.94, dt / R)
+    // Exact 60fps delta-timed animation loop from upstream
     let animId = 0;
     const N = performance.now();
     let P = N;
-    const R = 1000 / 60; // 16.666ms frame step
+    const R = 1000 / 60;
 
     const frameLoop = () => {
       animId = requestAnimationFrame(frameLoop);
@@ -282,7 +269,6 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
       const intensityFactor = 1 - Math.pow(0.94, dt / R);
       E += (T - E) * intensityFactor;
 
-      // Realtime continuous animated time t matching upstream: (now - N) * 0.001
       const timeVal = (now - N) * 0.001;
       gl.uniform1f(u_t, timeVal);
       gl.uniform2f(u_c, M[0], M[1]);

@@ -81,23 +81,17 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
     >
       {/* 
         Full-Screen Interactive WebGL Fluid Background (Lumen Interactive Shader):
-        Calibrated with exact user requested color translations:
-        - Pink -> Deep Emerald (#043e2e)
-        - Light Blue -> Emerald (#059669)
-        - Purple -> Biscotti Cream (#eed9c4)
-        - Orange-yellowish -> Graphite Enamel (#242b2e)
-        - Orange -> Mint Lacquer (#4ade80)
       */}
       <div className="fixed inset-0 -z-10 w-full h-full pointer-events-none overflow-hidden">
         <LumenInteractiveShader />
 
-        {/* Soft subtle edge vignette preserving crisp typography readability */}
+        {/* Soft subtle edge vignette preserving crisp typography readability without burying colors */}
         <div
           className="pointer-events-none absolute inset-0"
           style={{
             backgroundImage: `
-              radial-gradient(circle at 50% 40%, rgba(4, 62, 46, 0.05) 0%, rgba(4, 62, 46, 0.4) 100%),
-              linear-gradient(to bottom, rgba(4, 62, 46, 0.2) 0%, transparent 40%, rgba(4, 62, 46, 0.5) 100%)
+              radial-gradient(circle at 50% 40%, transparent 0%, rgba(3, 20, 14, 0.25) 100%),
+              linear-gradient(to bottom, rgba(3, 20, 14, 0.15) 0%, transparent 40%, rgba(3, 20, 14, 0.35) 100%)
             `,
           }}
         />
