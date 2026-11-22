@@ -170,21 +170,23 @@ export const DoubleStairsPreloader: React.FC<DoubleStairsPreloaderProps> = ({
 
   useEffect(() => {
     if (phase === 'loading') {
-      setProgress(0);
-      let currentVal = 0;
+      setProgress(1);
+      let currentVal = 1;
+      // Increment 1 by 1 from 1 to 100 with ~36ms interval (~3.6s total)
+      // Every single digit (1, 2, 3, 4, ... 100%) is clearly visible to the human eye
       const interval = setInterval(() => {
-        currentVal += Math.floor(Math.random() * 8 + 5);
+        currentVal += 1;
         if (currentVal >= 100) {
           currentVal = 100;
           setProgress(100);
           clearInterval(interval);
           setTimeout(() => {
             if (onLoadingComplete) onLoadingComplete();
-          }, 350);
+          }, 450);
         } else {
           setProgress(currentVal);
         }
-      }, 55);
+      }, 36);
       return () => clearInterval(interval);
     } else if (phase === 'idle') {
       setProgress(0);
@@ -212,11 +214,12 @@ export const DoubleStairsPreloader: React.FC<DoubleStairsPreloaderProps> = ({
           */}
           {columns.map((_, index) => {
             // Forward cascade when closing (left to right)
-            const forwardDelay = index * 0.055;
-            // Reverse mirrored cascade when opening (right to left)
-            const reverseDelay = (totalColumns - 1 - index) * 0.055;
+            const forwardDelay = index * 0.07;
+            // Majestic, clearly visible reverse mirrored cascade when opening (right to left)
+            const reverseDelay = (totalColumns - 1 - index) * 0.12;
 
             const currentDelay = isStairsClosed ? forwardDelay : reverseDelay;
+            const currentDuration = isStairsClosed ? 0.65 : 0.95;
 
             return (
               <div key={index} className="relative flex-1 h-full flex flex-col z-10 pointer-events-none">
@@ -226,7 +229,7 @@ export const DoubleStairsPreloader: React.FC<DoubleStairsPreloaderProps> = ({
                   initial={{ y: '-100%' }}
                   animate={{ y: isStairsClosed ? '0%' : '-100%' }}
                   transition={{
-                    duration: 0.62,
+                    duration: currentDuration,
                     ease: customEase,
                     delay: currentDelay,
                   }}
@@ -240,7 +243,7 @@ export const DoubleStairsPreloader: React.FC<DoubleStairsPreloaderProps> = ({
                   initial={{ y: '100%' }}
                   animate={{ y: isStairsClosed ? '0%' : '100%' }}
                   transition={{
-                    duration: 0.62,
+                    duration: currentDuration,
                     ease: customEase,
                     delay: currentDelay,
                   }}
