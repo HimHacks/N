@@ -15,13 +15,13 @@ export interface LumenInteractiveShaderProps {
 const VERT_SHADER = `
 attribute vec2 position;
 varying vec2 v;
-void main() {
+void main(){
   v = position;
   gl_Position = vec4(position, 0.0, 1.0);
 }
 `;
 
-// Exact upstream GLSL extracted from https://rbp-shader-template.vercel.app/
+// Exact upstream GLSL from https://rbp-shader-template.vercel.app/
 const FRAG_SHADER = `
 precision mediump float;
 varying vec2 v;
@@ -29,6 +29,7 @@ uniform float t;
 uniform vec2 r;
 uniform vec2 c;
 uniform float ci;
+
 uniform vec3 u_pal_base;
 uniform vec3 u_pal_warm;
 uniform vec3 u_pal_mid;
@@ -60,6 +61,7 @@ float m(vec2 u){
 
 void main(){
   vec2 uv = (v * 0.5 + 0.5) * r / r.x;
+
   vec2 cn = c / r.x;
   vec2 toC = uv - cn;
   float dC = length(toC);
@@ -70,6 +72,7 @@ void main(){
     n(uv * 6.0 + vec2(0.0, t * 1.1))
   ) - 0.5;
   vec2 disp = sh * fall * 0.55;
+
   uv = uv * 5.0 + disp * 5.0;
 
   vec2 d1 = vec2( 0.18,  0.07) * t;
@@ -78,11 +81,15 @@ void main(){
 
   float a = m(uv + d1);
   vec3 col = mix(u_pal_base, u_pal_warm, a * 2.5);
+
   float b = m(uv + a * 2.4 + d2);
   col = mix(col, u_pal_mid, b * 1.5);
+
   float dd = m(uv + b * 3.5 + d3);
   col = mix(col, u_pal_cool, dd);
+
   col += u_pal_cursor * fall;
+
   col *= u_pal_rgScale;
   gl_FragColor = vec4(col * u_brightness, 1.0);
 }
@@ -92,20 +99,31 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
   className = '',
   style,
 }) => {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const container = containerRef.current;
+    if (!container) return;
+
+    // Create canvas matching upstream
+    const canvas = document.createElement('canvas');
+    canvas.style.position = 'absolute';
+    canvas.style.inset = '0';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.display = 'block';
+    container.appendChild(canvas);
 
     const gl = canvas.getContext('webgl', {
       alpha: false,
       antialias: false,
+      depth: false,
+      stencil: false,
+      premultipliedAlpha: false,
       powerPreference: 'high-performance',
     });
     if (!gl) return;
 
-    // Helper to compile shaders
     const createShader = (glCtx: WebGLRenderingContext, type: number, src: string) => {
       const s = glCtx.createShader(type);
       if (!s) return null;
@@ -136,12 +154,12 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
 
     gl.useProgram(program);
 
-    // Full-screen quad geometry
+    // Big fullscreen triangle geometry [-1, -1, 3, -1, -1, 3] from upstream Triangle class
     const buf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     gl.bufferData(
       gl.ARRAY_BUFFER,
-      new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
+      new Float32Array([-1, -1, 3, -1, -1, 3]),
       gl.STATIC_DRAW
     );
 
@@ -174,89 +192,139 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
     gl.uniform3f(u_pal_cool, 0.290, 0.870, 0.500);   // Mint Lacquer
     gl.uniform3f(u_pal_cursor, 0.020, 0.588, 0.412); // Emerald
     gl.uniform3f(u_pal_rgScale, 1.0, 1.0, 1.0);
-    gl.uniform1f(u_brightness, 1.08);
+    gl.uniform1f(u_brightness, 1.85);
 
-    // Interactive state (cursor tracking & fluid wake)
-    let mouseX = window.innerWidth * 0.5;
-    let mouseY = window.innerHeight * 0.5;
-    let targetIntensity = 0.0;
-    let currentIntensity = 0.0;
-    let lastMoveTime = 0;
+    // Exact pointer tracking matching upstream:
+    // k = target pointer coords in canvas pixels, M = smoothed pointer coords
+    // T = target cursor intensity (1 when inside, 0 when out), E = smoothed intensity
+    let k = [0, 0];
+    let M = [0, 0];
+    let T = 0;
+    let E = 0;
 
-    const handleMouseMove = (e: MouseEvent) => {
-      mouseX = e.clientX;
-      mouseY = window.innerHeight - e.clientY; // Flip Y for WebGL
-      targetIntensity = 1.0;
-      lastMoveTime = performance.now();
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length > 0) {
-        mouseX = e.touches[0].clientX;
-        mouseY = window.innerHeight - e.touches[0].clientY;
-        targetIntensity = 1.0;
-        lastMoveTime = performance.now();
+    const handlePointerMove = (e: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      if (
+        e.clientX < rect.left ||
+        e.clientX > rect.right ||
+        e.clientY < rect.top ||
+        e.clientY > rect.bottom
+      ) {
+        T = 0;
+        return;
       }
+      const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+      const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+      k[0] = x;
+      k[1] = canvas.height - y; // Flip Y for WebGL
+      T = 1;
     };
 
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    const handlePointerLeave = () => {
+      T = 0;
+    };
 
-    let animId: number;
-    let startTime = performance.now();
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    window.addEventListener('pointerleave', handlePointerLeave, { passive: true });
+    window.addEventListener('blur', handlePointerLeave);
 
-    const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {
+    // Resize handling matching upstream
+    let resizeReq = 0;
+    let lastW = 0;
+    let lastH = 0;
+
+    const handleResize = () => {
+      const rect = container.getBoundingClientRect();
+      const w = Math.max(1, Math.round(rect.width));
+      const h = Math.max(1, Math.round(rect.height));
+      if (w !== lastW || h !== lastH) {
+        lastW = w;
+        lastH = h;
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
         canvas.width = Math.floor(w * dpr);
         canvas.height = Math.floor(h * dpr);
         gl.viewport(0, 0, canvas.width, canvas.height);
+        gl.uniform2f(u_r, canvas.width, canvas.height);
       }
     };
 
-    resize();
-    window.addEventListener('resize', resize);
+    handleResize();
+    const resizeObserver = new ResizeObserver(() => {
+      if (!resizeReq) {
+        resizeReq = requestAnimationFrame(() => {
+          resizeReq = 0;
+          handleResize();
+        });
+      }
+    });
+    resizeObserver.observe(container);
 
-    const render = () => {
+    // Exact 60fps delta-timed animation loop from upstream:
+    // t: (now - N) * 0.001
+    // pointer lerp: 1 - Math.pow(0.88, dt / R)
+    // intensity lerp: 1 - Math.pow(0.94, dt / R)
+    let animId = 0;
+    const N = performance.now();
+    let P = N;
+    const R = 1000 / 60; // 16.666ms frame step
+
+    const frameLoop = () => {
+      animId = requestAnimationFrame(frameLoop);
       const now = performance.now();
-      const elapsed = (now - startTime) * 0.0006; // Calm natural fluid flow
+      const dt = now - P;
+      if (dt < R - 1) return;
+      P = now - (dt % R);
 
-      // Decay cursor interaction smoothly
-      if (now - lastMoveTime > 120) {
-        targetIntensity = 0.0;
-      }
-      currentIntensity += (targetIntensity - currentIntensity) * 0.06;
+      const pointerFactor = 1 - Math.pow(0.88, dt / R);
+      M[0] += (k[0] - M[0]) * pointerFactor;
+      M[1] += (k[1] - M[1]) * pointerFactor;
 
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-      gl.uniform1f(u_t, elapsed);
-      gl.uniform2f(u_r, canvas.width, canvas.height);
-      gl.uniform2f(u_c, mouseX * dpr, mouseY * dpr);
-      gl.uniform1f(u_ci, currentIntensity);
+      const intensityFactor = 1 - Math.pow(0.94, dt / R);
+      E += (T - E) * intensityFactor;
 
-      gl.drawArrays(gl.TRIANGLES, 0, 6);
-      animId = requestAnimationFrame(render);
+      // Realtime continuous animated time t matching upstream: (now - N) * 0.001
+      const timeVal = (now - N) * 0.001;
+      gl.uniform1f(u_t, timeVal);
+      gl.uniform2f(u_c, M[0], M[1]);
+      gl.uniform1f(u_ci, E);
+
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
     };
 
-    animId = requestAnimationFrame(render);
+    animId = requestAnimationFrame(frameLoop);
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(animId);
+        animId = 0;
+      } else if (!animId) {
+        P = performance.now();
+        animId = requestAnimationFrame(frameLoop);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       cancelAnimationFrame(animId);
-      window.removeEventListener('resize', resize);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('touchmove', handleTouchMove);
+      cancelAnimationFrame(resizeReq);
+      resizeObserver.disconnect();
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerleave', handlePointerLeave);
+      window.removeEventListener('blur', handlePointerLeave);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       gl.deleteBuffer(buf);
       gl.deleteProgram(program);
       gl.deleteShader(vert);
       gl.deleteShader(frag);
+      canvas.remove();
     };
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className={`absolute inset-0 w-full h-full block ${className}`}
+    <div
+      ref={containerRef}
+      className={`absolute inset-0 w-full h-full overflow-hidden ${className}`}
       style={{
         ...style,
       }}
