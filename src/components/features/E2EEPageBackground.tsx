@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import FloatingLines from '../FloatingLines';
+import FluxLines from '../FluxLines';
 
 export interface E2EEPageBackgroundProps {
   children?: React.ReactNode;
@@ -25,48 +25,49 @@ export const E2EEPageBackground: React.FC<E2EEPageBackgroundProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Exact dark theme inspired by the Onda aesthetic with WhatsApp encryption accents:
-  // Pure deep black backdrop, dark emerald depths, vibrant WhatsApp green ribbon cores,
-  // and subtle glowing mint highlights.
-  const ondaGradient = [
-    '#059669', // Rich Emerald Green
+  // Signature WhatsApp & Onda magnetic fluid streamline colors:
+  // Dark emerald depths, vibrant WhatsApp green ribbon paths, mint accents, and deep forest hues
+  const ondaFluxColors = [
+    '#059669', // Emerald
     '#25D366', // Signature WhatsApp Green
     '#34d399', // Radiant Mint
-    '#10b981', // Emerald
-    '#0b5c48', // Deep Forest Green
-    '#064e3b', // Dark WhatsApp Pine
+    '#10b981', // Emerald Mint
+    '#0b5c48', // Deep Forest
+    '#128c7e', // WhatsApp Teal-Green
   ];
 
   return (
-    <div className={`relative w-full min-h-screen text-white bg-[#030705] ${className}`}>
-      {/* Fixed Fullscreen Page Background Layer (Hardware-accelerated Floating Lines) */}
+    <div className={`relative w-full min-h-screen text-white bg-[#020504] ${className}`}>
+      {/* Fixed Fullscreen Page Background Layer */}
       <div
         ref={containerRef}
         className="fixed inset-0 -z-10 h-screen w-screen overflow-hidden pointer-events-auto select-none bg-[#020504]"
       >
-        <FloatingLines
-          linesGradient={ondaGradient}
+        <FluxLines
+          colors={ondaFluxColors}
           backgroundColor="#020504"
-          lineCount={[10, 14, 10]}
-          lineDistance={[4, 5, 4]}
-          animationSpeed={0.65}
-          amplitude={1.1}
-          lineWidth={1.2}
-          glow={1.4}
-          brightness={1.15}
-          depthOfField={0.3}
-          edgeFade={0.15}
-          interactive={true}
-          bendRadius={3.0}
-          bendStrength={-0.35}
-          mouseDamping={0.06}
-          parallax={true}
-          parallaxStrength={0.18}
+          transparent={false}
+          speed={0.45}
+          scale={1.4}
+          turbulence={0.9}
+          fluidity={0.12}
+          rimWidth={0.25}
+          sharpness={2.2}
+          shimmer={1.2}
+          glow={2.2}
+          lineWidth={1.5}
+          flowDirection="down"
+          opacity={0.95}
+          mouseInteraction={true}
+          mouseStrength={1.2}
+          mouseRadius={0.45}
+          mouseDampening={0.12}
           clickSwirl={true}
+          intro={false}
           className="h-full w-full"
         />
 
-        {/* Cinematic subtle edge & center vignette to keep typography crystal legible */}
+        {/* Soft edge & center vignette to keep typography crystal legible */}
         <div
           className="pointer-events-none absolute inset-0"
           style={{
