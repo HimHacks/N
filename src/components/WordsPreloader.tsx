@@ -7,6 +7,7 @@ export type WordPreloaderPhase = 'idle' | 'expanding' | 'loading' | 'exiting';
 
 interface WordsPreloaderProps {
   phase: WordPreloaderPhase;
+  buttonOrigin?: { x: number; y: number } | null;
   onExpanded?: () => void;
   onLoadingComplete?: () => void;
   onExited?: () => void;
@@ -163,6 +164,7 @@ const InstantDotMatrixDigit: React.FC<{ char: string; dotSize?: number; color?: 
 
 export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   phase,
+  buttonOrigin,
   onExpanded,
   onLoadingComplete,
   onExited,
@@ -186,13 +188,13 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
     if (phase === 'loading') {
       const interval = setInterval(() => {
         setWordIndex((prev) => (prev + 1) % CRYPTO_WORDS.length);
-      }, 420);
+      }, 450);
       return () => clearInterval(interval);
     }
   }, [phase]);
 
-  // Numerical counter: Every single digit from 1% to 100% visible, ~42ms per tick (~4.2s total)
-  // Gives the rising Soffit gradient the exact time to rise and bloom from the bottom
+  // Compiling duration: Approximately 6 seconds total (1% -> 100% at ~60ms per tick)
+  // This gives the large WebGL2 Soffit gradient plenty of time to expand and bloom from the bottom
   useEffect(() => {
     if (phase === 'loading') {
       setProgress(1);
@@ -209,7 +211,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
         } else {
           setProgress(current);
         }
-      }, 42);
+      }, 58); // 100 ticks * 58ms = ~5.8s + 0.5s settle = ~6.3 seconds total
       return () => clearInterval(interval);
     } else if (phase === 'idle') {
       setProgress(0);
@@ -219,10 +221,12 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
 
   const { width, height } = dimensions;
 
-  // Skiper 8 SVG Curve Math (Dennis Snellenberg organic curve)
-  // When sliding up to exit, the bottom edge pulls into an elastic quadratic bezier curve
-  const initialPath = `M0 0 L${width} 0 L${width} ${height} Q${width / 2} ${height + 350} 0 ${height} L0 0`;
-  const targetPath = `M0 0 L${width} 0 L${width} ${height} Q${width / 2} ${height} 0 ${height} L0 0`;
+  // Exact button coordinate origin for the expanding circle (defaults to center 50% 90% if not set)
+  const originX = buttonOrigin ? `${Math.round(buttonOrigin.x)}px` : '50%';
+  const originY = buttonOrigin ? `${Math.round(buttonOrigin.y)}px` : '90%';
+
+  const initialClip = `circle(0px at ${originX} ${originY})`;
+  const expandedClip = `circle(160vmax at ${originX} ${originY})`;
 
   const customEase = [0.76, 0, 0.24, 1] as const;
 
@@ -231,50 +235,52 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
 
   const isVisible = phase !== 'idle';
 
-  // Exact Soffit gradient configuration integrating cyan, vibrant green, and dark green
+  // Exact Soffit gradient configuration:
+  // tilt: 0 (flat horizontal bands across the bottom),
+  // with rich cyan, vibrant emerald, and deep dark green
   const soffitConfig: SoffitGradientConfig = {
     bgColor: '#021512',   // Deep dark green base
     colorA: '#04382c',    // Deep forest green
     colorB: '#059669',    // Vibrant emerald green
     colorC: '#22d3ee',    // Electric Cyan
     colorD: '#6ee7b7',    // Luminous Mint-Green highlight
-    ambient: 0.24,
-    amount: 0.2,
-    bounce: 0.38,
-    bounceCurve: 4.25,
-    breathe: 0.29,
-    contrast: 2.45,
-    cursor: 1,
-    curve: 3.32,
-    direct: 0.97,
-    dither: 0.58,
-    flow: 0.475,
-    glow: 0.38,
+    scale: 0.65,          // Larger scale for prominent fluid ripples
+    speed: 0.28,
+    tilt: 0.0,            // FLAT horizontal orientation (not diagonal)
+    rock: 0.06,           // Gentle horizontal undulation
+    horizon: -0.15,       // Centered lower band
+    breathe: 0.25,
+    spread: 0.6,
+    curve: 2.8,
+    direct: 0.85,
+    bounce: 0.25,
+    bounceCurve: 2.5,
+    spillCentre: 0.0,
+    spillWidth: 1.8,
+    spillFloor: 0.2,
+    amount: 0.24,
+    warp: 2.2,
+    warpScale: 0.65,
+    flow: 0.38,
+    roughness: 0.35,
+    lacunarity: 2.0,
+    motes: 0.05,
+    moteScale: 7,
+    ambient: 0.18,
+    contrast: 2.2,
+    midpoint: 0.55,
+    sink: 0.22,
+    glow: 0.35,
     grain: 0,
     grainAnim: 0,
-    horizon: 0.36,
-    lacunarity: 1.99,
-    lift: 0.11,
+    dither: 0.8,
+    vignette: 0.15,
+    steer: 0.0,           // Keeps light flat
+    lift: 0.08,
+    sweep: 0.2,
+    cursor: 1,
+    parallax: 0.008,
     maxDpr: 1,
-    midpoint: 0.57,
-    moteScale: 7,
-    motes: 0.074,
-    parallax: 0.0137,
-    rock: 0.12,
-    roughness: 0.29,
-    scale: 1,
-    sink: 0.24,
-    speed: 0.33,
-    spillCentre: 0.3,
-    spillFloor: 0.26,
-    spillWidth: 2.18,
-    spread: 0.41,
-    steer: -0.13,
-    sweep: 0.5,
-    tilt: 1.87,
-    vignette: 0.21,
-    warp: 2.58,
-    warpScale: 0.78,
   };
 
   return (
@@ -282,30 +288,28 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
       {isVisible && (
         <div className="fixed inset-0 z-[120] pointer-events-auto overflow-hidden select-none">
           {/*
-            Phase 1: Black screen expands directly FROM THE BUBBLE BUTTON
-            (fixed at bottom: 80px, center: 50% 92%) spreading outward across the entire website.
-            Phase 2: Compiling studio card + Skiper 8 Cycling Words + Rising Soffit WebGL2 Gradient at bottom.
-            Phase 3: Smooth Dennis Snellenberg elastic curve sliding up to reveal simulator.
+            Phase 1 (Expanding): Black screen bursts outward directly FROM THE BUBBLE BUTTON.
+            Phase 2 (Loading): Compiling card + 6-second rising flat Soffit gradient from bottom.
+            Phase 3 (Exiting): Reverse word preloader — the black screen smoothly contracts back
+            into the bubble button origin, revealing the loaded simulator page!
           */}
           <motion.div
             className="fixed inset-0 z-30 flex items-center justify-center bg-[#070b0e]"
-            initial={{ clipPath: 'circle(0% at 50% 92%)' }}
+            initial={{ clipPath: initialClip }}
             animate={
               phase === 'expanding'
                 ? {
-                    clipPath: 'circle(150% at 50% 92%)',
-                    y: 0,
-                    transition: { duration: 1.05, ease: customEase },
+                    clipPath: expandedClip,
+                    transition: { duration: 1.1, ease: customEase },
                   }
                 : phase === 'loading'
                 ? {
-                    clipPath: 'circle(150% at 50% 92%)',
-                    y: 0,
+                    clipPath: expandedClip,
                   }
                 : phase === 'exiting'
                 ? {
-                    y: '-100vh',
-                    transition: { duration: 0.85, ease: customEase, delay: 0.15 },
+                    clipPath: initialClip,
+                    transition: { duration: 0.95, ease: customEase },
                   }
                 : {}
             }
@@ -318,10 +322,9 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
             }}
           >
             {/*
-              SOFFIT WEBGL2 GRADIENT RISING FROM THE BOTTOM OF THE WEBSITE:
-              As the preloader loads, this hardware-accelerated animated gradient
-              (cyan, emerald green, and dark green) slowly rises up from y: 100% to y: 0%
-              and breathes at the bottom (h-[480px]), matching the recording exactly.
+              LARGE FLAT SOFFIT WEBGL2 GRADIENT RISING FROM THE BOTTOM:
+              Covers 65% of the screen height (h-[65vh]), rising up over 5.5s so it
+              slowly and gracefully blooms to full scale as compiling reaches 100%.
             */}
             <motion.div
               initial={{ y: '100%', opacity: 0 }}
@@ -330,43 +333,31 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   ? {
                       y: '0%',
                       opacity: 1,
-                      transition: { duration: 2.8, ease: [0.16, 1, 0.3, 1] },
+                      transition: { duration: 5.2, ease: [0.16, 1, 0.3, 1] },
                     }
                   : phase === 'exiting'
                   ? {
                       opacity: 0,
-                      transition: { duration: 0.3 },
+                      transition: { duration: 0.4 },
                     }
                   : {}
               }
-              className="absolute bottom-0 left-0 right-0 h-[480px] pointer-events-none overflow-hidden z-10"
+              className="absolute bottom-0 left-0 right-0 h-[65vh] min-h-[480px] pointer-events-none overflow-hidden z-10"
             >
               <SoffitGradient
                 config={soffitConfig}
-                className="w-full h-full opacity-90"
+                className="w-full h-full opacity-95"
               />
 
-              {/* Seamless top blend into the pitch black screen */}
+              {/* Seamless flat top blend into the pitch black screen */}
               <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
                   background:
-                    'linear-gradient(to top, transparent 0%, rgba(7, 11, 14, 0.45) 50%, #070b0e 100%)',
+                    'linear-gradient(to top, transparent 0%, rgba(7, 11, 14, 0.25) 40%, rgba(7, 11, 14, 0.85) 80%, #070b0e 100%)',
                 }}
               />
             </motion.div>
-
-            {/* SVG Elastic Curve underneath the curtain (morphs from sag to flat as it lifts off) */}
-            {width > 0 && phase === 'exiting' && (
-              <svg className="absolute top-0 left-0 w-full h-[calc(100%+350px)] pointer-events-none -z-10">
-                <motion.path
-                  fill="#070b0e"
-                  initial={{ d: initialPath }}
-                  animate={{ d: targetPath }}
-                  transition={{ duration: 0.75, ease: customEase }}
-                />
-              </svg>
-            )}
 
             {/* Compiling Studio Card & Skiper 8 Word Preloader */}
             <AnimatePresence>

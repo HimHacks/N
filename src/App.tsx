@@ -6,16 +6,21 @@ import { WordsPreloader, type WordPreloaderPhase } from './components/WordsPrelo
 export const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<'home' | 'simulator'>('home');
   const [preloaderPhase, setPreloaderPhase] = useState<WordPreloaderPhase>('idle');
+  const [buttonOrigin, setButtonOrigin] = useState<{ x: number; y: number } | null>(null);
 
   // Triggered when user clicks the "Let's take a deep dive" bubble button on HomePage
-  const handleStartDeepDive = () => {
-    // 1. Black bubble spreads outward across the entire screen
+  // origin contains the exact viewport coordinates of the bubble button
+  const handleStartDeepDive = (origin?: { x: number; y: number }) => {
+    if (origin) {
+      setButtonOrigin(origin);
+    }
+    // 1. Black screen expands directly outward from the bubble button
     setPreloaderPhase('expanding');
   };
 
   // Called when the spreading bubble curtain covers the entire screen
   const handleBubbleExpanded = () => {
-    // 2. Open the compiling card with cycling crypto words and 1% -> 100% counter
+    // 2. Open compiling card with cycling crypto words and 6s counter with rising flat Soffit gradient
     setPreloaderPhase('loading');
   };
 
@@ -24,11 +29,12 @@ export const App: React.FC = () => {
     // 3. Mount the simulator portal behind the curtain
     setCurrentView('simulator');
 
-    // 4. Elastic curve (Skiper 8 / Dennis Snellenberg) lifts up off the screen to reveal the simulator
+    // 4. Reverse word preloader: the black curtain smoothly contracts back into the bubble button origin,
+    // revealing the loaded simulator portal!
     setPreloaderPhase('exiting');
   };
 
-  // Called when the curved curtain finishes exiting
+  // Called when the reverse preloader finishes contracting
   const handlePreloaderExited = () => {
     setPreloaderPhase('idle');
   };
@@ -37,6 +43,7 @@ export const App: React.FC = () => {
     <>
       <WordsPreloader
         phase={preloaderPhase}
+        buttonOrigin={buttonOrigin}
         onExpanded={handleBubbleExpanded}
         onLoadingComplete={handleLoadingComplete}
         onExited={handlePreloaderExited}

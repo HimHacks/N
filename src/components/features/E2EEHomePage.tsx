@@ -5,7 +5,7 @@ import { SoapBubbleButton, SoapBubbleMaterial } from '../soap-bubble';
 import { RefractedText } from '../refracted-text';
 
 interface E2EEHomePageProps {
-  onNavigateToSimulator: () => void;
+  onNavigateToSimulator: (origin?: { x: number; y: number }) => void;
 }
 
 /**
@@ -275,7 +275,14 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                 >
                   <SoapBubbleButton
                     interactive={0.2}
-                    onClick={onNavigateToSimulator}
+                    onClick={(e) => {
+                      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                      const origin = {
+                        x: rect.left + rect.width / 2,
+                        y: rect.top + rect.height / 2,
+                      };
+                      onNavigateToSimulator(origin);
+                    }}
                     className="flex items-center gap-2.5 px-7 py-3 text-sm font-medium text-white shadow-[0_12px_45px_rgba(0,0,0,0.7),0_0_28px_rgba(6,182,212,0.3)] border border-white/20 hover:border-cyan-400/60 hover:shadow-[0_12px_50px_rgba(0,0,0,0.8),0_0_36px_rgba(6,182,212,0.45)] backdrop-blur-2xl transition-all duration-200 cursor-pointer"
                     style={{
                       background: 'rgba(14, 22, 24, 0.82)',
