@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { TopographicFlow } from '../topographic-flow';
 
 interface CombinedTopographicBackgroundProps {
@@ -13,23 +13,15 @@ export const CombinedTopographicBackground: React.FC<CombinedTopographicBackgrou
   is3dShaded = true,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
 
-  // Forward viewport pointer events to the TopographicFlow canvas host
-  // so cursor hover interactions (rings, ripples, deformation) trigger anywhere on screen.
+  // High performance pointer forwarding without React state re-renders (zero React lag)
   useEffect(() => {
     let ticking = false;
 
     const handlePointerMove = (e: PointerEvent) => {
       if (!ticking) {
         requestAnimationFrame(() => {
-          // Update dynamic 3D lighting coordinates
-          setMousePos({
-            x: Math.round((e.clientX / window.innerWidth) * 100),
-            y: Math.round((e.clientY / window.innerHeight) * 100),
-          });
-
-          // Forward synthetic pointermove to TopographicFlow host element
+          // Forward synthetic pointermove directly to TopographicFlow host element
           const hostEl = containerRef.current?.querySelector('.topographic-flow');
           if (hostEl) {
             hostEl.dispatchEvent(
@@ -83,29 +75,32 @@ export const CombinedTopographicBackground: React.FC<CombinedTopographicBackgrou
     <div className={`relative w-full min-h-screen ${className}`}>
       {/* Fixed Full-Viewport Topographic Flow Canvas */}
       <div ref={containerRef} className="fixed inset-0 -z-10 h-screen w-screen overflow-hidden">
-        {/* Layer 1: 3D Volumetric Elevation Shading & Interactive Lighting (Image 1 depth relief) */}
+        {/* Layer 1: Static lightweight ambient lighting gradient */}
         {is3dShaded && (
           <div
-            className="absolute inset-0 pointer-events-none opacity-55 mix-blend-multiply transition-all duration-300 ease-out"
+            className="absolute inset-0 pointer-events-none opacity-50 mix-blend-multiply"
             style={{
               backgroundImage: `
-                radial-gradient(circle at ${mousePos.x}% ${mousePos.y}%, rgba(0, 0, 0, 0.09) 0%, transparent 45%),
-                radial-gradient(circle at ${100 - mousePos.x * 0.5}% ${100 - mousePos.y * 0.5}%, rgba(0, 0, 0, 0.12) 0%, transparent 60%),
-                radial-gradient(circle at 30% 25%, rgba(0, 0, 0, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.08) 0%, transparent 60%),
+                radial-gradient(circle at 20% 20%, rgba(0, 0, 0, 0.06) 0%, transparent 50%),
                 linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(220, 226, 235, 0.3) 100%)
               `,
             }}
           />
         )}
 
-        {/* Layer 2: Official ReactDrops Topographic Flow with alternating WhatsApp-themed palette */}
-        {/* Rich palette: Dominant WhatsApp emerald (#25D366, #128C7E, #51b68a), secure dark crimson/red (#991b1b, #be123c), and deep charcoal (#1f2937) */}
+        {/* 
+          Layer 2: ReactDrops Topographic Flow with equal 1:1:1 ratio:
+          - Crisp Solid Black lines
+          - WhatsApp Emerald / Mint Green lines
+          - Security Crimson Red lines
+        */}
         <TopographicFlow
           animateEntrance={true}
           scale={460}
-          density={5.2}
-          speed={2.2}
-          distortion={2.8}
+          density={4.6}
+          speed={1.9}
+          distortion={2.5}
           lineWidth={1.4}
           opacity={1}
           dashLength={7}
@@ -113,26 +108,21 @@ export const CombinedTopographicBackground: React.FC<CombinedTopographicBackgrou
           seed={42}
           gradientDiffusion={0}
           paused={false}
-          hover={0.85}
-          hoverRadius={240}
-          hoverFollow={0.12}
+          hover={0.7}
+          hoverRadius={200}
+          hoverFollow={0.15}
           hoverFade={0.7}
           hoverEffect={'rings'}
           backgroundColor={'#ffffff'}
           backgroundImage={'none'}
           gradientColors={[]}
           grain={0}
-          lineColor={'#25D366'}
-          accentColor={'#128C7E'}
+          lineColor={'#000000'}
+          accentColor={'#25D366'}
           linePalette={[
-            '#000000', // Crisp Solid Black
-            '#25D366', // Vibrant WhatsApp Green
-            '#111827', // Deep Carbon Black
-            '#128C7E', // Dark Emerald Teal
-            '#881337', // Dark Crimson / Security Red
-            '#000000', // Crisp Solid Black
-            '#51b68a', // Mint Green
-            '#991b1b', // Ruby Red
+            '#000000', // Pure Solid Black
+            '#25D366', // WhatsApp Vibrant Green
+            '#991b1b', // Security Crimson Red
           ]}
           lineStyle={'solid'}
           className="h-full w-full"
