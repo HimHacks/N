@@ -99,7 +99,8 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
     const container = containerRef.current;
     if (!container) return;
 
-    // Use exact upstream OGL Renderer
+    // Direct 1:1 implementation of upstream ShaderCanvas
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const renderer = new Renderer({
       alpha: false,
       antialias: false,
@@ -107,7 +108,7 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
       stencil: false,
       premultipliedAlpha: false,
       powerPreference: 'high-performance',
-      dpr: Math.min(window.devicePixelRatio || 1, 1.5),
+      dpr: 1,
     });
 
     const gl = renderer.gl;
@@ -119,15 +120,15 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
     canvas.style.display = 'block';
     container.appendChild(canvas);
 
-    // Exact upstream geometry: Triangle
     const geometry = new Triangle(gl);
 
-    // Calibrated vibrant green contrast matching user specifications:
-    // Pink -> Deep Emerald [0.04, 0.75, 0.45]
-    // Light Blue -> Mint/Emerald [0.05, 0.65, 0.35]
-    // Purple -> Biscotti Cream [0.88, 0.82, 0.65]
-    // Orange-yellowish -> Graphite [0.12, 0.18, 0.15]
-    // Base: Deep dark green forest [0.015, 0.08, 0.045]
+    // Exact calibrated color spectrum replacing warm coral/peach/cyan:
+    // Pink -> Deep Emerald: [0.03, 0.68, 0.40]
+    // Light Blue -> Vibrant Emerald: [0.04, 0.58, 0.32]
+    // Purple -> Biscotti Cream: [0.92, 0.86, 0.72]
+    // Orange-yellowish -> Graphite Enamel: [0.12, 0.16, 0.14]
+    // Base: Deep dark green canvas [0.015, 0.08, 0.045]
+    // Cursor: Electric Mint glint [0.12, 0.45, 0.35]
     const program = new Program(gl, {
       vertex: VERT_SHADER,
       fragment: FRAG_SHADER,
@@ -140,9 +141,9 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
         c: { value: [0, 0] },
         ci: { value: 0 },
         u_pal_base: { value: [0.015, 0.08, 0.045] },
-        u_pal_warm: { value: [0.04, 0.75, 0.45] },
-        u_pal_mid: { value: [0.88, 0.82, 0.65] },
-        u_pal_cool: { value: [0.05, 0.65, 0.35] },
+        u_pal_warm: { value: [0.03, 0.68, 0.40] },
+        u_pal_mid: { value: [0.92, 0.86, 0.72] },
+        u_pal_cool: { value: [0.04, 0.58, 0.32] },
         u_pal_cursor: { value: [0.12, 0.45, 0.35] },
         u_pal_rgScale: { value: [1.0, 1.0, 1.0] },
         u_brightness: { value: 2.5 },
@@ -150,8 +151,8 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
     });
 
     const mesh = new Mesh(gl, { geometry, program });
+    renderer.dpr = Math.min(window.devicePixelRatio || 1, 1.5);
 
-    // Resize handling matching upstream
     let resizeReq = 0;
     let lastW = 0;
     let lastH = 0;
@@ -181,7 +182,6 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
     });
     resizeObserver.observe(container);
 
-    // Pointer tracking matching upstream
     let k = [0, 0];
     let M = [0, 0];
     let T = 0;
@@ -213,7 +213,8 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
     window.addEventListener('pointerleave', handlePointerLeave, { passive: true });
     window.addEventListener('blur', handlePointerLeave);
 
-    // 60fps delta-timed animation loop from upstream
+    // Exact animation loop & intersection observer from upstream
+    let isVisible = true;
     let animId = 0;
     const N = performance.now();
     let P = N;
@@ -221,6 +222,11 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
 
     const frameLoop = () => {
       animId = requestAnimationFrame(frameLoop);
+      if (!isVisible) {
+        cancelAnimationFrame(animId);
+        animId = 0;
+        return;
+      }
       const now = performance.now();
       const dt = now - P;
       if (dt < R - 1) return;
@@ -241,15 +247,35 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
       renderer.render({ scene: mesh });
     };
 
-    animId = requestAnimationFrame(frameLoop);
+    if (reducedMotion) {
+      program.uniforms.t.value = 0;
+      renderer.render({ scene: mesh });
+    } else {
+      frameLoop();
+    }
+
+    const intersectionObserver = new IntersectionObserver(
+      (entries) => {
+        const intersecting = entries[0]?.isIntersecting ?? true;
+        if (intersecting && !animId && !reducedMotion) {
+          P = performance.now();
+          frameLoop();
+        }
+        isVisible = intersecting;
+      },
+      { threshold: 0 }
+    );
+    intersectionObserver.observe(container);
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
         cancelAnimationFrame(animId);
         animId = 0;
-      } else if (!animId) {
+      } else if (!isVisible || animId || reducedMotion) {
+        // already handled
+      } else {
         P = performance.now();
-        animId = requestAnimationFrame(frameLoop);
+        frameLoop();
       }
     };
 
@@ -259,19 +285,27 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
       cancelAnimationFrame(animId);
       cancelAnimationFrame(resizeReq);
       resizeObserver.disconnect();
+      intersectionObserver.disconnect();
       window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('pointerleave', handlePointerLeave);
       window.removeEventListener('blur', handlePointerLeave);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       canvas.remove();
+      const loseContext = gl.getExtension('WEBGL_lose_context');
+      loseContext?.loseContext();
     };
   }, []);
 
   return (
     <div
       ref={containerRef}
-      className={`absolute inset-0 w-full h-full overflow-hidden ${className}`}
+      className={className}
       style={{
+        position: 'absolute',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
         ...style,
       }}
     />

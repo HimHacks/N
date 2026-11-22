@@ -71,18 +71,17 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
   return (
     <div
       ref={pageRef}
-      className="relative w-full min-h-screen overflow-x-hidden font-sans select-none"
+      className="relative w-full min-h-screen overflow-x-hidden font-sans select-none bg-[#03140e] text-white"
       style={{
-        backgroundColor: '#043e2e',
-        color: '#ffffff',
         fontFamily:
           '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
       }}
     >
       {/* 
         Full-Screen Interactive WebGL Fluid Background (Lumen Interactive Shader):
+        Positioned fixed behind all page content with pointer-events enabled for fluid tracking
       */}
-      <div className="fixed inset-0 -z-10 w-full h-full pointer-events-none overflow-hidden">
+      <div className="fixed inset-0 z-0 w-full h-full overflow-hidden">
         <LumenInteractiveShader />
 
         {/* Soft subtle edge vignette preserving crisp typography readability without burying colors */}
@@ -90,8 +89,8 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
           className="pointer-events-none absolute inset-0"
           style={{
             backgroundImage: `
-              radial-gradient(circle at 50% 40%, transparent 0%, rgba(3, 20, 14, 0.25) 100%),
-              linear-gradient(to bottom, rgba(3, 20, 14, 0.15) 0%, transparent 40%, rgba(3, 20, 14, 0.35) 100%)
+              radial-gradient(circle at 50% 40%, transparent 0%, rgba(3, 20, 14, 0.2) 100%),
+              linear-gradient(to bottom, rgba(3, 20, 14, 0.1) 0%, transparent 40%, rgba(3, 20, 14, 0.3) 100%)
             `,
           }}
         />
