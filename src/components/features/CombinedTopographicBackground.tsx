@@ -125,14 +125,14 @@ export const CombinedTopographicBackground: React.FC<CombinedTopographicBackgrou
           lineColor={'#25D366'}
           accentColor={'#128C7E'}
           linePalette={[
+            '#000000', // Crisp Solid Black
             '#25D366', // Vibrant WhatsApp Green
-            '#1f2937', // Sleek Dark Charcoal
-            '#128C7E', // Deep Teal / WhatsApp Dark Green
-            '#991b1b', // Dark Ruby / Security Red (E2EE lock accent)
-            '#40bd93', // Fresh Mint Green
-            '#25D366', // Vibrant WhatsApp Green
-            '#881337', // Deep Wine / Dark Crimson
-            '#059669', // Emerald Green
+            '#111827', // Deep Carbon Black
+            '#128C7E', // Dark Emerald Teal
+            '#881337', // Dark Crimson / Security Red
+            '#000000', // Crisp Solid Black
+            '#51b68a', // Mint Green
+            '#991b1b', // Ruby Red
           ]}
           lineStyle={'solid'}
           className="h-full w-full"

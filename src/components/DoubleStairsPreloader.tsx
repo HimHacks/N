@@ -212,9 +212,9 @@ export const DoubleStairsPreloader: React.FC<DoubleStairsPreloaderProps> = ({
 
             return (
               <div key={index} className="relative flex-1 h-full flex flex-col z-10 pointer-events-none">
-                {/* Top Stair Block: WhatsApp Obsidian Emerald with crisp seam */}
+                {/* Top Stair Block: Translucent WhatsApp Emerald with background blur so moving fluid is visible behind it */}
                 <motion.div
-                  className="w-full h-1/2 bg-[#022119] border-r border-[#10b981]/20 shadow-2xl relative overflow-hidden"
+                  className="w-full h-1/2 bg-[#022119]/80 backdrop-blur-md border-r border-[#10b981]/25 shadow-2xl relative overflow-hidden"
                   initial={{ y: '-100%' }}
                   animate={{ y: isStairsClosed ? '0%' : '-100%' }}
                   transition={{
@@ -223,12 +223,12 @@ export const DoubleStairsPreloader: React.FC<DoubleStairsPreloaderProps> = ({
                     delay: currentDelay,
                   }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-b from-[#10b981]/10 to-transparent pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-[#10b981]/15 to-transparent pointer-events-none" />
                 </motion.div>
 
-                {/* Bottom Stair Block */}
+                {/* Bottom Stair Block: Translucent WhatsApp Emerald */}
                 <motion.div
-                  className="w-full h-1/2 bg-[#011812] border-r border-[#10b981]/20 shadow-2xl relative overflow-hidden"
+                  className="w-full h-1/2 bg-[#011812]/80 backdrop-blur-md border-r border-[#10b981]/25 shadow-2xl relative overflow-hidden"
                   initial={{ y: '100%' }}
                   animate={{ y: isStairsClosed ? '0%' : '100%' }}
                   transition={{
