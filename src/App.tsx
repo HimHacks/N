@@ -9,19 +9,23 @@ export const App: React.FC = () => {
 
   // Triggered when user clicks the "Let's take a deep dive" button on HomePage
   const handleStartDeepDive = () => {
-    // 1. Double stairs cascade shut from top and bottom
+    // 1. Double stairs chunks cascade together from top and bottom
     setPreloaderPhase('closing');
   };
 
-  // Called when the double stairs finish closing completely
+  // Called when the double stairs chunks finish coming together
   const handleStairsClosed = () => {
-    // 2. Switch the active view underneath to the simulator while curtains are shut
+    // 2. Start the loading phase (dot matrix counts 0% -> 100% with smooth digit transitions)
+    setPreloaderPhase('loading');
+  };
+
+  // Called when the 0% -> 100% digit loading animation finishes
+  const handleLoadingComplete = () => {
+    // 3. Mount the simulator behind the curtains
     setCurrentView('simulator');
 
-    // 3. Briefly hold the modern cyber HUD telemetry screen (~500ms), then trigger reverse double stairs reveal
-    setTimeout(() => {
-      setPreloaderPhase('opening');
-    }, 550);
+    // 4. Retract the chunks in a reverse double stair preloader wave
+    setPreloaderPhase('opening');
   };
 
   // Called when reverse double stairs finish retracting to reveal the simulator
@@ -34,6 +38,7 @@ export const App: React.FC = () => {
       <DoubleStairsPreloader
         phase={preloaderPhase}
         onClosed={handleStairsClosed}
+        onLoadingComplete={handleLoadingComplete}
         onOpened={handleStairsOpened}
       />
       {currentView === 'simulator' ? (
