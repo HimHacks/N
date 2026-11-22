@@ -113,7 +113,7 @@ const DIGIT_PATTERNS: Record<string, number[][]> = {
   ],
 };
 
-// Animated Dot Matrix Digit Component: Animates smoothly per digit change
+// Dot Matrix Digit Component: Individual dots toggle crisply in place (zero blur, zero whole-digit slide)
 const SmoothDotMatrixDigit: React.FC<{
   char: string;
   dotSize?: number;
@@ -122,33 +122,22 @@ const SmoothDotMatrixDigit: React.FC<{
   const pattern = DIGIT_PATTERNS[char] || DIGIT_PATTERNS['0'];
 
   return (
-    <div className="relative overflow-hidden py-1 px-0.5">
-      <AnimatePresence mode="popLayout" initial={false}>
-        <motion.div
-          key={char}
-          initial={{ y: 16, opacity: 0, filter: 'blur(2px)' }}
-          animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
-          exit={{ y: -16, opacity: 0, filter: 'blur(2px)' }}
-          transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
-          className="grid grid-cols-5 gap-[3.5px] select-none"
-        >
-          {pattern.flatMap((row, rIdx) =>
-            row.map((active, cIdx) => (
-              <div
-                key={`${rIdx}-${cIdx}`}
-                className="rounded-full transition-all duration-150"
-                style={{
-                  width: dotSize,
-                  height: dotSize,
-                  backgroundColor: active ? color : 'transparent',
-                  opacity: active ? 1 : 0,
-                  transform: active ? 'scale(1)' : 'scale(0.3)',
-                }}
-              />
-            ))
-          )}
-        </motion.div>
-      </AnimatePresence>
+    <div className="grid grid-cols-5 gap-[3.5px] select-none py-1 px-0.5">
+      {pattern.flatMap((row, rIdx) =>
+        row.map((active, cIdx) => (
+          <div
+            key={`${rIdx}-${cIdx}`}
+            className="rounded-full transition-all duration-120 ease-out"
+            style={{
+              width: dotSize,
+              height: dotSize,
+              backgroundColor: active ? color : '#f1f5f9',
+              opacity: active ? 1 : 0.18,
+              transform: active ? 'scale(1)' : 'scale(0.55)',
+            }}
+          />
+        ))
+      )}
     </div>
   );
 };
