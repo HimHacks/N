@@ -393,9 +393,8 @@ export function RefractedText({
     let revealElapsed = 0;
     let disposed = false;
     let inView = true;
-    // Canvas text does not update when a web font swaps in. The glyph mask
-    // must be created only after the face is ready, then rebuilt on later loads.
-    let fontReady = !document.fonts;
+    // Canvas text renders immediately with available system fonts and upgrades when web font is ready.
+    let fontReady = true;
     const pointer = {
       x: 0.5,
       y: 0.435,
@@ -646,8 +645,9 @@ export function RefractedText({
     syncPlayback();
     if (document.fonts) {
       document.fonts.addEventListener('loadingdone', queueResize);
+      const primaryFamily = String(fontFamily).split(',')[0].trim().replace(/^['"]|['"]$/g, '');
       void document.fonts
-        .load(`${fontWeight} 342px ${fontFamily}`, text)
+        .load(`${fontWeight} 342px '${primaryFamily}'`, text)
         .catch(() => [])
         .then(async () => {
           await document.fonts.ready;

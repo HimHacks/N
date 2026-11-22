@@ -214,7 +214,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 .refracted-text {
   position: relative;
   display: inline-block;
-  width: min(100%, var(--refracted-width));
+  width: var(--refracted-width, 12.8em);
+  min-width: var(--refracted-width, 12.8em);
   max-width: 100%;
   vertical-align: middle;
 }

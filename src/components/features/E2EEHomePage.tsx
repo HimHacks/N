@@ -51,9 +51,9 @@ export const RefractedEncryption: React.FC = () => {
         spectrumWarmColor="#6ee7b7"
         spectrumMiddleColor="#10b981"
         spectrumCoolColor="#06b6d4"
-        reveal={true}
-        stagger={0.55}
-        liftDuration={1.75}
+        reveal={false}
+        stagger={0}
+        liftDuration={0}
         ease="power4.out"
         beamFollowsLift={false}
         animateBeam={true}
@@ -66,7 +66,6 @@ export const RefractedEncryption: React.FC = () => {
         fixedBeam={false}
         paused={false}
         cursorMovesBeam={false}
-        fontSize="inherit"
         fontFamily="'ReactDrops Square Display', 'Arial Black', sans-serif"
         fontWeight={900}
         letterSpacing="normal"
@@ -74,6 +73,10 @@ export const RefractedEncryption: React.FC = () => {
         fontHeight={80}
         cornerRounding={1}
         className="align-middle drop-shadow-[0_2px_14px_rgba(0,0,0,0.65)]"
+        style={{
+          width: '12.8em',
+          height: '1.05em',
+        }}
       />
     </span>
   );
