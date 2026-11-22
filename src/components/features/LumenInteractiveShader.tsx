@@ -122,12 +122,12 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
 
     const geometry = new Triangle(gl);
 
-    // Calibrated color spectrum with rich Deep Emerald, luminous Biscotti Cream, and hints of Cyan:
-    // Base: Deep rich forest emerald [0.008, 0.16, 0.10]
-    // Warm: Vibrant deep emerald [0.02, 0.65, 0.38]
-    // Mid: Luminous Biscotti Cream [0.92, 0.85, 0.70]
-    // Cool: Crisp luminous Cyan [0.05, 0.65, 0.78]
-    // Cursor: Vivid Electric Cyan [0.08, 0.75, 0.85]
+    // Calibrated color spectrum: rich deep dark emerald depths, luminous Biscotti Cream folds, and hints of cyan from the bubble:
+    // Base: Deep dark emerald depths [0.003, 0.035, 0.022]
+    // Warm: Deep lush emerald [0.012, 0.280, 0.160]
+    // Mid: Luminous Biscotti Cream biscuit [0.960, 0.880, 0.680]
+    // Cool: Subtle hint of cyan from the bubble [0.015, 0.380, 0.460]
+    // Cursor: Reactive electric cyan wake [0.050, 0.650, 0.750]
     const program = new Program(gl, {
       vertex: VERT_SHADER,
       fragment: FRAG_SHADER,
@@ -139,13 +139,13 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
         r: { value: [1, 1] },
         c: { value: [0, 0] },
         ci: { value: 0 },
-        u_pal_base: { value: [0.008, 0.16, 0.10] },
-        u_pal_warm: { value: [0.02, 0.65, 0.38] },
-        u_pal_mid: { value: [0.92, 0.85, 0.70] },
-        u_pal_cool: { value: [0.05, 0.65, 0.78] },
-        u_pal_cursor: { value: [0.08, 0.75, 0.85] },
+        u_pal_base: { value: [0.003, 0.035, 0.022] },
+        u_pal_warm: { value: [0.012, 0.280, 0.160] },
+        u_pal_mid: { value: [0.960, 0.880, 0.680] },
+        u_pal_cool: { value: [0.015, 0.380, 0.460] },
+        u_pal_cursor: { value: [0.050, 0.650, 0.750] },
         u_pal_rgScale: { value: [1.0, 1.0, 1.0] },
-        u_brightness: { value: 2.5 },
+        u_brightness: { value: 1.95 },
       },
     });
 
