@@ -105,75 +105,38 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
       <main className="relative z-20 flex flex-col justify-between min-h-screen px-6 sm:px-12 md:px-20 py-12 w-full max-w-7xl mx-auto">
         {/* Top/Hero Left-Aligned Section */}
         <div className="mt-12 sm:mt-16 md:mt-24 max-w-4xl text-left">
-          {/* Presenter line: THE SYNTAX UNVEILERS PRESENTS */}
+          {/* Presenter line: THE SYNTAX UNVEILERS PRESENTS in clean white matching template */}
           <motion.p
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-xs sm:text-sm md:text-base font-bold tracking-[0.25em] text-[#a7f3d0] uppercase text-left mb-4 drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]"
+            className="text-xs sm:text-sm md:text-base font-bold tracking-[0.25em] text-white/90 uppercase text-left mb-4 drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]"
           >
             THE SYNTAX UNVEILERS PRESENTS
           </motion.p>
 
-          {/* Headline: Single line across viewports with Art-directed / Optical Refracted Encryption */}
+          {/* Headline: Clean solid white matching Lumen template layout without text gradients */}
           <motion.h1
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1 }}
-            className="flex items-center text-left whitespace-nowrap flex-nowrap gap-x-2 sm:gap-x-3 md:gap-x-4 text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[1.04] select-none max-w-full overflow-visible py-1 drop-shadow-[0_4px_30px_rgba(0,0,0,0.45)]"
+            className="text-left text-white font-black tracking-tight leading-[1.04] text-4xl sm:text-6xl md:text-7xl lg:text-8xl select-none max-w-full py-1 drop-shadow-[0_4px_30px_rgba(0,0,0,0.45)]"
           >
-            <span className="text-white font-black whitespace-nowrap shrink-0">
-              End-to-End
-            </span>
-            <span className="relative inline-block select-none whitespace-nowrap shrink-0 overflow-visible align-baseline">
-              <span
-                className="relative z-10 inline-block font-black tracking-tight text-transparent bg-clip-text select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.55)] overflow-visible"
-                style={{
-                  backgroundImage:
-                    'linear-gradient(155deg, #a7f3d0 0%, #4ade80 32%, #10b981 58%, #059669 82%, #047857 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitBoxDecorationBreak: 'clone',
-                  boxDecorationBreak: 'clone',
-                  paddingBottom: '0.18em',
-                  marginBottom: '-0.18em',
-                  paddingRight: '0.04em',
-                }}
-              >
-                Encryption
-              </span>
-              <span
-                aria-hidden="true"
-                className="absolute inset-0 z-20 pointer-events-none inline-block font-black tracking-tight text-transparent bg-clip-text select-none overflow-visible mix-blend-screen opacity-90"
-                style={{
-                  backgroundImage:
-                    'linear-gradient(125deg, transparent 10%, rgba(110,231,183,0.5) 28%, rgba(45,212,191,0.85) 42%, rgba(255,255,255,0.92) 50%, rgba(34,211,238,0.85) 58%, rgba(5,150,105,0.4) 72%, transparent 90%)',
-                  backgroundSize: '170% 100%',
-                  WebkitBackgroundClip: 'text',
-                  WebkitBoxDecorationBreak: 'clone',
-                  boxDecorationBreak: 'clone',
-                  animation: 'calibratedDispersion25 8s ease-in-out infinite alternate',
-                  paddingBottom: '0.18em',
-                  marginBottom: '-0.18em',
-                  paddingRight: '0.04em',
-                }}
-              >
-                Encryption
-              </span>
-            </span>
+            End-to-End Encryption
           </motion.h1>
         </div>
 
         {/* Bottom Section: Description on bottom-left, Soap Bubble Pop-up on bottom-right */}
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-8 mt-16 sm:mt-24 w-full">
-          {/* Bottom-left description text */}
+          {/* Bottom-left description text: strictly 2 lines */}
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-base sm:text-lg md:text-xl text-slate-100 font-normal max-w-xl text-left select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)]"
+            className="text-base sm:text-lg md:text-xl text-white/90 font-normal max-w-xl text-left select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] leading-relaxed"
           >
-            <span className="block">Messages are encrypted directly on your device. Only you and the recipient</span>
-            <span className="block mt-0.5">hold the keys.</span>
+            <span className="block">Messages are encrypted directly on your device.</span>
+            <span className="block mt-0.5">Only you and the recipient hold the keys.</span>
           </motion.p>
 
           {/* 

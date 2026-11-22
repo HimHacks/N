@@ -122,13 +122,12 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
 
     const geometry = new Triangle(gl);
 
-    // Exact calibrated color spectrum replacing warm coral/peach/cyan:
-    // Pink -> Deep Emerald: [0.03, 0.68, 0.40]
-    // Light Blue -> Vibrant Emerald: [0.04, 0.58, 0.32]
-    // Purple -> Biscotti Cream: [0.92, 0.86, 0.72]
-    // Orange-yellowish -> Graphite Enamel: [0.12, 0.16, 0.14]
-    // Base: Deep dark green canvas [0.015, 0.08, 0.045]
-    // Cursor: Electric Mint glint [0.12, 0.45, 0.35]
+    // Calibrated color spectrum with rich Deep Emerald, luminous Biscotti Cream, and hints of Cyan:
+    // Base: Deep rich forest emerald [0.008, 0.16, 0.10]
+    // Warm: Vibrant deep emerald [0.02, 0.65, 0.38]
+    // Mid: Luminous Biscotti Cream [0.92, 0.85, 0.70]
+    // Cool: Crisp luminous Cyan [0.05, 0.65, 0.78]
+    // Cursor: Vivid Electric Cyan [0.08, 0.75, 0.85]
     const program = new Program(gl, {
       vertex: VERT_SHADER,
       fragment: FRAG_SHADER,
@@ -140,11 +139,11 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
         r: { value: [1, 1] },
         c: { value: [0, 0] },
         ci: { value: 0 },
-        u_pal_base: { value: [0.015, 0.08, 0.045] },
-        u_pal_warm: { value: [0.03, 0.68, 0.40] },
-        u_pal_mid: { value: [0.92, 0.86, 0.72] },
-        u_pal_cool: { value: [0.04, 0.58, 0.32] },
-        u_pal_cursor: { value: [0.12, 0.45, 0.35] },
+        u_pal_base: { value: [0.008, 0.16, 0.10] },
+        u_pal_warm: { value: [0.02, 0.65, 0.38] },
+        u_pal_mid: { value: [0.92, 0.85, 0.70] },
+        u_pal_cool: { value: [0.05, 0.65, 0.78] },
+        u_pal_cursor: { value: [0.08, 0.75, 0.85] },
         u_pal_rgScale: { value: [1.0, 1.0, 1.0] },
         u_brightness: { value: 2.5 },
       },
