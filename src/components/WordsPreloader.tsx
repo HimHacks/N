@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThreeSquaresLoader } from './ThreeSquaresLoader';
+import { SoffitGradient, type SoffitGradientConfig } from './SoffitGradient';
 
 export type WordPreloaderPhase = 'idle' | 'expanding' | 'loading' | 'exiting';
 
@@ -126,7 +127,7 @@ const DIGIT_PATTERNS: Record<string, number[][]> = {
   ],
 };
 
-// Strict Instant Dot-Matrix Digit (Zero animation/transition, immediate digit change)
+// Strict Instant Dot-Matrix Digit (Zero animation/transition, immediate digit changes)
 const InstantDotMatrixDigit: React.FC<{ char: string; dotSize?: number; color?: string }> = ({
   char,
   dotSize = 5,
@@ -191,7 +192,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   }, [phase]);
 
   // Numerical counter: Every single digit from 1% to 100% visible, ~42ms per tick (~4.2s total)
-  // Allows the rising bubble gradient to slowly climb and flourish to its full height
+  // Gives the rising Soffit gradient the exact time to rise and bloom from the bottom
   useEffect(() => {
     if (phase === 'loading') {
       setProgress(1);
@@ -230,14 +231,60 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
 
   const isVisible = phase !== 'idle';
 
+  // Exact Soffit gradient configuration integrating cyan, vibrant green, and dark green
+  const soffitConfig: SoffitGradientConfig = {
+    bgColor: '#021512',   // Deep dark green base
+    colorA: '#04382c',    // Deep forest green
+    colorB: '#059669',    // Vibrant emerald green
+    colorC: '#22d3ee',    // Electric Cyan
+    colorD: '#6ee7b7',    // Luminous Mint-Green highlight
+    ambient: 0.24,
+    amount: 0.2,
+    bounce: 0.38,
+    bounceCurve: 4.25,
+    breathe: 0.29,
+    contrast: 2.45,
+    cursor: 1,
+    curve: 3.32,
+    direct: 0.97,
+    dither: 0.58,
+    flow: 0.475,
+    glow: 0.38,
+    grain: 0,
+    grainAnim: 0,
+    horizon: 0.36,
+    lacunarity: 1.99,
+    lift: 0.11,
+    maxDpr: 1,
+    midpoint: 0.57,
+    moteScale: 7,
+    motes: 0.074,
+    parallax: 0.0137,
+    rock: 0.12,
+    roughness: 0.29,
+    scale: 1,
+    sink: 0.24,
+    speed: 0.33,
+    spillCentre: 0.3,
+    spillFloor: 0.26,
+    spillWidth: 2.18,
+    spread: 0.41,
+    steer: -0.13,
+    sweep: 0.5,
+    tilt: 1.87,
+    vignette: 0.21,
+    warp: 2.58,
+    warpScale: 0.78,
+  };
+
   return (
     <AnimatePresence>
       {isVisible && (
         <div className="fixed inset-0 z-[120] pointer-events-auto overflow-hidden select-none">
           {/*
-            Phase 1: Black screen expands directly FROM THE BUTTON location (bottom: 80px, center: 50% 92%)
-            spreading outward in a circular wave across the entire website.
-            Phase 2: Compiling studio card + Skiper 8 Cycling Words + Rising Bubble Gradient at bottom.
+            Phase 1: Black screen expands directly FROM THE BUBBLE BUTTON
+            (fixed at bottom: 80px, center: 50% 92%) spreading outward across the entire website.
+            Phase 2: Compiling studio card + Skiper 8 Cycling Words + Rising Soffit WebGL2 Gradient at bottom.
             Phase 3: Smooth Dennis Snellenberg elastic curve sliding up to reveal simulator.
           */}
           <motion.div
@@ -271,10 +318,10 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
             }}
           >
             {/*
-              BUBBLE GRADIENT COMING UP FROM THE BOTTOM OF THE WEBSITE:
-              As the preloader loads, this iridescent bubble gradient (cyan, radiant mint, green, and dark green)
-              slowly rises up from y: 100% to y: 0% and breathes at a prominent height (h-[480px])
-              matching the Skiper UI recording.
+              SOFFIT WEBGL2 GRADIENT RISING FROM THE BOTTOM OF THE WEBSITE:
+              As the preloader loads, this hardware-accelerated animated gradient
+              (cyan, emerald green, and dark green) slowly rises up from y: 100% to y: 0%
+              and breathes at the bottom (h-[480px]), matching the recording exactly.
             */}
             <motion.div
               initial={{ y: '100%', opacity: 0 }}
@@ -294,28 +341,19 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
               }
               className="absolute bottom-0 left-0 right-0 h-[480px] pointer-events-none overflow-hidden z-10"
             >
-              {/* Primary Electric Cyan (#22d3ee) & WhatsApp Green (#25D366) iridescent aura */}
-              <div
-                className="absolute -bottom-24 -left-[25%] -right-[25%] h-[520px] opacity-90 blur-3xl"
-                style={{
-                  background:
-                    'radial-gradient(ellipse 90% 65% at 50% 100%, rgba(34, 211, 238, 0.85) 0%, rgba(45, 212, 191, 0.7) 32%, rgba(37, 211, 102, 0.58) 55%, rgba(6, 78, 59, 0.45) 75%, transparent 100%)',
-                  animation: 'bubbleFluidSlow 7s ease-in-out infinite alternate',
-                }}
+              <SoffitGradient
+                config={soffitConfig}
+                className="w-full h-full opacity-90"
               />
 
-              {/* Secondary Mint (#2dd4bf) & Deep Forest Green (#064e3b) shimmering layer */}
+              {/* Seamless top blend into the pitch black screen */}
               <div
-                className="absolute -bottom-16 left-[5%] right-[5%] h-[380px] opacity-80 blur-2xl"
+                className="absolute inset-0 pointer-events-none"
                 style={{
                   background:
-                    'radial-gradient(ellipse 75% 55% at 50% 100%, rgba(34, 211, 238, 0.9) 0%, rgba(16, 185, 129, 0.65) 45%, rgba(6, 78, 59, 0.35) 75%, transparent 90%)',
-                  animation: 'bubbleFluidShimmer 5s ease-in-out infinite alternate',
+                    'linear-gradient(to top, transparent 0%, rgba(7, 11, 14, 0.45) 50%, #070b0e 100%)',
                 }}
               />
-
-              {/* Subtle top fade into the black screen */}
-              <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#070b0e]/20 to-[#070b0e]" />
             </motion.div>
 
             {/* SVG Elastic Curve underneath the curtain (morphs from sag to flat as it lifts off) */}
@@ -383,35 +421,6 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
               )}
             </AnimatePresence>
           </motion.div>
-
-          {/* Keyframes for the fluid bubble gradient waves */}
-          <style>{`
-            @keyframes bubbleFluidSlow {
-              0% {
-                transform: translateY(14px) scale(0.96) rotate(-1deg);
-              }
-              50% {
-                transform: translateY(-16px) scale(1.05) rotate(1deg);
-              }
-              100% {
-                transform: translateY(10px) scale(1.02) rotate(-0.5deg);
-              }
-            }
-            @keyframes bubbleFluidShimmer {
-              0% {
-                transform: translateX(-5%) scaleY(0.9);
-                opacity: 0.7;
-              }
-              50% {
-                transform: translateX(5%) scaleY(1.15);
-                opacity: 0.95;
-              }
-              100% {
-                transform: translateX(-3%) scaleY(1);
-                opacity: 0.75;
-              }
-            }
-          `}</style>
         </div>
       )}
     </AnimatePresence>
