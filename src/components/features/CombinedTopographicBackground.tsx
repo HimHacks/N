@@ -98,15 +98,15 @@ export const CombinedTopographicBackground: React.FC<CombinedTopographicBackgrou
           />
         )}
 
-        {/* Layer 2: Official ReactDrops Topographic Flow with alternating color palette */}
-        {/* Tuned with alternating emerald-mint (#51b68a) and sleek charcoal (#202020) contour lines matching user palette */}
+        {/* Layer 2: Official ReactDrops Topographic Flow with alternating WhatsApp-themed palette */}
+        {/* Rich palette: Dominant WhatsApp emerald (#25D366, #128C7E, #51b68a), secure dark crimson/red (#991b1b, #be123c), and deep charcoal (#1f2937) */}
         <TopographicFlow
           animateEntrance={true}
           scale={460}
           density={5.2}
           speed={2.2}
           distortion={2.8}
-          lineWidth={1.35}
+          lineWidth={1.4}
           opacity={1}
           dashLength={7}
           dashGap={8}
@@ -122,9 +122,18 @@ export const CombinedTopographicBackground: React.FC<CombinedTopographicBackgrou
           backgroundImage={'none'}
           gradientColors={[]}
           grain={0}
-          lineColor={'#202020'}
-          accentColor={'#51b68a'}
-          linePalette={['#202020', '#51b68a']}
+          lineColor={'#25D366'}
+          accentColor={'#128C7E'}
+          linePalette={[
+            '#25D366', // Vibrant WhatsApp Green
+            '#1f2937', // Sleek Dark Charcoal
+            '#128C7E', // Deep Teal / WhatsApp Dark Green
+            '#991b1b', // Dark Ruby / Security Red (E2EE lock accent)
+            '#40bd93', // Fresh Mint Green
+            '#25D366', // Vibrant WhatsApp Green
+            '#881337', // Deep Wine / Dark Crimson
+            '#059669', // Emerald Green
+          ]}
           lineStyle={'solid'}
           className="h-full w-full"
         />

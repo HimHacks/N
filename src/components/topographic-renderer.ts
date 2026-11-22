@@ -477,11 +477,13 @@ export function createTopographicRenderer(
     // transient objects in the animation loop. Only two shared time coefficients.
     const coordinate = (buffer: Float64Array, index: number) =>
       buffer[index] + buffer[index + 2] * cosine + buffer[index + 4] * sine;
-    for (const curve of contours) {
+    for (let cIdx = 0; cIdx < contours.length; cIdx++) {
+      const curve = contours[cIdx];
       const major = curve.level % 4 === 0;
       let stroke = major ? accentColor : lineColor;
       if (linePalette && linePalette.length > 0) {
-        stroke = linePalette[curve.level % linePalette.length];
+        const palIdx = Math.abs(curve.level);
+        stroke = linePalette[palIdx % linePalette.length];
       }
       contourContext.strokeStyle = stroke;
       contourContext.lineWidth = lineWidth;
