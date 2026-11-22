@@ -1,74 +1,107 @@
 import React from 'react';
 
 /**
- * Three Squares Orbit / Chasing Loader
- * Exactly matching the user's uploaded screen recording:
- * 3 rounded squares in a 2x2 grid (red, green, orange/amber),
- * chasing smoothly around the 4 positions with the 4th slot empty.
- * Sized small to sit nicely next to "Compiling...".
+ * Three Sliding Squares Puzzle Loader
+ * 3 rounded cubes (Red, Olive Green, Amber/Orange) in a 2x2 grid framework.
+ * They slide past each other along the edges into the empty slot one by one
+ * (like a 15-puzzle / sliding block puzzle), NEVER combining or morphing.
  */
-export const ThreeSquaresLoader: React.FC<{ size?: number }> = ({ size = 20 }) => {
+export const ThreeSquaresLoader: React.FC<{ size?: number }> = ({ size = 26 }) => {
   return (
     <div
       className="relative select-none inline-flex items-center justify-center shrink-0"
       style={{ width: size, height: size }}
     >
-      <div className="three-squares-spinner w-full h-full relative" />
+      <div className="relative w-full h-full">
+        {/* Cube 1: Coral Red (starts at top-left [0,0]) */}
+        <div className="absolute w-[calc(50%-2px)] h-[calc(50%-2px)] rounded-[3.5px] bg-[#ef4444] shadow-sm cube-1" />
+
+        {/* Cube 2: Olive Green (starts at top-right [1,0]) */}
+        <div className="absolute w-[calc(50%-2px)] h-[calc(50%-2px)] rounded-[3.5px] bg-[#84cc16] shadow-sm cube-2" />
+
+        {/* Cube 3: Warm Amber/Orange (starts at bottom-left [0,1]) */}
+        <div className="absolute w-[calc(50%-2px)] h-[calc(50%-2px)] rounded-[3.5px] bg-[#f97316] shadow-sm cube-3" />
+      </div>
+
       <style>{`
-        .three-squares-spinner {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          grid-template-rows: repeat(2, 1fr);
-          gap: 2.5px;
-          animation: spin3Squares 1.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+        /* 
+          Grid Coordinates:
+          TL: top-left     (0, 0)
+          TR: top-right    (calc(100% + 4px), 0)
+          BR: bottom-right (calc(100% + 4px), calc(100% + 4px))
+          BL: bottom-left  (0, calc(100% + 4px))
+
+          Empty slot starts at BR (bottom-right).
+          Movement order:
+          1. Cube 2 (TR) slides down to BR
+          2. Cube 1 (TL) slides right to TR
+          3. Cube 3 (BL) slides up to TL
+          4. Cube 2 (BR) slides left to BL
+        */
+
+        .cube-1 {
+          top: 0;
+          left: 0;
+          animation: slideCube1 2.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
         }
 
-        .three-squares-spinner::before,
-        .three-squares-spinner::after {
-          content: "";
-          border-radius: 2.5px;
+        .cube-2 {
+          top: 0;
+          right: 0;
+          animation: slideCube2 2.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
         }
 
-        /* Red Square (top-left) */
-        .three-squares-spinner::before {
-          background-color: #ef4444; /* Coral Red */
-          grid-area: 1 / 1;
+        .cube-3 {
+          bottom: 0;
+          left: 0;
+          animation: slideCube3 2.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
         }
 
-        /* Olive/Green Square (top-right) */
-        .three-squares-spinner::after {
-          background-color: #84cc16; /* Muted Olive Green */
-          grid-area: 1 / 2;
-        }
-
-        @keyframes spin3Squares {
-          0% {
-            transform: rotate(0deg);
+        @keyframes slideCube1 {
+          0%, 100% {
+            transform: translate(0, 0);
           }
           25% {
-            transform: rotate(90deg);
+            transform: translate(0, 0);
           }
           50% {
-            transform: rotate(180deg);
+            transform: translate(calc(100% + 4px), 0);
           }
           75% {
-            transform: rotate(270deg);
+            transform: translate(calc(100% + 4px), calc(100% + 4px));
           }
-          100% {
-            transform: rotate(360deg);
+        }
+
+        @keyframes slideCube2 {
+          0%, 100% {
+            transform: translate(0, 0);
+          }
+          25% {
+            transform: translate(0, calc(100% + 4px));
+          }
+          50% {
+            transform: translate(calc(-100% - 4px), calc(100% + 4px));
+          }
+          75% {
+            transform: translate(calc(-100% - 4px), 0);
+          }
+        }
+
+        @keyframes slideCube3 {
+          0%, 100% {
+            transform: translate(0, 0);
+          }
+          25% {
+            transform: translate(0, 0);
+          }
+          50% {
+            transform: translate(0, 0);
+          }
+          75% {
+            transform: translate(0, calc(-100% - 4px));
           }
         }
       `}</style>
-      {/* 3rd Amber/Orange square in bottom-left slot */}
-      <div
-        className="absolute w-[calc(50%-1.25px)] h-[calc(50%-1.25px)] rounded-[2.5px] bg-[#f97316] pointer-events-none"
-        style={{
-          left: 0,
-          bottom: 0,
-          transformOrigin: 'center center',
-          animation: 'spin3Squares 1.8s cubic-bezier(0.65, 0, 0.35, 1) infinite',
-        }}
-      />
     </div>
   );
 };
