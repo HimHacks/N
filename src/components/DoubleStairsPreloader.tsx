@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { MorphingPinwheelLoader } from './MorphingPinwheelLoader';
 
 export type PreloaderPhase = 'idle' | 'closing' | 'loading' | 'opening';
 
@@ -306,28 +307,10 @@ export const DoubleStairsPreloader: React.FC<DoubleStairsPreloaderProps> = ({
                         ))}
                       </div>
 
-                      {/* Directional Dot-Matrix Arrow + Compiling */}
-                      <div className="flex items-center gap-3">
-                        <div className="grid grid-cols-5 gap-[3px]">
-                          {[
-                            [0, 0, 1, 0, 0],
-                            [0, 0, 0, 1, 0],
-                            [1, 1, 1, 1, 1],
-                            [0, 0, 0, 1, 0],
-                            [0, 0, 1, 0, 0],
-                          ].flatMap((row, r) =>
-                            row.map((val, c) => (
-                              <div
-                                key={`arr-${r}-${c}`}
-                                className="w-[4px] h-[4px] rounded-full"
-                                style={{
-                                  backgroundColor: val ? '#059669' : 'transparent',
-                                }}
-                              />
-                            ))
-                          )}
-                        </div>
-                        <span className="text-xs font-mono text-slate-500 uppercase tracking-widest font-semibold">
+                      {/* Morphing Pinwheel Animated Loader (exact geometry from screen recording in bold black) + Compiling */}
+                      <div className="flex items-center gap-4">
+                        <MorphingPinwheelLoader size={34} />
+                        <span className="text-xs font-mono text-slate-800 uppercase tracking-widest font-bold">
                           COMPILING...
                         </span>
                       </div>
