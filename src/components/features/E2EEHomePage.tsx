@@ -74,7 +74,7 @@ export const RefractedEncryption: React.FC = () => {
         cornerRounding={1}
         className="align-middle drop-shadow-[0_2px_14px_rgba(0,0,0,0.65)]"
         style={{
-          width: '12.8em',
+          width: '7.8em',
           height: '1.05em',
         }}
       />
@@ -149,7 +149,7 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1 }}
-            className="flex items-center justify-center whitespace-nowrap flex-nowrap gap-x-2 sm:gap-x-4 md:gap-x-5 text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight text-center leading-[1.12] select-none max-w-full overflow-visible py-1"
+            className="flex items-center justify-center whitespace-nowrap flex-nowrap gap-x-2 sm:gap-x-3 md:gap-x-4 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-center leading-[1.12] select-none max-w-full overflow-visible py-1"
           >
             {/* Plain crisp solid white 'End-to-End' */}
             <span className="text-white font-black drop-shadow-[0_2px_15px_rgba(0,0,0,0.5)] whitespace-nowrap shrink-0">
