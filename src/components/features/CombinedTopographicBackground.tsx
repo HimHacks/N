@@ -98,15 +98,15 @@ export const CombinedTopographicBackground: React.FC<CombinedTopographicBackgrou
           />
         )}
 
-        {/* Layer 2: Official ReactDrops Topographic Flow (Image 2 survey isolines) */}
-        {/* Tuned for noticeably fluid dynamics and high-responsiveness to cursor interaction */}
+        {/* Layer 2: Official ReactDrops Topographic Flow with alternating color palette */}
+        {/* Tuned with alternating emerald-mint (#51b68a) and sleek charcoal (#202020) contour lines matching user palette */}
         <TopographicFlow
           animateEntrance={true}
           scale={460}
           density={5.2}
           speed={2.2}
           distortion={2.8}
-          lineWidth={1.25}
+          lineWidth={1.35}
           opacity={1}
           dashLength={7}
           dashGap={8}
@@ -122,8 +122,9 @@ export const CombinedTopographicBackground: React.FC<CombinedTopographicBackgrou
           backgroundImage={'none'}
           gradientColors={[]}
           grain={0}
-          lineColor={'#000000'}
-          accentColor={'#000000'}
+          lineColor={'#202020'}
+          accentColor={'#51b68a'}
+          linePalette={['#202020', '#51b68a']}
           lineStyle={'solid'}
           className="h-full w-full"
         />

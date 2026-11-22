@@ -163,6 +163,7 @@ export const TopographicFlow = forwardRef<TopographicFlowHandle, TopographicFlow
       paused,
       lineColor,
       accentColor,
+      linePalette,
       lineStyle,
       hover,
       hoverRadius,
@@ -210,6 +211,7 @@ export const TopographicFlow = forwardRef<TopographicFlowHandle, TopographicFlow
           lineColor ?? (preset === 'paper' ? 'var(--topographic-flow-ink)' : palette.lineColor),
         accentColor:
           accentColor ?? (preset === 'paper' ? 'var(--topographic-flow-ink)' : palette.accentColor),
+        linePalette,
         lineStyle: lineStyle ?? palette.lineStyle,
         hover: hover ?? topographicDefaults.hover,
         hoverRadius: hoverRadius ?? topographicDefaults.hoverRadius,
@@ -245,6 +247,7 @@ export const TopographicFlow = forwardRef<TopographicFlowHandle, TopographicFlow
         paused,
         lineColor,
         accentColor,
+        linePalette,
         lineStyle,
         hover,
         hoverRadius,

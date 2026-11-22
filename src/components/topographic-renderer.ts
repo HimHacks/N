@@ -136,6 +136,7 @@ export type TopographicConfig = {
   paused: boolean;
   lineColor: string;
   accentColor: string;
+  linePalette?: string[];
   lineStyle: TopographicLineStyle;
   grain?: number;
   gradientColors?: TopographicGradientColors;
@@ -203,7 +204,10 @@ export function createTopographicRenderer(
     return color;
   };
   let lineColor = resolveColor(config.lineColor, '#000000'),
-    accentColor = resolveColor(config.accentColor, '#000000');
+    accentColor = resolveColor(config.accentColor, '#000000'),
+    linePalette = config.linePalette && config.linePalette.length > 0
+      ? config.linePalette.map((c) => resolveColor(c, '#000000'))
+      : null;
   const resolveGradient = (colors?: TopographicGradientColors) => {
     if (!colors || colors.length < 2) return null;
     const pixel = document.createElement('canvas');
@@ -475,7 +479,11 @@ export function createTopographicRenderer(
       buffer[index] + buffer[index + 2] * cosine + buffer[index + 4] * sine;
     for (const curve of contours) {
       const major = curve.level % 4 === 0;
-      contourContext.strokeStyle = major ? accentColor : lineColor;
+      let stroke = major ? accentColor : lineColor;
+      if (linePalette && linePalette.length > 0) {
+        stroke = linePalette[curve.level % linePalette.length];
+      }
+      contourContext.strokeStyle = stroke;
       contourContext.lineWidth = lineWidth;
       contourContext.globalAlpha = opacity;
       const commands = terraced ? curve.solid : (curve.broken ?? curve.solid);
@@ -587,6 +595,9 @@ export function createTopographicRenderer(
       config = next;
       lineColor = resolveColor(config.lineColor, '#000000');
       accentColor = resolveColor(config.accentColor, '#000000');
+      linePalette = config.linePalette && config.linePalette.length > 0
+        ? config.linePalette.map((c) => resolveColor(c, '#000000'))
+        : null;
       gradientColors = resolveGradient(config.gradientColors);
       updateGradientLookup();
       if (changed) rebuild();
