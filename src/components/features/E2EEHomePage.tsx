@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { E2EEPageBackground } from './E2EEPageBackground';
 import { SoapBubbleButton, SoapBubbleMaterial } from '../soap-bubble';
-import { LumenBloomBackground } from './LumenBloomBackground';
 
 interface E2EEHomePageProps {
   onNavigateToSimulator: (origin?: { x: number; y: number }) => void;
@@ -9,7 +9,6 @@ interface E2EEHomePageProps {
 
 /**
  * Art-Directed Typography for "Encryption" (Gradient baseline)
- * Preserved for instant recoverability and direct visual comparison.
  */
 export const ArtDirectedEncryption: React.FC = () => {
   return (
@@ -35,11 +34,7 @@ export const ArtDirectedEncryption: React.FC = () => {
 
 /**
  * Refracted Glass Optical Typography for "Encryption"
- * Implements a calibrated ~25% optical ray dispersion:
- * - Clear, rich optical refraction that is distinct and lively across the letter surfaces
- * - Visible spectral dispersion band: mint-emerald, prism teal, luminous center ray, and vibrant cyan
- * - Crisp, perfectly readable Plus Jakarta Sans typography aligned with "End-to-End"
- * - Gentle internal optical refraction oscillation (8s ease-in-out)
+ * Implements a calibrated optical ray dispersion
  */
 export const OpticalRefractedEncryption: React.FC = () => {
   return (
@@ -62,7 +57,7 @@ export const OpticalRefractedEncryption: React.FC = () => {
         Encryption
       </span>
 
-      {/* Optical Ray Dispersion Layer (Calibrated to 25% optical presence across the letters) */}
+      {/* Optical Ray Dispersion Layer */}
       <span
         aria-hidden="true"
         className="absolute inset-0 z-20 pointer-events-none inline-block font-black tracking-tight text-transparent bg-clip-text select-none overflow-visible mix-blend-screen opacity-80"
@@ -83,7 +78,7 @@ export const OpticalRefractedEncryption: React.FC = () => {
         Encryption
       </span>
 
-      {/* Internal Glass Prismatic Facet Highlight: Refracts light through the upper contour */}
+      {/* Internal Glass Prismatic Facet Highlight */}
       <span
         aria-hidden="true"
         className="absolute inset-0 z-30 pointer-events-none inline-block font-black tracking-tight text-transparent bg-clip-text select-none overflow-visible opacity-45 mix-blend-overlay"
@@ -121,6 +116,7 @@ export const OpticalRefractedEncryption: React.FC = () => {
 export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulator }) => {
   const pageRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [canHover, setCanHover] = useState(false);
   const autoHideTimerRef = useRef<NodeJS.Timeout | null>(null);
   const readingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -135,7 +131,13 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
     }, 5000);
   };
 
-  // When leaving the hotline range, immediately close the pop-up button
+  // Hovering the bottom-right hotline zone triggers it only if 7-second reading time has finished
+  const handleHotlineEnter = () => {
+    if (!canHover) return;
+    triggerShowFor5Seconds();
+  };
+
+  // Leaving the hotline area immediately hides the pop-up button
   const handleHotlineLeave = () => {
     if (autoHideTimerRef.current) {
       clearTimeout(autoHideTimerRef.current);
@@ -143,13 +145,15 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
     setIsOpen(false);
   };
 
-  // Lifecycle:
-  // 1. After ~4.5s (estimated reading time), pop-up appears, stays for 5s, and smoothly slides down.
-  // 2. Hovering over the bottom hotline area triggers it to pop up, stays for 5s, and slides back down.
+  // Estimated reading time requirement:
+  // The pop-up button will NOT appear until the 7-second reading time completes.
+  // After 7 seconds, it pops up automatically, stays for 5 seconds, and drops down.
+  // Then the hotline zone is activated so the user can hover to reveal it anytime.
   useEffect(() => {
     readingTimerRef.current = setTimeout(() => {
+      setCanHover(true);
       triggerShowFor5Seconds();
-    }, 4500);
+    }, 7000); // Strict 7 seconds estimated reading time
 
     return () => {
       if (readingTimerRef.current) clearTimeout(readingTimerRef.current);
@@ -158,184 +162,156 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
   }, []);
 
   return (
-    <div
-      ref={pageRef}
-      className="relative w-full min-h-screen text-white select-none overflow-hidden"
-      style={{ backgroundColor: '#070b0e' }}
+    <E2EEPageBackground
+      preset="whatsapp-iridescent"
+      color="#10b981"         // Signal Emerald (#10b981)
+      accentColor="#059669"   // Deep Emerald (#059669)
+      cyanColor="#34d399"     // Mint / Slight Green (#34d399)
+      darkColor="#021a12"     // Deep Forest Green / Night Emerald (#021a12)
+      whiteColor="#dcfce7"    // Luminous Glint (#dcfce7)
+      opacity={0.94}
+      speed={0.6}
     >
       {/* 
-        Full-screen generative WebGL2 background from Lumen (Soft Bloom mode)
-        Calibrated with WhatsApp emerald, signal teal, vibrant green, and deep contrasts:
-        - Pink -> Deep Emerald (#059669)
-        - Blue -> Signal Emerald & WhatsApp Teal (#00a884)
-        - Purple/Orange -> Radiant Mint & WhatsApp Green (#25d366, #10b981)
-        - Base -> Dark forest base for luminous contrast (#04130d)
+        Full Layout: Matching the video/image structure:
+        - Main text left-aligned in the hero section ("THE SYNTAX UNVEILERS PRESENTS", "End-to-End Encryption")
+        - Description copy on the bottom-left
+        - Soap Bubble Button on the right, appearing after the 7-second estimated reading time
       */}
-      <div className="fixed inset-0 -z-10 h-screen w-screen overflow-hidden pointer-events-none select-none bg-[#04130d]">
-        <LumenBloomBackground
-          config={{
-            c1: '#00a884', // Signal Teal Emerald
-            c2: '#25d366', // WhatsApp vibrant green
-            c3: '#059669', // Deep Emerald
-            c4: '#10b981', // Luminous Mint-Emerald
-            bg: '#04130d', // Deep rich forest base
-            scale: 1.15,
-            warp: 0.95,
-            flow: 0.35,
-            soft: 1.25,
-            loop: 8.0,
-          }}
-        />
-
-        {/* Soft edge & center vignette to keep typography crystal legible */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundImage: `
-              radial-gradient(circle at 50% 35%, rgba(4, 19, 13, 0.15) 0%, rgba(4, 19, 13, 0.55) 100%),
-              linear-gradient(to bottom, rgba(4, 19, 13, 0.35) 0%, transparent 40%, rgba(3, 14, 10, 0.65) 100%)
-            `,
-          }}
-        />
-      </div>
-
-      {/* Centered Main Viewport Container */}
       <main
+        ref={pageRef}
         data-theme="dark"
-        className="relative flex min-h-screen flex-col items-center justify-center px-4 sm:px-8 py-12 select-none overflow-hidden"
+        className="relative flex min-h-screen flex-col justify-between px-6 sm:px-12 md:px-20 py-12 select-none overflow-hidden"
       >
-        {/* Centered Hero Content Section */}
-        <div className="relative z-10 w-full max-w-5xl mx-auto flex flex-col items-center justify-center text-center -mt-8">
-          {/* Presenter Line: THE SYNTAX UNVEILERS PRESENTS */}
+        {/* Top/Hero Left-Aligned Section */}
+        <div className="relative z-10 w-full max-w-5xl mt-12 sm:mt-16 md:mt-20 text-left">
+          {/* Presenter line: THE SYNTAX UNVEILERS PRESENTS */}
           <motion.p
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-sm sm:text-base md:text-lg font-bold tracking-[0.25em] text-white uppercase text-center mb-5 drop-shadow-[0_2px_12px_rgba(0,0,0,0.4)]"
+            className="text-xs sm:text-sm md:text-base font-bold tracking-[0.25em] text-[#34d399] uppercase text-left mb-4 drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)]"
           >
             THE SYNTAX UNVEILERS PRESENTS
           </motion.p>
 
-          {/* 
-            Headline: Strictly in ONE SINGLE LINE across all viewports:
-            "End-to-End" in plain crisp solid white + Art-directed "Encryption"
-          */}
+          {/* Headline: Single line across viewports with Art-directed / Optical Refracted Encryption */}
           <motion.h1
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1 }}
-            className="flex items-center justify-center whitespace-nowrap flex-nowrap gap-x-2 sm:gap-x-3 md:gap-x-4 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-center leading-[1.12] select-none max-w-full overflow-visible py-1"
+            className="flex items-center text-left whitespace-nowrap flex-nowrap gap-x-2 sm:gap-x-3 md:gap-x-4 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08] select-none max-w-full overflow-visible py-1"
           >
-            {/* Plain crisp solid white 'End-to-End' */}
-            <span className="text-white font-black drop-shadow-[0_2px_15px_rgba(0,0,0,0.5)] whitespace-nowrap shrink-0">
+            <span className="text-white font-black drop-shadow-[0_2px_15px_rgba(0,0,0,0.6)] whitespace-nowrap shrink-0">
               End-to-End
             </span>
-
-            {/* Subtle Optical Refracted Light Typography for "Encryption" */}
             <OpticalRefractedEncryption />
           </motion.h1>
+        </div>
 
-          {/* Overview text strictly formatted on 2 lines matching the original template */}
+        {/* Bottom Section: Description on bottom-left, Soap Bubble Pop-up on bottom-right */}
+        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-end justify-between gap-8 mt-16 sm:mt-24 w-full">
+          {/* Bottom-left description text */}
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-sm sm:text-base md:text-lg text-slate-200/95 leading-relaxed font-normal max-w-2xl mx-auto text-center mt-6 select-none"
+            className="text-sm sm:text-base md:text-lg text-slate-200/90 leading-relaxed font-normal max-w-xl text-left select-none drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)]"
           >
             <span className="block">Messages are encrypted directly on your device. Only you and the recipient</span>
             <span className="block mt-0.5">hold the keys.</span>
           </motion.p>
-        </div>
 
-        {/* 
-          Interactive SoapBubble Button & Hotline Area:
-          - Automatically triggers after ~4.5s reading time, staying for 5s then smoothly hiding.
-          - Hovering the hotline area shows the button.
-          - Leaving the hotline area immediately closes the pop-up button.
-        */}
-        <div
-          onMouseEnter={triggerShowFor5Seconds}
-          onMouseLeave={handleHotlineLeave}
-          className="fixed bottom-10 sm:bottom-14 left-0 right-0 h-24 z-40 flex items-center justify-center pointer-events-auto"
-        >
-          <AnimatePresence>
-            {isOpen && (
-              <motion.div
-                initial={{ y: 80, opacity: 0, scale: 0.8 }}
-                animate={{
-                  y: 0,
-                  opacity: 1,
-                  scale: 1,
-                  transition: {
-                    duration: 1.25,
-                    ease: [0.16, 1, 0.3, 1],
-                  },
-                }}
-                exit={{
-                  y: 40,
-                  opacity: 0,
-                  scale: 0.88,
-                  transition: {
-                    duration: 0.55,
-                    ease: [0.32, 0, 0.67, 0],
-                  },
-                }}
-                className="pointer-events-auto"
-              >
-                <SoapBubbleMaterial
-                  backdrop={pageRef}
-                  glass={0.95}
-                  iridescence={1.35}
-                  filmScale={4.5}
-                  oilCoverage={0.9}
-                  oilEdge={18}
-                  oilEdgeFade={1.2}
-                  clearCenter={0.65}
-                  thickness={460}
-                  drainage={0.25}
-                  swirl={0.45}
-                  reflectivity={1.3}
-                  refraction={0.12}
-                  dispersion={0}
-                  bevel={14}
-                  wobble={0.08}
-                  windowIntensity={0.95}
-                  environment="studio"
-                  soapPalette="custom"
-                  soapPaletteRed="#10b981"    // Emerald
-                  soapPaletteGold="#2dd4bf"   // Cyan-Mint
-                  soapPaletteGreen="#059669"  // Deep Emerald
-                  soapPaletteCyan="#22d3ee"   // Electric Cyan
-                  soapPaletteBlue="#06b6d4"   // Vibrant Cyan
-                  soapPaletteViolet="#0891b2" // Deep Oceanic Cyan
-                  soapColor="#06b6d4"         // Prominent Cyan film base
-                  soapHighlightColor="rgba(255, 255, 255, 0.95)"
+          {/* 
+            Right-hand Hotline Zone & Pop-Up Soap Bubble Button:
+            - Locked until 7-second reading timer ends.
+            - Once timer ends, pops up for 5 seconds and drops down.
+            - Then hoverable in this right-hand hotline zone.
+          */}
+          <div
+            onMouseEnter={handleHotlineEnter}
+            onMouseLeave={handleHotlineLeave}
+            className="relative h-24 w-full md:w-auto flex items-center justify-start md:justify-end pointer-events-auto"
+          >
+            <AnimatePresence>
+              {isOpen && (
+                <motion.div
+                  initial={{ y: 70, opacity: 0, scale: 0.85 }}
+                  animate={{
+                    y: 0,
+                    opacity: 1,
+                    scale: 1,
+                    transition: {
+                      duration: 1.25,
+                      ease: [0.16, 1, 0.3, 1],
+                    },
+                  }}
+                  exit={{
+                    y: 40,
+                    opacity: 0,
+                    scale: 0.88,
+                    transition: {
+                      duration: 0.55,
+                      ease: [0.32, 0, 0.67, 0],
+                    },
+                  }}
+                  className="pointer-events-auto shrink-0"
                 >
-                  <SoapBubbleButton
-                    interactive={0.2}
-                    onClick={(e) => {
-                      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                      const origin = {
-                        x: rect.left + rect.width / 2,
-                        y: rect.top + rect.height / 2,
-                      };
-                      onNavigateToSimulator(origin);
-                    }}
-                    className="flex items-center gap-2.5 px-7 py-3 text-sm font-medium text-white shadow-[0_12px_45px_rgba(0,0,0,0.7),0_0_28px_rgba(6,182,212,0.3)] border border-white/20 hover:border-cyan-400/60 hover:shadow-[0_12px_50px_rgba(0,0,0,0.8),0_0_36px_rgba(6,182,212,0.45)] backdrop-blur-2xl transition-all duration-200 cursor-pointer"
-                    style={{
-                      background: 'rgba(14, 22, 24, 0.82)',
-                    }}
+                  <SoapBubbleMaterial
+                    backdrop={pageRef}
+                    glass={0.95}
+                    iridescence={1.35}
+                    filmScale={4.5}
+                    oilCoverage={0.9}
+                    oilEdge={18}
+                    oilEdgeFade={1.2}
+                    clearCenter={0.65}
+                    thickness={460}
+                    drainage={0.25}
+                    swirl={0.45}
+                    reflectivity={1.3}
+                    refraction={0.12}
+                    dispersion={0}
+                    bevel={14}
+                    wobble={0.08}
+                    windowIntensity={0.95}
+                    environment="studio"
+                    soapPalette="custom"
+                    soapPaletteRed="#10b981"    // Emerald
+                    soapPaletteGold="#2dd4bf"   // Mint
+                    soapPaletteGreen="#059669"  // Deep Emerald
+                    soapPaletteCyan="#22d3ee"   // Electric Cyan
+                    soapPaletteBlue="#06b6d4"   // Vibrant Cyan
+                    soapPaletteViolet="#0891b2" // Oceanic Cyan
+                    soapColor="#06b6d4"
+                    soapHighlightColor="rgba(255, 255, 255, 0.95)"
                   >
-                    <span>Let's take a deep dive</span>
-                    <span className="text-cyan-400 font-bold text-base">&rarr;</span>
-                  </SoapBubbleButton>
-                </SoapBubbleMaterial>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                    <SoapBubbleButton
+                      interactive={0.2}
+                      onClick={(e) => {
+                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                        const origin = {
+                          x: rect.left + rect.width / 2,
+                          y: rect.top + rect.height / 2,
+                        };
+                        onNavigateToSimulator(origin);
+                      }}
+                      className="flex items-center gap-2.5 px-8 py-3.5 text-sm font-medium text-white shadow-[0_12px_45px_rgba(0,0,0,0.7),0_0_28px_rgba(6,182,212,0.3)] border border-white/20 hover:border-cyan-400/60 hover:shadow-[0_12px_50px_rgba(0,0,0,0.8),0_0_36px_rgba(6,182,212,0.45)] backdrop-blur-2xl transition-all duration-200 cursor-pointer"
+                      style={{
+                        background: 'rgba(14, 22, 24, 0.85)',
+                      }}
+                    >
+                      <span>Let's take a deep dive</span>
+                      <span className="text-cyan-400 font-bold text-base">&rarr;</span>
+                    </SoapBubbleButton>
+                  </SoapBubbleMaterial>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </main>
-    </div>
+    </E2EEPageBackground>
   );
 };
 
