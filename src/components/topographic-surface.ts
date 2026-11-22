@@ -179,8 +179,8 @@ uniform highp int uStampCount;
 uniform float uPointerRadius, uPointerLift, uHoverTime;
 uniform highp int uHoverEffect;
 uniform vec2 uPointerDrag;
-uniform int uStyle, uLevelOffset, uLayers[41], uGradientEnabled, uGradientStops;
-uniform vec3 uLineColor, uAccentColor, uGradientColors[8];
+uniform int uStyle, uLevelOffset, uLayers[41], uGradientEnabled, uGradientStops, uPaletteLength;
+uniform vec3 uLineColor, uAccentColor, uGradientColors[8], uPalette[8];
 out vec4 color;
 vec4 weights(float t) {
   float t2=t*t, t3=t2*t;
@@ -313,6 +313,15 @@ void main() {
   }
   float alpha=ink*uOpacity;
   vec3 pigment=major?uAccentColor:uLineColor;
+  if (uPaletteLength > 0) {
+    int palIdx = int(abs(level)) - (int(abs(level)) / uPaletteLength) * uPaletteLength;
+    for (int p = 0; p < 8; p++) {
+      if (p == palIdx) {
+        pigment = uPalette[p];
+        break;
+      }
+    }
+  }
   float fleck=uGrainAmount>0.?texture(uGrain,gl_FragCoord.xy/uCanvasSize).r:0.;
   float grain=uGrainAmount*fleck;
   float white=uGrainAmount*.7*fleck*fleck*(1.-alpha);
@@ -620,6 +629,13 @@ export function createTopographicSurface(
   };
   let line = color(config.lineColor, '#000000'),
     accent = color(config.accentColor, '#000000');
+  const resolveLinePalette = () => {
+    const list = config.linePalette?.slice(0, 8) ?? [];
+    const data = new Float32Array(24);
+    list.forEach((val, idx) => data.set(color(val, '#000000'), idx * 3));
+    return { count: list.length, data };
+  };
+  let paletteData = resolveLinePalette();
   let shadow = config.shadowColor === undefined ? null : color(config.shadowColor, '#000000');
   let surfaceColor = color(config.surfaceColor ?? '#f4f3f0', '#f4f3f0'),
     background = color(config.backgroundColor ?? getComputedStyle(host).backgroundColor, '#ffffff');
@@ -706,6 +722,8 @@ export function createTopographicSurface(
         'uLayers[0]',
         'uLineColor',
         'uAccentColor',
+        'uPaletteLength',
+        'uPalette[0]',
         'uGradientEnabled',
         'uGradientStops',
         'uGradientDiffusion',
@@ -954,6 +972,10 @@ export function createTopographicSurface(
     );
     gl.uniform3fv(locations.uLineColor, line);
     gl.uniform3fv(locations.uAccentColor, accent);
+    gl.uniform1i(locations.uPaletteLength, paletteData.count);
+    if (paletteData.count > 0) {
+      gl.uniform3fv(locations['uPalette[0]'], paletteData.data);
+    }
     gl.uniform1i(locations.uGradientEnabled, gradientColors.count >= 2 ? 1 : 0);
     gl.uniform1i(locations.uGradientStops, gradientColors.count);
     gl.uniform1f(locations.uGradientDiffusion, finite(config.gradientDiffusion ?? 0, 0, 1, 0));
@@ -1151,6 +1173,7 @@ export function createTopographicSurface(
         !literalColor(config.accentColor)
       )
         accent = color(config.accentColor, '#000000');
+      paletteData = resolveLinePalette();
       if (
         !threeDimensional ||
         config.surfaceColor !== previous.surfaceColor ||
