@@ -1,31 +1,40 @@
 import React, { useState } from 'react';
 import { E2EEHomePage } from './components/features/E2EEHomePage';
 import { E2EESimulatorPortal } from './components/features/E2EESimulatorPortal';
-import { DoubleStairsPreloader } from './components/DoubleStairsPreloader';
+import { DoubleStairsPreloader, type PreloaderPhase } from './components/DoubleStairsPreloader';
 
 export const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<'home' | 'simulator'>('home');
-  const [isPreloaderActive, setIsPreloaderActive] = useState(false);
+  const [preloaderPhase, setPreloaderPhase] = useState<PreloaderPhase>('idle');
 
-  // Triggered when user clicks the "Let's take a deep dive" button
+  // Triggered when user clicks the "Let's take a deep dive" button on HomePage
   const handleStartDeepDive = () => {
-    setIsPreloaderActive(true);
+    // 1. Double stairs cascade shut from top and bottom
+    setPreloaderPhase('closing');
   };
 
-  // Called when double stairs curtain finishes closing
-  const handlePreloaderComplete = () => {
-    // Switch to simulator view, then unlock the curtains
+  // Called when the double stairs finish closing completely
+  const handleStairsClosed = () => {
+    // 2. Switch the active view underneath to the simulator while curtains are shut
     setCurrentView('simulator');
+
+    // 3. Briefly hold the modern cyber HUD telemetry screen (~500ms), then trigger reverse double stairs reveal
     setTimeout(() => {
-      setIsPreloaderActive(false);
-    }, 200);
+      setPreloaderPhase('opening');
+    }, 550);
+  };
+
+  // Called when reverse double stairs finish retracting to reveal the simulator
+  const handleStairsOpened = () => {
+    setPreloaderPhase('idle');
   };
 
   return (
     <>
       <DoubleStairsPreloader
-        isActive={isPreloaderActive}
-        onTransitionComplete={handlePreloaderComplete}
+        phase={preloaderPhase}
+        onClosed={handleStairsClosed}
+        onOpened={handleStairsOpened}
       />
       {currentView === 'simulator' ? (
         <E2EESimulatorPortal onBackToHome={() => setCurrentView('home')} />
