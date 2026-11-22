@@ -232,24 +232,22 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
       {isVisible && (
         <div className="fixed inset-0 z-[120] pointer-events-auto overflow-hidden select-none">
           {/*
-            Phase 1: Expanding bubble curtain covering the screen
-            Phase 2: Compiling studio card + Skiper 8 Cycling Words
-            Phase 3: Smooth Dennis Snellenberg elastic curve sliding up
+            Phase 1: Pure black curtain rising up from the bottom of the website to cover the entire page.
+            Phase 2: Compiling studio card + Skiper 8 Cycling Words.
+            Phase 3: Smooth Dennis Snellenberg elastic curve sliding up to reveal simulator.
           */}
           <motion.div
             className="fixed inset-0 z-30 flex items-center justify-center bg-[#070b0e]"
-            initial={{ clipPath: 'circle(0% at 50% 90%)' }}
+            initial={{ y: '100%' }}
             animate={
               phase === 'expanding'
                 ? {
-                    clipPath: 'circle(150% at 50% 90%)',
-                    y: 0,
-                    transition: { duration: 0.85, ease: customEase },
+                    y: '0%',
+                    transition: { duration: 0.9, ease: customEase },
                   }
                 : phase === 'loading'
                 ? {
-                    clipPath: 'circle(150% at 50% 90%)',
-                    y: 0,
+                    y: '0%',
                   }
                 : phase === 'exiting'
                 ? {
@@ -266,7 +264,37 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
               }
             }}
           >
-            {/* SVG Elastic Curve underneath the curtain (morphs from sag to flat as it lifts) */}
+            {/*
+              Animated Soap-Bubble Gradient at the BOTTOM of the black curtain only:
+              Luminous Cyan (#22d3ee), Vibrant WhatsApp Green (#25D366), and Deep Forest Green (#064e3b)
+              slowly breathing and swirling along the bottom border.
+            */}
+            <div className="absolute bottom-0 left-0 right-0 h-64 sm:h-80 pointer-events-none overflow-hidden z-10">
+              {/* Primary Cyan & Emerald iridescent glow wave */}
+              <div
+                className="absolute -bottom-16 -left-[20%] -right-[20%] h-72 opacity-85 blur-3xl"
+                style={{
+                  background:
+                    'radial-gradient(ellipse 90% 65% at 50% 100%, rgba(34, 211, 238, 0.75) 0%, rgba(37, 211, 102, 0.55) 45%, rgba(6, 78, 59, 0.35) 75%, transparent 100%)',
+                  animation: 'bubbleWave 6s ease-in-out infinite alternate',
+                }}
+              />
+
+              {/* Secondary oscillating shimmer ray */}
+              <div
+                className="absolute -bottom-10 left-[10%] right-[10%] h-44 opacity-75 blur-2xl"
+                style={{
+                  background:
+                    'radial-gradient(ellipse 70% 50% at 50% 100%, rgba(45, 212, 191, 0.85) 0%, rgba(16, 185, 129, 0.6) 50%, transparent 85%)',
+                  animation: 'bubbleShimmer 4.5s ease-in-out infinite alternate',
+                }}
+              />
+
+              {/* Subtle top edge fade so the gradient seamlessly vanishes into the pitch black screen */}
+              <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#070b0e]/30 to-[#070b0e]" />
+            </div>
+
+            {/* SVG Elastic Curve underneath the curtain (morphs from sag to flat as it lifts off) */}
             {width > 0 && phase === 'exiting' && (
               <svg className="absolute top-0 left-0 w-full h-[calc(100%+350px)] pointer-events-none -z-10">
                 <motion.path
@@ -287,7 +315,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.96 }}
                   transition={{ duration: 0.35, ease: 'easeOut' }}
-                  className="relative w-full max-w-4xl h-[78vh] max-h-[580px] bg-[#fcfcfc] rounded-3xl shadow-[0_35px_100px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-slate-200/80 mx-4 sm:mx-8"
+                  className="relative z-20 w-full max-w-4xl h-[78vh] max-h-[580px] bg-[#fcfcfc] rounded-3xl shadow-[0_35px_100px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-slate-200/80 mx-4 sm:mx-8"
                 >
                   {/* Top Bar Navigation: Mac window controls */}
                   <div className="flex items-center justify-between w-full border-b border-slate-200/80 pb-3.5">
@@ -331,6 +359,35 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
               )}
             </AnimatePresence>
           </motion.div>
+
+          {/* Keyframe styles for the bottom fluid bubble gradient animation */}
+          <style>{`
+            @keyframes bubbleWave {
+              0% {
+                transform: translateY(12px) scale(0.96) rotate(-1deg);
+              }
+              50% {
+                transform: translateY(-8px) scale(1.04) rotate(1deg);
+              }
+              100% {
+                transform: translateY(6px) scale(1.01) rotate(-0.5deg);
+              }
+            }
+            @keyframes bubbleShimmer {
+              0% {
+                transform: translateX(-4%) scaleY(0.9);
+                opacity: 0.65;
+              }
+              50% {
+                transform: translateX(4%) scaleY(1.15);
+                opacity: 0.9;
+              }
+              100% {
+                transform: translateX(-2%) scaleY(1);
+                opacity: 0.7;
+              }
+            }
+          `}</style>
         </div>
       )}
     </AnimatePresence>
