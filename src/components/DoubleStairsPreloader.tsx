@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MorphingPinwheelLoader } from './MorphingPinwheelLoader';
+import { ThreeSquaresLoader } from './ThreeSquaresLoader';
 
 export type PreloaderPhase = 'idle' | 'closing' | 'loading' | 'opening';
 
@@ -284,36 +284,12 @@ export const DoubleStairsPreloader: React.FC<DoubleStairsPreloaderProps> = ({
 
                   {/* Center Dot-Matrix Loading Telemetry */}
                   <div className="flex flex-col md:flex-row items-center justify-between my-auto w-full gap-8">
-                    {/* Left: Status & Micro-Copy */}
-                    <div className="flex flex-col gap-6">
-                      {/* Animated jumping letters: "initializing..." */}
-                      <div className="inline-flex items-center select-none">
-                        {'initializing...'.split('').map((letter, idx) => (
-                          <motion.span
-                            key={idx}
-                            className="font-mono text-sm sm:text-base font-bold text-slate-900 tracking-wider inline-block"
-                            animate={{
-                              y: [0, -6, 0],
-                            }}
-                            transition={{
-                              duration: 0.65,
-                              repeat: Infinity,
-                              ease: 'easeInOut',
-                              delay: idx * 0.05,
-                            }}
-                          >
-                            {letter}
-                          </motion.span>
-                        ))}
-                      </div>
-
-                      {/* Morphing Pinwheel Animated Loader (exact geometry from screen recording in bold black) + Compiling */}
-                      <div className="flex items-center gap-4">
-                        <MorphingPinwheelLoader size={34} />
-                        <span className="text-xs font-mono text-slate-800 uppercase tracking-widest font-bold">
-                          COMPILING...
-                        </span>
-                      </div>
+                    {/* Left: Compiling with cycling three squares loader */}
+                    <div className="flex items-center gap-3.5">
+                      <span className="text-xl sm:text-2xl md:text-3xl font-bold font-mono text-slate-900 tracking-tight">
+                        Compiling
+                      </span>
+                      <ThreeSquaresLoader size={22} />
                     </div>
 
                     {/* Right: Big Dot-Matrix Counter with direct bold black numbers */}
