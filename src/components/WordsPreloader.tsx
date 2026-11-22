@@ -132,7 +132,7 @@ const DIGIT_PATTERNS: Record<string, number[][]> = {
 const InstantDotMatrixDigit: React.FC<{ char: string; dotSize?: number; color?: string }> = ({
   char,
   dotSize = 5,
-  color = '#000000',
+  color = '#111b21',
 }) => {
   const pattern = DIGIT_PATTERNS[char] || DIGIT_PATTERNS['0'];
   return (
@@ -193,7 +193,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
     }
   }, [phase]);
 
-  // Compiling duration: Approximately 6 seconds total (1% -> 100% at ~60ms per tick)
+  // Compiling duration: Approximately 6 seconds total (1% -> 100% at ~58ms per tick)
   // This gives the large WebGL2 Soffit gradient plenty of time to expand and bloom from the bottom
   useEffect(() => {
     if (phase === 'loading') {
@@ -219,11 +219,10 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
     }
   }, [phase, onLoadingComplete]);
 
-  const { width, height } = dimensions;
-
-  // Exact button coordinate origin for the expanding circle (defaults to center 50% 90% if not set)
+  // Button origin coordinates: Strictly at horizontal center (50vw) and bottom of screen (button position)
+  // Ensures perfectly symmetric bottom expansion with no sideways/rightward bias
   const originX = buttonOrigin ? `${Math.round(buttonOrigin.x)}px` : '50%';
-  const originY = buttonOrigin ? `${Math.round(buttonOrigin.y)}px` : '90%';
+  const originY = buttonOrigin ? `${Math.round(buttonOrigin.y)}px` : 'calc(100% - 70px)';
 
   const initialClip = `circle(0px at ${originX} ${originY})`;
   const expandedClip = `circle(160vmax at ${originX} ${originY})`;
@@ -235,20 +234,20 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
 
   const isVisible = phase !== 'idle';
 
-  // Exact Soffit gradient configuration:
-  // tilt: 0 (flat horizontal bands across the bottom),
-  // with rich cyan, vibrant emerald, and deep dark green
+  // WhatsApp-inspired authentic palette:
+  // Smooth transition from dark oil-film black -> WhatsApp warm cream/off-white background
+  // Soffit gradient with WhatsApp green, teal, and luminous emerald ripples
   const soffitConfig: SoffitGradientConfig = {
-    bgColor: '#021512',   // Deep dark green base
-    colorA: '#04382c',    // Deep forest green
-    colorB: '#059669',    // Vibrant emerald green
-    colorC: '#22d3ee',    // Electric Cyan
-    colorD: '#6ee7b7',    // Luminous Mint-Green highlight
-    scale: 0.65,          // Larger scale for prominent fluid ripples
+    bgColor: '#f0f2f5',   // WhatsApp warm off-white cream base
+    colorA: '#00a884',    // WhatsApp primary teal-green
+    colorB: '#25d366',    // WhatsApp vibrant green
+    colorC: '#06b6d4',    // Electric Cyan highlight
+    colorD: '#dcfce7',    // Light mint-cream glint
+    scale: 0.65,          // Broad organic ripples
     speed: 0.28,
-    tilt: 0.0,            // FLAT horizontal orientation (not diagonal)
+    tilt: 0.0,            // FLAT horizontal orientation
     rock: 0.06,           // Gentle horizontal undulation
-    horizon: -0.15,       // Centered lower band
+    horizon: -0.15,
     breathe: 0.25,
     spread: 0.6,
     curve: 2.8,
@@ -266,16 +265,16 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
     lacunarity: 2.0,
     motes: 0.05,
     moteScale: 7,
-    ambient: 0.18,
-    contrast: 2.2,
+    ambient: 0.32,
+    contrast: 1.8,
     midpoint: 0.55,
     sink: 0.22,
     glow: 0.35,
     grain: 0,
     grainAnim: 0,
     dither: 0.8,
-    vignette: 0.15,
-    steer: 0.0,           // Keeps light flat
+    vignette: 0.08,
+    steer: 0.0,
     lift: 0.08,
     sweep: 0.2,
     cursor: 1,
@@ -288,28 +287,44 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
       {isVisible && (
         <div className="fixed inset-0 z-[120] pointer-events-auto overflow-hidden select-none">
           {/*
-            Phase 1 (Expanding): Black screen bursts outward directly FROM THE BUBBLE BUTTON.
-            Phase 2 (Loading): Compiling card + 6-second rising flat Soffit gradient from bottom.
-            Phase 3 (Exiting): Reverse word preloader — the black screen smoothly contracts back
-            into the bubble button origin, revealing the loaded simulator page!
+            Phase 1 (Expanding):
+            Starts at the bubble button location at the bottom of the website,
+            morphing from the button's black tint (#0c1317) into WhatsApp's warm off-white cream (#f0f2f5),
+            expanding outward to cover the entire website.
+            Phase 2 (Loading):
+            Compiling studio card + 6-second rising flat Soffit gradient in WhatsApp teal/emerald/cyan.
+            Phase 3 (Exiting):
+            Reverse preloader contracts smoothly back into the bottom button origin, revealing the simulator!
           */}
           <motion.div
-            className="fixed inset-0 z-30 flex items-center justify-center bg-[#070b0e]"
-            initial={{ clipPath: initialClip }}
+            className="fixed inset-0 z-30 flex items-center justify-center"
+            initial={{
+              clipPath: initialClip,
+              backgroundColor: '#0c1317', // Bubble black start
+            }}
             animate={
               phase === 'expanding'
                 ? {
                     clipPath: expandedClip,
-                    transition: { duration: 1.1, ease: customEase },
+                    backgroundColor: '#efeae2', // WhatsApp signature warm cream (#efeae2)
+                    transition: {
+                      clipPath: { duration: 1.15, ease: customEase },
+                      backgroundColor: { duration: 1.0, ease: 'easeInOut' },
+                    },
                   }
                 : phase === 'loading'
                 ? {
                     clipPath: expandedClip,
+                    backgroundColor: '#efeae2',
                   }
                 : phase === 'exiting'
                 ? {
                     clipPath: initialClip,
-                    transition: { duration: 0.95, ease: customEase },
+                    backgroundColor: '#0c1317', // Contracts back into black bubble
+                    transition: {
+                      clipPath: { duration: 0.95, ease: customEase },
+                      backgroundColor: { duration: 0.85, ease: 'easeInOut' },
+                    },
                   }
                 : {}
             }
@@ -323,8 +338,8 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
           >
             {/*
               LARGE FLAT SOFFIT WEBGL2 GRADIENT RISING FROM THE BOTTOM:
-              Covers 65% of the screen height (h-[65vh]), rising up over 5.5s so it
-              slowly and gracefully blooms to full scale as compiling reaches 100%.
+              Covers 65% of the screen height (h-[65vh]), rising up over 5.2s so it
+              slowly and gracefully blooms to full scale in vibrant WhatsApp green, teal, and cyan.
             */}
             <motion.div
               initial={{ y: '100%', opacity: 0 }}
@@ -332,7 +347,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                 phase === 'loading'
                   ? {
                       y: '0%',
-                      opacity: 1,
+                      opacity: 0.92,
                       transition: { duration: 5.2, ease: [0.16, 1, 0.3, 1] },
                     }
                   : phase === 'exiting'
@@ -346,20 +361,20 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
             >
               <SoffitGradient
                 config={soffitConfig}
-                className="w-full h-full opacity-95"
+                className="w-full h-full"
               />
 
-              {/* Seamless flat top blend into the pitch black screen */}
+              {/* Seamless flat top blend into the warm cream background */}
               <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
                   background:
-                    'linear-gradient(to top, transparent 0%, rgba(7, 11, 14, 0.25) 40%, rgba(7, 11, 14, 0.85) 80%, #070b0e 100%)',
+                    'linear-gradient(to top, transparent 0%, rgba(239, 234, 226, 0.25) 40%, rgba(239, 234, 226, 0.85) 80%, #efeae2 100%)',
                 }}
               />
             </motion.div>
 
-            {/* Compiling Studio Card & Skiper 8 Word Preloader */}
+            {/* Compiling Studio Card & Skiper 8 Word Preloader in refined WhatsApp theme */}
             <AnimatePresence>
               {phase === 'loading' && (
                 <motion.div
@@ -368,19 +383,19 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.96 }}
                   transition={{ duration: 0.35, ease: 'easeOut' }}
-                  className="relative z-20 w-full max-w-4xl h-[78vh] max-h-[580px] bg-[#fcfcfc] rounded-3xl shadow-[0_35px_100px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-slate-200/80 mx-4 sm:mx-8 backdrop-blur-md"
+                  className="relative z-20 w-full max-w-4xl h-[78vh] max-h-[580px] bg-white/95 rounded-3xl shadow-[0_30px_90px_rgba(11,20,26,0.18)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-[#d1d7db]/80 mx-4 sm:mx-8 backdrop-blur-xl"
                 >
                   {/* Top Bar Navigation: Mac window controls */}
-                  <div className="flex items-center justify-between w-full border-b border-slate-200/80 pb-3.5">
+                  <div className="flex items-center justify-between w-full border-b border-[#e9edef] pb-3.5">
                     <div className="flex items-center gap-2">
                       <span className="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e]/50 shadow-xs cursor-pointer" />
                       <span className="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea123]/50 shadow-xs cursor-pointer" />
-                      <span className="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29]/50 shadow-xs cursor-pointer" />
+                      <span className="w-3 h-3 rounded-full bg-[#25d366] border border-[#128c7e]/50 shadow-xs cursor-pointer" />
                     </div>
 
                     {/* Skiper 8 Cycling Words Pill */}
-                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-mono font-semibold text-emerald-600">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#f0f2f5] border border-[#d1d7db] text-xs font-mono font-semibold text-[#00a884]">
+                      <span className="w-2 h-2 rounded-full bg-[#00a884] animate-ping" />
                       <span className="transition-all duration-200">{CRYPTO_WORDS[wordIndex]}</span>
                     </div>
                   </div>
@@ -389,24 +404,24 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   <div className="flex flex-col md:flex-row items-center justify-between my-auto w-full gap-8">
                     {/* Left: Compiling with cycling three squares loader */}
                     <div className="flex items-center gap-4">
-                      <span className="text-2xl sm:text-3xl md:text-4xl font-bold font-mono text-slate-900 tracking-tight">
+                      <span className="text-2xl sm:text-3xl md:text-4xl font-bold font-mono text-[#111b21] tracking-tight">
                         Compiling
                       </span>
-                      <ThreeSquaresLoader size={26} />
+                      <ThreeSquaresLoader size={26} color="#00a884" />
                     </div>
 
                     {/* Right: Big Dot-Matrix Counter with instant digit changes */}
-                    <div className="flex items-center gap-2 sm:gap-3 bg-slate-100/90 px-6 py-5 rounded-2xl border border-slate-200/90 shadow-inner">
+                    <div className="flex items-center gap-2 sm:gap-3 bg-[#f0f2f5] px-6 py-5 rounded-2xl border border-[#d1d7db] shadow-inner">
                       {digits.map((ch, idx) => (
-                        <InstantDotMatrixDigit key={idx} char={ch} dotSize={6} color="#000000" />
+                        <InstantDotMatrixDigit key={idx} char={ch} dotSize={6} color="#111b21" />
                       ))}
                     </div>
                   </div>
 
                   {/* Bottom Footer Telemetry */}
-                  <div className="flex items-center justify-between w-full text-xs font-mono text-slate-400 border-t border-slate-200/80 pt-3.5">
-                    <span className="text-slate-500 font-medium">THE SYNTAX UNVEILERS</span>
-                    <span className="text-slate-400 hidden sm:inline">END-TO-END ENCRYPTION SIMULATOR</span>
+                  <div className="flex items-center justify-between w-full text-xs font-mono text-[#667781] border-t border-[#e9edef] pt-3.5">
+                    <span className="text-[#00a884] font-semibold tracking-wide">THE SYNTAX UNVEILERS</span>
+                    <span className="text-[#667781] hidden sm:inline">END-TO-END ENCRYPTION SIMULATOR</span>
                   </div>
                 </motion.div>
               )}
