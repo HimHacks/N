@@ -223,9 +223,9 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
           <AnimatePresence>
             {isOpen && (
               <motion.div
-                initial={{ y: 80, opacity: 0, scale: 0.92 }}
+                initial={{ y: 80, opacity: 0, scale: 0.8 }}
                 animate={{ y: 0, opacity: 1, scale: 1 }}
-                exit={{ y: 64, opacity: 0, scale: 0.94 }}
+                exit={{ y: 72, opacity: 0, scale: 0.72 }}
                 transition={{ duration: 1.25, ease: [0.16, 1, 0.3, 1] }}
                 className="pointer-events-auto"
               >
