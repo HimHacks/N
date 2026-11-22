@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { Renderer, Program, Mesh, Triangle } from 'ogl';
 
 export interface LumenInteractiveShaderProps {
   className?: string;
@@ -14,7 +15,7 @@ void main(){
 }
 `;
 
-// Exact upstream GLSL from https://rbp-shader-template.vercel.app/
+// Exact upstream GLSL extracted from https://rbp-shader-template.vercel.app/
 const FRAG_SHADER = `
 precision mediump float;
 varying vec2 v;
@@ -98,7 +99,19 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
     const container = containerRef.current;
     if (!container) return;
 
-    const canvas = document.createElement('canvas');
+    // Use exact upstream OGL Renderer
+    const renderer = new Renderer({
+      alpha: false,
+      antialias: false,
+      depth: false,
+      stencil: false,
+      premultipliedAlpha: false,
+      powerPreference: 'high-performance',
+      dpr: Math.min(window.devicePixelRatio || 1, 1.5),
+    });
+
+    const gl = renderer.gl;
+    const canvas = gl.canvas;
     canvas.style.position = 'absolute';
     canvas.style.inset = '0';
     canvas.style.width = '100%';
@@ -106,87 +119,69 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
     canvas.style.display = 'block';
     container.appendChild(canvas);
 
-    const gl = canvas.getContext('webgl', {
-      alpha: false,
-      antialias: false,
-      depth: false,
-      stencil: false,
-      premultipliedAlpha: false,
-      powerPreference: 'high-performance',
-    });
-    if (!gl) return;
+    // Exact upstream geometry: Triangle
+    const geometry = new Triangle(gl);
 
-    const createShader = (glCtx: WebGLRenderingContext, type: number, src: string) => {
-      const s = glCtx.createShader(type);
-      if (!s) return null;
-      glCtx.shaderSource(s, src);
-      glCtx.compileShader(s);
-      if (!glCtx.getShaderParameter(s, glCtx.COMPILE_STATUS)) {
-        console.error('Shader compile error:', glCtx.getShaderInfoLog(s));
-        glCtx.deleteShader(s);
-        return null;
+    // Calibrated vibrant green contrast matching user specifications:
+    // Pink -> Deep Emerald [0.04, 0.75, 0.45]
+    // Light Blue -> Mint/Emerald [0.05, 0.65, 0.35]
+    // Purple -> Biscotti Cream [0.88, 0.82, 0.65]
+    // Orange-yellowish -> Graphite [0.12, 0.18, 0.15]
+    // Base: Deep dark green forest [0.015, 0.08, 0.045]
+    const program = new Program(gl, {
+      vertex: VERT_SHADER,
+      fragment: FRAG_SHADER,
+      depthTest: false,
+      depthWrite: false,
+      cullFace: false,
+      uniforms: {
+        t: { value: 0 },
+        r: { value: [1, 1] },
+        c: { value: [0, 0] },
+        ci: { value: 0 },
+        u_pal_base: { value: [0.015, 0.08, 0.045] },
+        u_pal_warm: { value: [0.04, 0.75, 0.45] },
+        u_pal_mid: { value: [0.88, 0.82, 0.65] },
+        u_pal_cool: { value: [0.05, 0.65, 0.35] },
+        u_pal_cursor: { value: [0.12, 0.45, 0.35] },
+        u_pal_rgScale: { value: [1.0, 1.0, 1.0] },
+        u_brightness: { value: 2.5 },
+      },
+    });
+
+    const mesh = new Mesh(gl, { geometry, program });
+
+    // Resize handling matching upstream
+    let resizeReq = 0;
+    let lastW = 0;
+    let lastH = 0;
+
+    const handleResize = () => {
+      const rect = container.getBoundingClientRect();
+      const w = Math.max(1, Math.round(rect.width));
+      const h = Math.max(1, Math.round(rect.height));
+      if (w !== lastW || h !== lastH) {
+        lastW = w;
+        lastH = h;
+        renderer.setSize(w, h);
+        program.uniforms.r.value[0] = canvas.width;
+        program.uniforms.r.value[1] = canvas.height;
+        renderer.render({ scene: mesh });
       }
-      return s;
     };
 
-    const vert = createShader(gl, gl.VERTEX_SHADER, VERT_SHADER);
-    const frag = createShader(gl, gl.FRAGMENT_SHADER, FRAG_SHADER);
-    if (!vert || !frag) return;
+    handleResize();
+    const resizeObserver = new ResizeObserver(() => {
+      if (!resizeReq) {
+        resizeReq = requestAnimationFrame(() => {
+          resizeReq = 0;
+          handleResize();
+        });
+      }
+    });
+    resizeObserver.observe(container);
 
-    const program = gl.createProgram();
-    if (!program) return;
-    gl.attachShader(program, vert);
-    gl.attachShader(program, frag);
-    gl.linkProgram(program);
-
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      console.error('Program link error:', gl.getProgramInfoLog(program));
-      return;
-    }
-
-    gl.useProgram(program);
-
-    // Big fullscreen triangle geometry [-1, -1, 3, -1, -1, 3] from upstream
-    const buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(
-      gl.ARRAY_BUFFER,
-      new Float32Array([-1, -1, 3, -1, -1, 3]),
-      gl.STATIC_DRAW
-    );
-
-    const posLoc = gl.getAttribLocation(program, 'position');
-    gl.enableVertexAttribArray(posLoc);
-    gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
-
-    // Uniform locations
-    const u_t = gl.getUniformLocation(program, 't');
-    const u_r = gl.getUniformLocation(program, 'r');
-    const u_c = gl.getUniformLocation(program, 'c');
-    const u_ci = gl.getUniformLocation(program, 'ci');
-    const u_pal_base = gl.getUniformLocation(program, 'u_pal_base');
-    const u_pal_warm = gl.getUniformLocation(program, 'u_pal_warm');
-    const u_pal_mid = gl.getUniformLocation(program, 'u_pal_mid');
-    const u_pal_cool = gl.getUniformLocation(program, 'u_pal_cool');
-    const u_pal_cursor = gl.getUniformLocation(program, 'u_pal_cursor');
-    const u_pal_rgScale = gl.getUniformLocation(program, 'u_pal_rgScale');
-    const u_brightness = gl.getUniformLocation(program, 'u_brightness');
-
-    // Vibrant calibrated green translation of upstream "Warm" (brightness: 2.5):
-    // 1. base (deep forest green canvas): [0.015, 0.08, 0.045]
-    // 2. warm (rich vibrant deep emerald replacing coral/pink): [0.04, 0.75, 0.45]
-    // 3. mid (warm luminous biscotti cream & mint replacing peach/golden): [0.88, 0.82, 0.65]
-    // 4. cool (vibrant emerald green replacing sky blue): [0.05, 0.65, 0.35]
-    // 5. cursor (electric mint & cyan glint wake): [0.12, 0.45, 0.35]
-    gl.uniform3f(u_pal_base, 0.015, 0.08, 0.045);
-    gl.uniform3f(u_pal_warm, 0.04, 0.75, 0.45);
-    gl.uniform3f(u_pal_mid, 0.88, 0.82, 0.65);
-    gl.uniform3f(u_pal_cool, 0.05, 0.65, 0.35);
-    gl.uniform3f(u_pal_cursor, 0.12, 0.45, 0.35);
-    gl.uniform3f(u_pal_rgScale, 1.0, 1.0, 1.0);
-    gl.uniform1f(u_brightness, 2.5); // Exact upstream brightness
-
-    // Pointer tracking matching upstream:
+    // Pointer tracking matching upstream
     let k = [0, 0];
     let M = [0, 0];
     let T = 0;
@@ -218,38 +213,7 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
     window.addEventListener('pointerleave', handlePointerLeave, { passive: true });
     window.addEventListener('blur', handlePointerLeave);
 
-    // Resize handling matching upstream
-    let resizeReq = 0;
-    let lastW = 0;
-    let lastH = 0;
-
-    const handleResize = () => {
-      const rect = container.getBoundingClientRect();
-      const w = Math.max(1, Math.round(rect.width));
-      const h = Math.max(1, Math.round(rect.height));
-      if (w !== lastW || h !== lastH) {
-        lastW = w;
-        lastH = h;
-        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-        canvas.width = Math.floor(w * dpr);
-        canvas.height = Math.floor(h * dpr);
-        gl.viewport(0, 0, canvas.width, canvas.height);
-        gl.uniform2f(u_r, canvas.width, canvas.height);
-      }
-    };
-
-    handleResize();
-    const resizeObserver = new ResizeObserver(() => {
-      if (!resizeReq) {
-        resizeReq = requestAnimationFrame(() => {
-          resizeReq = 0;
-          handleResize();
-        });
-      }
-    });
-    resizeObserver.observe(container);
-
-    // Exact 60fps delta-timed animation loop from upstream
+    // 60fps delta-timed animation loop from upstream
     let animId = 0;
     const N = performance.now();
     let P = N;
@@ -269,12 +233,12 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
       const intensityFactor = 1 - Math.pow(0.94, dt / R);
       E += (T - E) * intensityFactor;
 
-      const timeVal = (now - N) * 0.001;
-      gl.uniform1f(u_t, timeVal);
-      gl.uniform2f(u_c, M[0], M[1]);
-      gl.uniform1f(u_ci, E);
+      program.uniforms.t.value = (now - N) * 0.001;
+      program.uniforms.c.value[0] = M[0];
+      program.uniforms.c.value[1] = M[1];
+      program.uniforms.ci.value = E;
 
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      renderer.render({ scene: mesh });
     };
 
     animId = requestAnimationFrame(frameLoop);
@@ -299,10 +263,6 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
       window.removeEventListener('pointerleave', handlePointerLeave);
       window.removeEventListener('blur', handlePointerLeave);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      gl.deleteBuffer(buf);
-      gl.deleteProgram(program);
-      gl.deleteShader(vert);
-      gl.deleteShader(frag);
       canvas.remove();
     };
   }, []);
