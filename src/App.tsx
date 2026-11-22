@@ -1,45 +1,45 @@
 import React, { useState } from 'react';
 import { E2EEHomePage } from './components/features/E2EEHomePage';
 import { E2EESimulatorPortal } from './components/features/E2EESimulatorPortal';
-import { DoubleStairsPreloader, type PreloaderPhase } from './components/DoubleStairsPreloader';
+import { WordsPreloader, type WordPreloaderPhase } from './components/WordsPreloader';
 
 export const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<'home' | 'simulator'>('home');
-  const [preloaderPhase, setPreloaderPhase] = useState<PreloaderPhase>('idle');
+  const [preloaderPhase, setPreloaderPhase] = useState<WordPreloaderPhase>('idle');
 
-  // Triggered when user clicks the "Let's take a deep dive" button on HomePage
+  // Triggered when user clicks the "Let's take a deep dive" bubble button on HomePage
   const handleStartDeepDive = () => {
-    // 1. Double stairs chunks cascade together from top and bottom
-    setPreloaderPhase('closing');
+    // 1. Black bubble spreads outward across the entire screen
+    setPreloaderPhase('expanding');
   };
 
-  // Called when the double stairs chunks finish coming together
-  const handleStairsClosed = () => {
-    // 2. Start the loading phase (dot matrix counts 0% -> 100% with smooth digit transitions)
+  // Called when the spreading bubble curtain covers the entire screen
+  const handleBubbleExpanded = () => {
+    // 2. Open the compiling card with cycling crypto words and 1% -> 100% counter
     setPreloaderPhase('loading');
   };
 
-  // Called when the 0% -> 100% digit loading animation finishes
+  // Called when 100% is reached
   const handleLoadingComplete = () => {
-    // 3. Mount the simulator behind the curtains
+    // 3. Mount the simulator portal behind the curtain
     setCurrentView('simulator');
 
-    // 4. Retract the chunks in a reverse double stair preloader wave
-    setPreloaderPhase('opening');
+    // 4. Elastic curve (Skiper 8 / Dennis Snellenberg) lifts up off the screen to reveal the simulator
+    setPreloaderPhase('exiting');
   };
 
-  // Called when reverse double stairs finish retracting to reveal the simulator
-  const handleStairsOpened = () => {
+  // Called when the curved curtain finishes exiting
+  const handlePreloaderExited = () => {
     setPreloaderPhase('idle');
   };
 
   return (
     <>
-      <DoubleStairsPreloader
+      <WordsPreloader
         phase={preloaderPhase}
-        onClosed={handleStairsClosed}
+        onExpanded={handleBubbleExpanded}
         onLoadingComplete={handleLoadingComplete}
-        onOpened={handleStairsOpened}
+        onExited={handlePreloaderExited}
       />
       {currentView === 'simulator' ? (
         <E2EESimulatorPortal onBackToHome={() => setCurrentView('home')} />
