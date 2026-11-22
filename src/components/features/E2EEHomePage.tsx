@@ -73,15 +73,15 @@ export const RefractedEncryption: React.FC = () => {
         paused={false}
         cursorMovesBeam={false}
         fontSize="1em"
-        fontFamily="'ReactDrops Square Display', 'Arial Black', sans-serif"
-        fontWeight={900}
-        letterSpacing="normal"
-        extraBold={2.25}
-        fontHeight={80}
-        cornerRounding={1}
+        fontFamily="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
+        fontWeight={800}
+        letterSpacing="-0.025em"
+        extraBold={0}
+        fontHeight={100}
+        cornerRounding={0}
         className="align-middle drop-shadow-[0_2px_14px_rgba(0,0,0,0.65)]"
         style={{
-          width: '7.1em',
+          width: '5.6em',
           height: '1.05em',
         }}
       />
