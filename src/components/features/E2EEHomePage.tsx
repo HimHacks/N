@@ -71,10 +71,10 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
   return (
     <div
       ref={pageRef}
-      className="relative w-full min-h-screen overflow-x-hidden font-sans select-none bg-[#03140e] text-white"
+      className="relative w-full min-h-screen overflow-x-hidden select-none bg-[#0b141a] text-white"
       style={{
         fontFamily:
-          '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+          'system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
       }}
     >
       {/* 
@@ -133,7 +133,7 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-base sm:text-lg md:text-xl text-white/90 font-normal max-w-xl text-left select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] leading-relaxed"
+            className="text-base sm:text-lg md:text-xl text-[#efeae2]/90 font-normal max-w-xl text-left select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] leading-relaxed"
           >
             <span className="block">Messages are encrypted directly on your device.</span>
             <span className="block mt-0.5">Only you and the recipient hold the keys.</span>
@@ -177,22 +177,22 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                 >
                   <SoapBubbleMaterial
                     backdrop={pageRef}
-                    glass={0.95}
-                    iridescence={1.35}
-                    filmScale={4.5}
-                    oilCoverage={0.9}
-                    oilEdge={18}
-                    oilEdgeFade={1.2}
-                    clearCenter={0.65}
-                    thickness={460}
-                    drainage={0.25}
-                    swirl={0.45}
-                    reflectivity={1.3}
-                    refraction={0.12}
+                    glass={1.0}
+                    iridescence={1.2}
+                    filmScale={4.0}
+                    oilCoverage={0.85}
+                    oilEdge={16}
+                    oilEdgeFade={1.0}
+                    clearCenter={0.8}
+                    thickness={440}
+                    drainage={0.2}
+                    swirl={0.4}
+                    reflectivity={1.4}
+                    refraction={0.15}
                     dispersion={0}
                     bevel={14}
                     wobble={0.08}
-                    windowIntensity={0.95}
+                    windowIntensity={1.0}
                     environment="studio"
                     soapPalette="custom"
                     soapPaletteRed="#10b981"    // Emerald
@@ -201,7 +201,7 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                     soapPaletteCyan="#22d3ee"   // Electric Cyan
                     soapPaletteBlue="#06b6d4"   // Vibrant Cyan
                     soapPaletteViolet="#0891b2" // Oceanic Cyan
-                    soapColor="#06b6d4"
+                    soapColor="#ffffff"
                     soapHighlightColor="rgba(255, 255, 255, 0.95)"
                   >
                     <SoapBubbleButton
@@ -214,13 +214,13 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                         };
                         onNavigateToSimulator(origin);
                       }}
-                      className="flex items-center gap-2.5 px-8 py-3.5 text-sm font-medium text-white shadow-[0_12px_45px_rgba(0,0,0,0.7),0_0_28px_rgba(6,182,212,0.3)] border border-white/20 hover:border-cyan-400/60 hover:shadow-[0_12px_50px_rgba(0,0,0,0.8),0_0_36px_rgba(6,182,212,0.45)] backdrop-blur-2xl transition-all duration-200 cursor-pointer"
+                      className="flex items-center gap-2.5 px-8 py-3.5 text-sm font-medium text-white shadow-[0_12px_45px_rgba(0,0,0,0.4),0_0_28px_rgba(255,255,255,0.25)] border border-white/50 hover:border-white/90 hover:shadow-[0_12px_50px_rgba(0,0,0,0.5),0_0_36px_rgba(255,255,255,0.4)] backdrop-blur-2xl transition-all duration-200 cursor-pointer"
                       style={{
-                        background: 'rgba(14, 22, 24, 0.88)',
+                        background: 'rgba(255, 255, 255, 0.12)',
                       }}
                     >
-                      <span>Let's take a deep dive</span>
-                      <span className="text-cyan-400 font-bold text-base">&rarr;</span>
+                      <span className="text-white font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.4)]">Let's take a deep dive</span>
+                      <span className="text-white font-bold text-base drop-shadow-[0_1px_4px_rgba(0,0,0,0.4)]">&rarr;</span>
                     </SoapBubbleButton>
                   </SoapBubbleMaterial>
                 </motion.div>

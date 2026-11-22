@@ -77,10 +77,10 @@ void main(){
   vec3 col = mix(u_pal_base, u_pal_warm, a * 2.5);
 
   float b = m(uv + a * 2.4 + d2);
-  col = mix(col, u_pal_mid, b * 1.5);
+  col = mix(col, u_pal_mid, b * 1.65);
 
   float dd = m(uv + b * 3.5 + d3);
-  col = mix(col, u_pal_cool, dd);
+  col = mix(col, u_pal_cool, dd * 0.85);
 
   col += u_pal_cursor * fall;
 
@@ -122,11 +122,11 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
 
     const geometry = new Triangle(gl);
 
-    // Calibrated color spectrum: rich deep dark emerald depths, luminous Biscotti Cream folds, and hints of cyan from the bubble:
+    // Calibrated palette: rich deep dark emerald depths, prominent WhatsApp Biscotti Cream, and subtle cyan bubble glints:
     // Base: Deep dark emerald depths [0.003, 0.035, 0.022]
-    // Warm: Deep lush emerald [0.012, 0.280, 0.160]
-    // Mid: Luminous Biscotti Cream biscuit [0.960, 0.880, 0.680]
-    // Cool: Subtle hint of cyan from the bubble [0.015, 0.380, 0.460]
+    // Warm: Deep lush emerald [0.012, 0.260, 0.150]
+    // Mid: Prominent WhatsApp Biscotti Cream (#efeae2 equivalent) [0.960, 0.920, 0.820]
+    // Cool: Subtle hint of cyan from the bubble [0.015, 0.350, 0.440]
     // Cursor: Reactive electric cyan wake [0.050, 0.650, 0.750]
     const program = new Program(gl, {
       vertex: VERT_SHADER,
@@ -140,9 +140,9 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
         c: { value: [0, 0] },
         ci: { value: 0 },
         u_pal_base: { value: [0.003, 0.035, 0.022] },
-        u_pal_warm: { value: [0.012, 0.280, 0.160] },
-        u_pal_mid: { value: [0.960, 0.880, 0.680] },
-        u_pal_cool: { value: [0.015, 0.380, 0.460] },
+        u_pal_warm: { value: [0.012, 0.260, 0.150] },
+        u_pal_mid: { value: [0.960, 0.920, 0.820] },
+        u_pal_cool: { value: [0.015, 0.350, 0.440] },
         u_pal_cursor: { value: [0.050, 0.650, 0.750] },
         u_pal_rgScale: { value: [1.0, 1.0, 1.0] },
         u_brightness: { value: 1.95 },
