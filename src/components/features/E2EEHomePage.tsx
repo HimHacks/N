@@ -2,16 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { E2EEPageBackground } from './E2EEPageBackground';
 import { SoapBubbleButton, SoapBubbleMaterial } from '../soap-bubble';
+import { RefractedText } from '../refracted-text';
 
 interface E2EEHomePageProps {
   onNavigateToSimulator: () => void;
 }
 
 /**
- * Art-Directed Typography for "Encryption"
- * Features a distinctive, non-uniform gradient transitioning from luminous mint highlights
- * into rich WhatsApp emerald and refined deep emerald base tones.
- * Tuned with explicit descender headroom and balanced kerning so 'y' and 'p' render fully with zero cutoff.
+ * Art-Directed Typography for "Encryption" (Gradient baseline)
+ * Preserved for instant recoverability and direct visual comparison.
  */
 export const ArtDirectedEncryption: React.FC = () => {
   return (
@@ -31,6 +30,51 @@ export const ArtDirectedEncryption: React.FC = () => {
       >
         Encryption
       </span>
+    </span>
+  );
+};
+
+/**
+ * Refracted Glass Optical Typography for "Encryption"
+ * Implements the ReactDrops RefractedText WebGL 2.0 shader component.
+ * Produces subtle glass internal beam refraction and restrained emerald/mint/cyan spectral dispersion.
+ */
+export const RefractedEncryption: React.FC = () => {
+  return (
+    <span className="relative inline-flex items-center select-none whitespace-nowrap shrink-0 overflow-visible align-middle">
+      <RefractedText
+        text="Encryption"
+        theme="dark"
+        topColor="#a7f3d0"
+        bottomColor="#047857"
+        beamColor="#2dd4bf"
+        spectrumWarmColor="#6ee7b7"
+        spectrumMiddleColor="#10b981"
+        spectrumCoolColor="#06b6d4"
+        reveal={true}
+        stagger={0.55}
+        liftDuration={1.75}
+        ease="power4.out"
+        beamFollowsLift={false}
+        animateBeam={true}
+        openingDuration={6.9}
+        duration={13.2}
+        intensity={1.2}
+        dispersion={1}
+        colorIntensity={1}
+        beamPosition={0.5}
+        fixedBeam={false}
+        paused={false}
+        cursorMovesBeam={false}
+        fontSize="inherit"
+        fontFamily="'ReactDrops Square Display', 'Arial Black', sans-serif"
+        fontWeight={900}
+        letterSpacing="normal"
+        extraBold={2.25}
+        fontHeight={80}
+        cornerRounding={1}
+        className="align-middle drop-shadow-[0_2px_14px_rgba(0,0,0,0.65)]"
+      />
     </span>
   );
 };
@@ -109,8 +153,8 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
               End-to-End
             </span>
 
-            {/* Art-Directed Distinctive & Premium "Encryption" */}
-            <ArtDirectedEncryption />
+            {/* Subtle Refracted Light Typography for "Encryption" (ReactDrops WebGL 2.0) */}
+            <RefractedEncryption />
           </motion.h1>
 
           {/* Overview text strictly formatted on 2 lines matching the original template */}
