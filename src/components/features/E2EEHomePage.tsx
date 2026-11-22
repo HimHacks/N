@@ -223,10 +223,10 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
           <AnimatePresence>
             {isOpen && (
               <motion.div
-                initial={{ y: 24, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: 20, opacity: 0 }}
-                transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+                initial={{ y: 36, opacity: 0, scale: 0.95 }}
+                animate={{ y: 0, opacity: 1, scale: 1 }}
+                exit={{ y: 28, opacity: 0, scale: 0.96 }}
+                transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
                 className="pointer-events-auto"
               >
                 <SoapBubbleMaterial
