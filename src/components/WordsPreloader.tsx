@@ -126,7 +126,8 @@ const DIGIT_PATTERNS: Record<string, number[][]> = {
   ],
 };
 
-const DotMatrixDigit: React.FC<{ char: string; dotSize?: number; color?: string }> = ({
+// Strict Instant Dot-Matrix Digit (Zero animation/transition, immediate digit change)
+const InstantDotMatrixDigit: React.FC<{ char: string; dotSize?: number; color?: string }> = ({
   char,
   dotSize = 5,
   color = '#000000',
@@ -144,12 +145,13 @@ const DotMatrixDigit: React.FC<{ char: string; dotSize?: number; color?: string 
         row.map((on, c) => (
           <div
             key={`${r}-${c}`}
-            className="rounded-[1.5px] transition-all duration-150"
+            className="rounded-[1.5px]"
             style={{
               width: dotSize,
               height: dotSize,
               backgroundColor: on ? color : 'rgba(0, 0, 0, 0.06)',
               opacity: on ? 1 : 0.2,
+              transition: 'none',
             }}
           />
         ))
@@ -183,12 +185,13 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
     if (phase === 'loading') {
       const interval = setInterval(() => {
         setWordIndex((prev) => (prev + 1) % CRYPTO_WORDS.length);
-      }, 340);
+      }, 420);
       return () => clearInterval(interval);
     }
   }, [phase]);
 
-  // Numerical counter for the Compiling window
+  // Numerical counter: Every single digit from 1% to 100% visible, ~42ms per tick (~4.2s total)
+  // Allows the rising bubble gradient to slowly climb and flourish to its full height
   useEffect(() => {
     if (phase === 'loading') {
       setProgress(1);
@@ -201,11 +204,11 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
           clearInterval(interval);
           setTimeout(() => {
             if (onLoadingComplete) onLoadingComplete();
-          }, 400);
+          }, 500);
         } else {
           setProgress(current);
         }
-      }, 32);
+      }, 42);
       return () => clearInterval(interval);
     } else if (phase === 'idle') {
       setProgress(0);
@@ -232,22 +235,25 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
       {isVisible && (
         <div className="fixed inset-0 z-[120] pointer-events-auto overflow-hidden select-none">
           {/*
-            Phase 1: Pure black curtain rising up from the bottom of the website to cover the entire page.
-            Phase 2: Compiling studio card + Skiper 8 Cycling Words.
+            Phase 1: Black screen expands directly FROM THE BUTTON location (bottom: 80px, center: 50% 92%)
+            spreading outward in a circular wave across the entire website.
+            Phase 2: Compiling studio card + Skiper 8 Cycling Words + Rising Bubble Gradient at bottom.
             Phase 3: Smooth Dennis Snellenberg elastic curve sliding up to reveal simulator.
           */}
           <motion.div
             className="fixed inset-0 z-30 flex items-center justify-center bg-[#070b0e]"
-            initial={{ y: '100%' }}
+            initial={{ clipPath: 'circle(0% at 50% 92%)' }}
             animate={
               phase === 'expanding'
                 ? {
-                    y: '0%',
-                    transition: { duration: 0.9, ease: customEase },
+                    clipPath: 'circle(150% at 50% 92%)',
+                    y: 0,
+                    transition: { duration: 1.05, ease: customEase },
                   }
                 : phase === 'loading'
                 ? {
-                    y: '0%',
+                    clipPath: 'circle(150% at 50% 92%)',
+                    y: 0,
                   }
                 : phase === 'exiting'
                 ? {
@@ -265,34 +271,52 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
             }}
           >
             {/*
-              Animated Soap-Bubble Gradient at the BOTTOM of the black curtain only:
-              Luminous Cyan (#22d3ee), Vibrant WhatsApp Green (#25D366), and Deep Forest Green (#064e3b)
-              slowly breathing and swirling along the bottom border.
+              BUBBLE GRADIENT COMING UP FROM THE BOTTOM OF THE WEBSITE:
+              As the preloader loads, this iridescent bubble gradient (cyan, radiant mint, green, and dark green)
+              slowly rises up from y: 100% to y: 0% and breathes at a prominent height (h-[480px])
+              matching the Skiper UI recording.
             */}
-            <div className="absolute bottom-0 left-0 right-0 h-64 sm:h-80 pointer-events-none overflow-hidden z-10">
-              {/* Primary Cyan & Emerald iridescent glow wave */}
+            <motion.div
+              initial={{ y: '100%', opacity: 0 }}
+              animate={
+                phase === 'loading'
+                  ? {
+                      y: '0%',
+                      opacity: 1,
+                      transition: { duration: 2.8, ease: [0.16, 1, 0.3, 1] },
+                    }
+                  : phase === 'exiting'
+                  ? {
+                      opacity: 0,
+                      transition: { duration: 0.3 },
+                    }
+                  : {}
+              }
+              className="absolute bottom-0 left-0 right-0 h-[480px] pointer-events-none overflow-hidden z-10"
+            >
+              {/* Primary Electric Cyan (#22d3ee) & WhatsApp Green (#25D366) iridescent aura */}
               <div
-                className="absolute -bottom-16 -left-[20%] -right-[20%] h-72 opacity-85 blur-3xl"
+                className="absolute -bottom-24 -left-[25%] -right-[25%] h-[520px] opacity-90 blur-3xl"
                 style={{
                   background:
-                    'radial-gradient(ellipse 90% 65% at 50% 100%, rgba(34, 211, 238, 0.75) 0%, rgba(37, 211, 102, 0.55) 45%, rgba(6, 78, 59, 0.35) 75%, transparent 100%)',
-                  animation: 'bubbleWave 6s ease-in-out infinite alternate',
+                    'radial-gradient(ellipse 90% 65% at 50% 100%, rgba(34, 211, 238, 0.85) 0%, rgba(45, 212, 191, 0.7) 32%, rgba(37, 211, 102, 0.58) 55%, rgba(6, 78, 59, 0.45) 75%, transparent 100%)',
+                  animation: 'bubbleFluidSlow 7s ease-in-out infinite alternate',
                 }}
               />
 
-              {/* Secondary oscillating shimmer ray */}
+              {/* Secondary Mint (#2dd4bf) & Deep Forest Green (#064e3b) shimmering layer */}
               <div
-                className="absolute -bottom-10 left-[10%] right-[10%] h-44 opacity-75 blur-2xl"
+                className="absolute -bottom-16 left-[5%] right-[5%] h-[380px] opacity-80 blur-2xl"
                 style={{
                   background:
-                    'radial-gradient(ellipse 70% 50% at 50% 100%, rgba(45, 212, 191, 0.85) 0%, rgba(16, 185, 129, 0.6) 50%, transparent 85%)',
-                  animation: 'bubbleShimmer 4.5s ease-in-out infinite alternate',
+                    'radial-gradient(ellipse 75% 55% at 50% 100%, rgba(34, 211, 238, 0.9) 0%, rgba(16, 185, 129, 0.65) 45%, rgba(6, 78, 59, 0.35) 75%, transparent 90%)',
+                  animation: 'bubbleFluidShimmer 5s ease-in-out infinite alternate',
                 }}
               />
 
-              {/* Subtle top edge fade so the gradient seamlessly vanishes into the pitch black screen */}
-              <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#070b0e]/30 to-[#070b0e]" />
-            </div>
+              {/* Subtle top fade into the black screen */}
+              <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#070b0e]/20 to-[#070b0e]" />
+            </motion.div>
 
             {/* SVG Elastic Curve underneath the curtain (morphs from sag to flat as it lifts off) */}
             {width > 0 && phase === 'exiting' && (
@@ -315,7 +339,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.96 }}
                   transition={{ duration: 0.35, ease: 'easeOut' }}
-                  className="relative z-20 w-full max-w-4xl h-[78vh] max-h-[580px] bg-[#fcfcfc] rounded-3xl shadow-[0_35px_100px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-slate-200/80 mx-4 sm:mx-8"
+                  className="relative z-20 w-full max-w-4xl h-[78vh] max-h-[580px] bg-[#fcfcfc] rounded-3xl shadow-[0_35px_100px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-slate-200/80 mx-4 sm:mx-8 backdrop-blur-md"
                 >
                   {/* Top Bar Navigation: Mac window controls */}
                   <div className="flex items-center justify-between w-full border-b border-slate-200/80 pb-3.5">
@@ -342,10 +366,10 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                       <ThreeSquaresLoader size={26} />
                     </div>
 
-                    {/* Right: Big Dot-Matrix Counter with bold black digits */}
+                    {/* Right: Big Dot-Matrix Counter with instant digit changes */}
                     <div className="flex items-center gap-2 sm:gap-3 bg-slate-100/90 px-6 py-5 rounded-2xl border border-slate-200/90 shadow-inner">
                       {digits.map((ch, idx) => (
-                        <DotMatrixDigit key={idx} char={ch} dotSize={6} color="#000000" />
+                        <InstantDotMatrixDigit key={idx} char={ch} dotSize={6} color="#000000" />
                       ))}
                     </div>
                   </div>
@@ -360,31 +384,31 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
             </AnimatePresence>
           </motion.div>
 
-          {/* Keyframe styles for the bottom fluid bubble gradient animation */}
+          {/* Keyframes for the fluid bubble gradient waves */}
           <style>{`
-            @keyframes bubbleWave {
+            @keyframes bubbleFluidSlow {
               0% {
-                transform: translateY(12px) scale(0.96) rotate(-1deg);
+                transform: translateY(14px) scale(0.96) rotate(-1deg);
               }
               50% {
-                transform: translateY(-8px) scale(1.04) rotate(1deg);
+                transform: translateY(-16px) scale(1.05) rotate(1deg);
               }
               100% {
-                transform: translateY(6px) scale(1.01) rotate(-0.5deg);
+                transform: translateY(10px) scale(1.02) rotate(-0.5deg);
               }
             }
-            @keyframes bubbleShimmer {
+            @keyframes bubbleFluidShimmer {
               0% {
-                transform: translateX(-4%) scaleY(0.9);
-                opacity: 0.65;
+                transform: translateX(-5%) scaleY(0.9);
+                opacity: 0.7;
               }
               50% {
-                transform: translateX(4%) scaleY(1.15);
-                opacity: 0.9;
+                transform: translateX(5%) scaleY(1.15);
+                opacity: 0.95;
               }
               100% {
-                transform: translateX(-2%) scaleY(1);
-                opacity: 0.7;
+                transform: translateX(-3%) scaleY(1);
+                opacity: 0.75;
               }
             }
           `}</style>
