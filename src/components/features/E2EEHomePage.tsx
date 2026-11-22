@@ -36,11 +36,11 @@ export const ArtDirectedEncryption: React.FC = () => {
 
 /**
  * Refracted Glass Optical Typography for "Encryption"
- * Implements a calibrated 10-13% optical ray dispersion:
- * - Perfectly balanced: perceptible when looking at the headline, but never distracting
- * - Multi-wavelength chromatic refraction bands (amber-mint 530nm, cyan-teal 490nm, pure spectral ray)
- * - Translucent glass caustics that gently refract light inside letter vertices and curves
- * - No aggressive traveling flare, strictly sophisticated optical prism dispersion
+ * Implements a calibrated ~25% optical ray dispersion:
+ * - Clear, rich optical refraction that is distinct and lively across the letter surfaces
+ * - Visible spectral dispersion band: mint-emerald, prism teal, luminous center ray, and vibrant cyan
+ * - Crisp, perfectly readable Plus Jakarta Sans typography aligned with "End-to-End"
+ * - Gentle internal optical refraction oscillation (8s ease-in-out)
  */
 export const OpticalRefractedEncryption: React.FC = () => {
   return (
@@ -63,19 +63,19 @@ export const OpticalRefractedEncryption: React.FC = () => {
         Encryption
       </span>
 
-      {/* Optical Ray Dispersion Layer (~12% spectral chromatic dispersion across the letters) */}
+      {/* Optical Ray Dispersion Layer (Calibrated to 25% optical presence across the letters) */}
       <span
         aria-hidden="true"
-        className="absolute inset-0 z-20 pointer-events-none inline-block font-black tracking-tight text-transparent bg-clip-text select-none overflow-visible mix-blend-screen opacity-55"
+        className="absolute inset-0 z-20 pointer-events-none inline-block font-black tracking-tight text-transparent bg-clip-text select-none overflow-visible mix-blend-screen opacity-80"
         style={{
           fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
           backgroundImage:
-            'linear-gradient(125deg, transparent 15%, rgba(110,231,183,0.35) 30%, rgba(45,212,191,0.65) 42%, rgba(255,255,255,0.7) 48%, rgba(34,211,238,0.65) 54%, rgba(5,150,105,0.25) 68%, transparent 85%)',
-          backgroundSize: '180% 100%',
+            'linear-gradient(125deg, transparent 10%, rgba(110,231,183,0.5) 28%, rgba(45,212,191,0.85) 42%, rgba(255,255,255,0.92) 50%, rgba(34,211,238,0.85) 58%, rgba(5,150,105,0.4) 72%, transparent 90%)',
+          backgroundSize: '170% 100%',
           WebkitBackgroundClip: 'text',
           WebkitBoxDecorationBreak: 'clone',
           boxDecorationBreak: 'clone',
-          animation: 'calibratedDispersion 8s ease-in-out infinite alternate',
+          animation: 'calibratedDispersion25 8s ease-in-out infinite alternate',
           paddingBottom: '0.18em',
           marginBottom: '-0.18em',
           paddingRight: '0.04em',
@@ -87,11 +87,11 @@ export const OpticalRefractedEncryption: React.FC = () => {
       {/* Internal Glass Prismatic Facet Highlight: Refracts light through the upper contour */}
       <span
         aria-hidden="true"
-        className="absolute inset-0 z-30 pointer-events-none inline-block font-black tracking-tight text-transparent bg-clip-text select-none overflow-visible opacity-35 mix-blend-overlay"
+        className="absolute inset-0 z-30 pointer-events-none inline-block font-black tracking-tight text-transparent bg-clip-text select-none overflow-visible opacity-45 mix-blend-overlay"
         style={{
           fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
           backgroundImage:
-            'linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(167,243,208,0.4) 25%, transparent 65%)',
+            'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(167,243,208,0.5) 30%, transparent 70%)',
           WebkitBackgroundClip: 'text',
           WebkitBoxDecorationBreak: 'clone',
           boxDecorationBreak: 'clone',
@@ -104,14 +104,14 @@ export const OpticalRefractedEncryption: React.FC = () => {
       </span>
 
       <style>{`
-        @keyframes calibratedDispersion {
+        @keyframes calibratedDispersion25 {
           0% {
-            background-position: 15% 0%;
-            filter: hue-rotate(-8deg) brightness(1.02);
+            background-position: 20% 0%;
+            filter: hue-rotate(-10deg) brightness(1.05);
           }
           100% {
-            background-position: 85% 0%;
-            filter: hue-rotate(8deg) brightness(1.08);
+            background-position: 80% 0%;
+            filter: hue-rotate(10deg) brightness(1.15);
           }
         }
       `}</style>
