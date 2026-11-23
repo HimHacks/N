@@ -10,12 +10,24 @@
 
 @layer base {
   body {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+    background-color: #F7F4EC;
+    color: #153A32;
   }
   
-  code, pre, .font-mono {
-    font-family: 'Geist Mono', monospace;
+  h1, h2, h3, .font-heading {
+    font-family: 'Fraunces', Georgia, serif;
   }
+
+  code, pre, .font-mono {
+    font-family: 'IBM Plex Mono', monospace;
+  }
+}
+
+/* Accessible focus ring */
+:focus-visible {
+  outline: 2px solid #176B50;
+  outline-offset: 3px;
 }
 
 /* Bootzy TM display font styling */
