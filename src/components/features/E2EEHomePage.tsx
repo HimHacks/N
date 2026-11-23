@@ -4,10 +4,11 @@ import { SoapBubbleButton, SoapBubbleMaterial } from '../soap-bubble';
 import { LumenInteractiveShader } from './LumenInteractiveShader';
 
 interface E2EEHomePageProps {
-  onNavigateToSimulator: (origin?: { x: number; y: number }) => void;
+  onNavigateToSimulator?: (origin?: { x: number; y: number }) => void;
+  onScrollToPlayground?: () => void;
 }
 
-export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulator }) => {
+export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulator, onScrollToPlayground }) => {
   const pageRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isReadingOver, setIsReadingOver] = useState(false);
@@ -212,7 +213,11 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                           x: rect.left + rect.width / 2,
                           y: rect.top + rect.height / 2,
                         };
-                        onNavigateToSimulator(origin);
+                        if (onScrollToPlayground) {
+                          onScrollToPlayground();
+                        } else if (onNavigateToSimulator) {
+                          onNavigateToSimulator(origin);
+                        }
                       }}
                       className="flex items-center gap-2.5 px-8 py-3.5 text-sm font-medium text-[#efeae2] shadow-[0_12px_45px_rgba(0,0,0,0.4),0_0_28px_rgba(239,234,226,0.2)] border border-[#efeae2]/35 hover:border-[#efeae2]/70 hover:shadow-[0_12px_50px_rgba(0,0,0,0.5),0_0_36px_rgba(239,234,226,0.35)] backdrop-blur-2xl transition-all duration-200 cursor-pointer"
                       style={{
@@ -220,7 +225,7 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                       }}
                     >
                       <span className="text-[#efeae2] font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">Let's take a deep dive</span>
-                      <span className="text-[#efeae2] font-bold text-base drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">&rarr;</span>
+                      <span className="text-[#efeae2] font-bold text-base drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">&darr;</span>
                     </SoapBubbleButton>
                   </SoapBubbleMaterial>
                 </motion.div>
