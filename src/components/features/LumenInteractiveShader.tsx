@@ -122,12 +122,12 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
 
     const geometry = new Triangle(gl);
 
-    // Calibrated palette: rich deep dark emerald depths, prominent WhatsApp Biscotti Cream, and subtle cyan bubble glints:
-    // Base: Deep dark emerald depths [0.003, 0.035, 0.022]
-    // Warm: Deep lush emerald [0.012, 0.260, 0.150]
-    // Mid: Prominent WhatsApp Biscotti Cream (#efeae2 equivalent) [0.960, 0.920, 0.820]
-    // Cool: Subtle hint of cyan from the bubble [0.015, 0.350, 0.440]
-    // Cursor: Reactive electric cyan wake [0.050, 0.650, 0.750]
+    // Calibrated palette: rich Deep Signal Emerald (#00a884, #043e2e), prominent WhatsApp Biscotti Cream (#efeae2), and subtle cyan bubble glints
+    // Base: Deep dark signal emerald [0.004, 0.080, 0.045]
+    // Warm: Vibrant signal emerald [0.000, 0.658, 0.518] (#00a884)
+    // Mid: Biscotti Cream (#efeae2) [0.937, 0.918, 0.886]
+    // Cool: Deep sea emerald-cyan [0.015, 0.245, 0.220]
+    // Cursor: Reactive luminous signal cyan wake [0.050, 0.700, 0.650]
     const program = new Program(gl, {
       vertex: VERT_SHADER,
       fragment: FRAG_SHADER,
@@ -139,13 +139,13 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
         r: { value: [1, 1] },
         c: { value: [0, 0] },
         ci: { value: 0 },
-        u_pal_base: { value: [0.003, 0.035, 0.022] },
-        u_pal_warm: { value: [0.012, 0.260, 0.150] },
-        u_pal_mid: { value: [0.960, 0.920, 0.820] },
-        u_pal_cool: { value: [0.015, 0.350, 0.440] },
-        u_pal_cursor: { value: [0.050, 0.650, 0.750] },
+        u_pal_base: { value: [0.004, 0.080, 0.045] },
+        u_pal_warm: { value: [0.000, 0.658, 0.518] },
+        u_pal_mid: { value: [0.937, 0.918, 0.886] },
+        u_pal_cool: { value: [0.015, 0.245, 0.220] },
+        u_pal_cursor: { value: [0.050, 0.700, 0.650] },
         u_pal_rgScale: { value: [1.0, 1.0, 1.0] },
-        u_brightness: { value: 1.95 },
+        u_brightness: { value: 1.78 },
       },
     });
 

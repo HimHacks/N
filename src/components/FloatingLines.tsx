@@ -273,6 +273,9 @@ const compile = (gl: WebGL2RenderingContext, type: number, source: string) => {
   if (!shader) return null;
   gl.shaderSource(shader, source);
   gl.compileShader(shader);
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    console.error('[FloatingLines Shader Compile Error]:', gl.getShaderInfoLog(shader));
+  }
   return shader;
 };
 
@@ -285,6 +288,9 @@ const link = (gl: WebGL2RenderingContext): WebGLProgram | null => {
   gl.attachShader(program, fragment);
   gl.bindAttribLocation(program, 0, 'aPosition');
   gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    console.error('[FloatingLines Program Link Error]:', gl.getProgramInfoLog(program));
+  }
   gl.deleteShader(vertex);
   gl.deleteShader(fragment);
   return program;
@@ -410,11 +416,14 @@ const FloatingLines = ({
     });
     if (!container || !canvas || !gl) return undefined;
 
-    const parallel = gl.getExtension('KHR_parallel_shader_compile');
     let linking = link(gl);
     let program = linking && !parallel ? finish(gl, linking) : null;
-    if (!linking || (!parallel && !program)) return undefined;
-    if (program) linking = null;
+    if (!program) {
+      console.error('[FloatingLines] WebGL shader compilation or linking failed');
+      return undefined;
+    }
+    linking = null;
+    const parallel = null;
 
     const buffer = gl.createBuffer();
     const vao = gl.createVertexArray();
@@ -546,16 +555,7 @@ const FloatingLines = ({
     const frame = (now: number) => {
       raf = 0;
       if (!visible || document.hidden) return;
-      if (!program) {
-        if (!linking || !parallel) return;
-        if (!gl.getProgramParameter(linking, parallel.COMPLETION_STATUS_KHR)) {
-          raf = requestAnimationFrame(frame);
-          return;
-        }
-        program = finish(gl, linking);
-        linking = null;
-        if (!program) return;
-      }
+      if (!program) return;
       const s = settingsRef.current;
       const dt = last ? clamp((now - last) / 1000, 0.0005, 0.05) : 1 / 60;
       last = now;

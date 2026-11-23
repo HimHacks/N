@@ -5,7 +5,7 @@ export interface LumenBloomConfig {
   c2?: string;       // Secondary green (e.g. #25d366 WhatsApp vibrant signal)
   c3?: string;       // Deep emerald (e.g. #059669 deep emerald)
   c4?: string;       // Luminous mint-cream glint (e.g. #dcfce7)
-  bg?: string;       // Off-white / cream background (e.g. #efeae2 or #f0f2f5)
+  bg?: string;       // Warm off-white / cream background (e.g. #efeae2)
   seed?: number;
   scale?: number;
   complex?: number;
@@ -311,7 +311,7 @@ export const LumenBloomBackground: React.FC<LumenBloomBackgroundProps> = ({
     const u3f = (n: string, c: [number, number, number]) => gl.uniform3f(loc(n), c[0], c[1], c[2]);
 
     let animId: number;
-    let startTime = performance.now();
+    const startTime = performance.now();
 
     const render = () => {
       if (!canvas || !gl) return;

@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { E2EEHomePage } from './components/features/E2EEHomePage';
 import { E2EESimulatorPortal } from './components/features/E2EESimulatorPortal';
 import { WordsPreloader, type WordPreloaderPhase } from './components/WordsPreloader';
+import { GreetingPreloader } from './components/GreetingPreloader';
 
 export const App: React.FC = () => {
+  const [hasVisited, setHasVisited] = useState(false);
   const [currentView, setCurrentView] = useState<'home' | 'simulator'>('home');
   const [preloaderPhase, setPreloaderPhase] = useState<WordPreloaderPhase>('idle');
   const [buttonOrigin, setButtonOrigin] = useState<{ x: number; y: number } | null>(null);
@@ -41,6 +43,14 @@ export const App: React.FC = () => {
 
   return (
     <>
+      {/* 
+        Initial Page Load Greeting Word Preloader (Skiper 8 / Dennis Snellenberg reverse animation):
+        Translucent white/Biscotti cream screen cycling through greetings, then sliding up in reverse curve
+      */}
+      {!hasVisited && (
+        <GreetingPreloader onComplete={() => setHasVisited(true)} />
+      )}
+
       <WordsPreloader
         phase={preloaderPhase}
         buttonOrigin={buttonOrigin}
