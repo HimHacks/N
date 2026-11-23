@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ThreeSquaresLoader } from './ThreeSquaresLoader';
 import { SoffitGradient, type SoffitGradientConfig } from './SoffitGradient';
 
 export type WordPreloaderPhase = 'idle' | 'expanding' | 'loading' | 'exiting';
@@ -13,108 +14,154 @@ interface WordsPreloaderProps {
   onScrollDown?: () => void;
 }
 
-// 5x7 dot matrix font maps for large typography (SP•DEV style)
-const DOT_FONT: Record<string, number[][]> = {
-  'S': [
-    [0, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
+// 5x7 Dot-matrix glyph definitions for loading counter
+const DIGIT_PATTERNS: Record<string, number[][]> = {
+  '0': [
     [0, 1, 1, 1, 0],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 1, 1],
+    [1, 0, 1, 0, 1],
+    [1, 1, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [0, 1, 1, 1, 0],
+  ],
+  '1': [
+    [0, 0, 1, 0, 0],
+    [0, 1, 1, 0, 0],
+    [0, 0, 1, 0, 0],
+    [0, 0, 1, 0, 0],
+    [0, 0, 1, 0, 0],
+    [0, 0, 1, 0, 0],
+    [0, 1, 1, 1, 0],
+  ],
+  '2': [
+    [0, 1, 1, 1, 0],
+    [1, 0, 0, 0, 1],
     [0, 0, 0, 0, 1],
-    [0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 0],
-  ],
-  'C': [
-    [0, 1, 1, 1, 0],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 1],
-    [0, 1, 1, 1, 0],
-  ],
-  'R': [
-    [1, 1, 1, 1, 0],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 1, 1, 1, 0],
-    [1, 0, 1, 0, 0],
-    [1, 0, 0, 1, 0],
-    [1, 0, 0, 0, 1],
-  ],
-  'O': [
-    [0, 1, 1, 1, 0],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [0, 1, 1, 1, 0],
-  ],
-  'L': [
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0],
+    [0, 0, 1, 0, 0],
+    [0, 1, 0, 0, 0],
     [1, 1, 1, 1, 1],
   ],
-  'D': [
+  '3': [
+    [0, 1, 1, 1, 0],
+    [1, 0, 0, 0, 1],
+    [0, 0, 0, 0, 1],
+    [0, 0, 1, 1, 0],
+    [0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [0, 1, 1, 1, 0],
+  ],
+  '4': [
+    [0, 0, 0, 1, 0],
+    [0, 0, 1, 1, 0],
+    [0, 1, 0, 1, 0],
+    [1, 0, 0, 1, 0],
+    [1, 1, 1, 1, 1],
+    [0, 0, 0, 1, 0],
+    [0, 0, 0, 1, 0],
+  ],
+  '5': [
+    [1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0],
+    [1, 1, 1, 1, 0],
+    [0, 0, 0, 0, 1],
+    [0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [0, 1, 1, 1, 0],
+  ],
+  '6': [
+    [0, 1, 1, 1, 0],
+    [1, 0, 0, 0, 0],
     [1, 1, 1, 1, 0],
     [1, 0, 0, 0, 1],
     [1, 0, 0, 0, 1],
     [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 1, 1, 1, 0],
+    [0, 1, 1, 1, 0],
   ],
-  'W': [
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 0, 1, 0, 1],
-    [1, 0, 1, 0, 1],
-    [1, 1, 0, 1, 1],
-    [1, 0, 0, 0, 1],
+  '7': [
+    [1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 1],
+    [0, 0, 0, 1, 0],
+    [0, 0, 1, 0, 0],
+    [0, 1, 0, 0, 0],
+    [0, 1, 0, 0, 0],
+    [0, 1, 0, 0, 0],
   ],
-  'N': [
+  '8': [
+    [0, 1, 1, 1, 0],
     [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [0, 1, 1, 1, 0],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [0, 1, 1, 1, 0],
+  ],
+  '9': [
+    [0, 1, 1, 1, 0],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [0, 1, 1, 1, 1],
+    [0, 0, 0, 0, 1],
+    [0, 0, 0, 0, 1],
+    [0, 1, 1, 1, 0],
+  ],
+  '%': [
     [1, 1, 0, 0, 1],
-    [1, 0, 1, 0, 1],
+    [1, 1, 0, 1, 0],
+    [0, 0, 1, 0, 0],
+    [0, 1, 0, 0, 0],
+    [0, 1, 0, 1, 1],
     [1, 0, 0, 1, 1],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-  ],
-  ' ': [
-    [0, 0, 0],
-    [0, 0, 0],
-    [0, 0, 0],
-    [0, 0, 0],
-    [0, 0, 0],
-    [0, 0, 0],
-    [0, 0, 0],
+    [0, 0, 0, 0, 0],
   ],
 };
 
-// Target text for dot matrix hero reassembly
-const WORD_ROW_1 = ['S', 'C', 'R', 'O', 'L', 'L'];
-const WORD_ROW_2 = ['D', 'O', 'W', 'N'];
+// Dot-Matrix Digit
+const InstantDotMatrixDigit: React.FC<{ char: string; dotSize?: number; color?: string }> = ({
+  char,
+  dotSize = 5,
+  color = '#111b21',
+}) => {
+  const pattern = DIGIT_PATTERNS[char] || DIGIT_PATTERNS['0'];
+  return (
+    <div
+      className="inline-grid gap-[2.5px] p-0.5 select-none"
+      style={{
+        gridTemplateColumns: `repeat(5, ${dotSize}px)`,
+        gridTemplateRows: `repeat(7, ${dotSize}px)`,
+      }}
+    >
+      {pattern.flatMap((row, r) =>
+        row.map((on, c) => (
+          <div
+            key={`${r}-${c}`}
+            className="rounded-[1.5px]"
+            style={{
+              width: dotSize,
+              height: dotSize,
+              backgroundColor: on ? color : 'rgba(0, 0, 0, 0.06)',
+              opacity: on ? 1 : 0.2,
+              transition: 'none',
+            }}
+          />
+        ))
+      )}
+    </div>
+  );
+};
 
-// Floating scatter words that converge and reassemble into the final button
-const SCATTER_WORDS = [
-  { id: 1, text: 'CIPHER', initX: -260, initY: -140 },
-  { id: 2, text: 'KEYS', initX: 280, initY: -160 },
-  { id: 3, text: 'RATCHET', initX: -320, initY: 40 },
-  { id: 4, text: 'ENTROPY', initX: 300, initY: 60 },
-  { id: 5, text: 'ENCRYPT', initX: -220, initY: 180 },
-  { id: 6, text: 'DIFFIE', initX: 240, initY: 190 },
-  { id: 7, text: 'CURVE25519', initX: 0, initY: -220 },
-  { id: 8, text: 'SIGNAL', initX: -140, initY: -80 },
-  { id: 9, text: 'DECRYPT', initX: 160, initY: -90 },
-  { id: 10, text: 'PEER', initX: 0, initY: 220 },
-];
+// Target phrase in bottom right:
+// "Scroll to see the simulator"
+const TARGET_TEXT = "Scroll to see the simulator";
+const TARGET_LETTERS = TARGET_TEXT.split('').map((char, index) => ({
+  char,
+  index,
+  // Deterministic scatter position across the card
+  initX: ((index * 47) % 360) - 180,
+  initY: ((index * 31) % 220) - 110,
+  initRot: ((index * 29) % 90) - 45,
+}));
 
 export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   phase,
@@ -126,8 +173,9 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
 }) => {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [progress, setProgress] = useState(0);
-  const [isAssembled, setIsAssembled] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
+  // Measure viewport dimensions
   useEffect(() => {
     const updateDims = () => {
       setDimensions({ width: window.innerWidth, height: window.innerHeight });
@@ -137,10 +185,10 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
     return () => window.removeEventListener('resize', updateDims);
   }, []);
 
-  // Smooth loading progression over ~4.8 seconds
+  // Loading duration: ~5.0 seconds (1% -> 100%)
   useEffect(() => {
     if (phase === 'loading') {
-      setIsAssembled(false);
+      setIsLoaded(false);
       setProgress(1);
       let current = 1;
       const interval = setInterval(() => {
@@ -148,17 +196,17 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
         if (current >= 100) {
           current = 100;
           setProgress(100);
-          setIsAssembled(true);
+          setIsLoaded(true);
           clearInterval(interval);
           if (onLoadingComplete) onLoadingComplete();
         } else {
           setProgress(current);
         }
-      }, 48);
+      }, 50);
       return () => clearInterval(interval);
     } else if (phase === 'idle') {
       setProgress(0);
-      setIsAssembled(false);
+      setIsLoaded(false);
     }
   }, [phase, onLoadingComplete]);
 
@@ -168,6 +216,9 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   const initialClip = `circle(0px at ${originX} ${originY})`;
   const expandedClip = `circle(160vmax at ${originX} ${originY})`;
   const customEase = [0.76, 0, 0.24, 1] as const;
+
+  const progressStr = String(Math.min(100, progress)).padStart(3, '0') + '%';
+  const digits = progressStr.split('');
 
   const isVisible = phase !== 'idle';
 
@@ -221,7 +272,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
       {isVisible && (
         <div className="fixed inset-0 z-[120] pointer-events-auto overflow-hidden select-none">
           <motion.div
-            className="fixed inset-0 z-30 flex flex-col justify-between"
+            className="fixed inset-0 z-30 flex items-center justify-center"
             initial={{
               clipPath: initialClip,
               backgroundColor: '#0c1317',
@@ -260,15 +311,15 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
               }
             }}
           >
-            {/* Retained Soffit Gradient rising from the bottom */}
+            {/* Flat Soffit WebGL2 Gradient Rising from Bottom */}
             <motion.div
               initial={{ y: '100%', opacity: 0 }}
               animate={
                 phase === 'loading'
                   ? {
                       y: '0%',
-                      opacity: 0.85,
-                      transition: { duration: 4.8, ease: [0.16, 1, 0.3, 1] },
+                      opacity: 0.92,
+                      transition: { duration: 5.0, ease: [0.16, 1, 0.3, 1] },
                     }
                   : phase === 'exiting'
                   ? {
@@ -277,199 +328,132 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                     }
                   : {}
               }
-              className="absolute bottom-0 left-0 right-0 h-[60vh] min-h-[420px] pointer-events-none overflow-hidden z-0"
+              className="absolute bottom-0 left-0 right-0 h-[65vh] min-h-[480px] pointer-events-none overflow-hidden z-10"
             >
-              <SoffitGradient config={soffitConfig} className="w-full h-full" />
+              <SoffitGradient
+                config={soffitConfig}
+                className="w-full h-full"
+              />
+
               <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
                   background:
-                    'linear-gradient(to top, transparent 0%, rgba(239, 234, 226, 0.3) 40%, rgba(239, 234, 226, 0.9) 85%, #efeae2 100%)',
+                    'linear-gradient(to top, transparent 0%, rgba(239, 234, 226, 0.25) 40%, rgba(239, 234, 226, 0.85) 80%, #efeae2 100%)',
                 }}
               />
             </motion.div>
 
-            {/* 
-              SP•DEV Minimal Clean Top Navigation Header 
-              (Replaces MacBook window controls)
-            */}
-            <header className="relative z-20 w-full px-6 sm:px-12 py-6 flex items-center justify-between text-[#111b21] font-mono text-xs font-semibold tracking-wider uppercase border-b border-[#111b21]/10">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-black tracking-widest text-[#00a884]">E2EE•DEV</span>
-                <span className="hidden sm:inline text-[#8696a0] text-[10px] lowercase">/ protocol</span>
-              </div>
+            {/* Studio Card (Loading Screen) */}
+            <AnimatePresence>
+              {phase === 'loading' && (
+                <motion.div
+                  key="loading-card-container"
+                  initial={{ opacity: 0, scale: 0.94 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.96 }}
+                  transition={{ duration: 0.35, ease: 'easeOut' }}
+                  className="relative z-20 w-full max-w-4xl h-[78vh] max-h-[580px] bg-white/95 rounded-3xl shadow-[0_30px_90px_rgba(11,20,26,0.18)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-[#d1d7db]/80 mx-4 sm:mx-8 backdrop-blur-xl"
+                >
+                  {/* Top Bar: Clean minimal header (no mac buttons, no initializing pill) */}
+                  <div className="flex items-center justify-between w-full border-b border-[#e9edef] pb-3.5">
+                    <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#00a884]">
+                      E2EE • PROTOCOL
+                    </span>
+                    <span className="text-xs font-mono text-[#8696a0]">
+                      {progress < 100 ? 'CONNECTING...' : 'CHANNEL ACTIVE'}
+                    </span>
+                  </div>
 
-              {/* Progress counter pill */}
-              <div className="flex items-center gap-3">
-                <span className="text-[#8696a0] hidden md:inline">SYSTEM STATUS:</span>
-                <span className="px-3 py-1 rounded-full bg-[#111b21]/5 border border-[#111b21]/15 text-[#00a884] font-bold">
-                  {progress < 100 ? `ASSEMBLING ${progress}%` : 'READY 100%'}
-                </span>
-              </div>
-            </header>
+                  {/* Center Loading Telemetry: Overwritten "Loading" with ThreeSquaresLoader & Dot Matrix Counter */}
+                  <div className="flex flex-col md:flex-row items-center justify-between my-auto w-full gap-8">
+                    {/* Left: "Loading" with cycling three squares loader */}
+                    <div className="flex items-center gap-4">
+                      <span className="text-3xl sm:text-4xl md:text-5xl font-bold font-mono text-[#111b21] tracking-tight">
+                        Loading
+                      </span>
+                      <ThreeSquaresLoader size={28} color="#00a884" />
+                    </div>
 
-            {/* 
-              Center Stage: SP•DEV Dot-Matrix Letters & Converging Words Reassembly
-            */}
-            <main className="relative z-20 flex-1 flex flex-col items-center justify-center px-4 sm:px-8 w-full max-w-6xl mx-auto overflow-hidden">
-              {/* SP•DEV Big Dot-Matrix Typography Hero */}
-              <div className="flex flex-col items-center gap-4 sm:gap-6 my-auto">
-                {/* Row 1: SCROLL */}
-                <div className="flex items-center justify-center gap-2 sm:gap-4 md:gap-6">
-                  {WORD_ROW_1.map((char, charIdx) => {
-                    const matrix = DOT_FONT[char] || DOT_FONT[' '];
-                    return (
-                      <div key={charIdx} className="flex flex-col gap-1.5 sm:gap-2">
-                        {matrix.map((row, rIdx) => (
-                          <div key={rIdx} className="flex gap-1.5 sm:gap-2">
-                            {row.map((on, cIdx) => (
-                              <motion.span
-                                key={cIdx}
-                                initial={{ scale: 0, opacity: 0 }}
-                                animate={{
-                                  scale: on ? 1 : 0,
-                                  opacity: on ? 1 : 0,
-                                }}
-                                transition={{
-                                  delay: (charIdx * 0.08) + (rIdx * 0.02) + (cIdx * 0.01),
-                                  duration: 0.3,
-                                  ease: 'backOut',
-                                }}
-                                className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 rounded-full bg-[#111b21]"
-                                style={{
-                                  visibility: on ? 'visible' : 'hidden',
-                                }}
-                              />
-                            ))}
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Row 2: DOWN */}
-                <div className="flex items-center justify-center gap-2 sm:gap-4 md:gap-6">
-                  {WORD_ROW_2.map((char, charIdx) => {
-                    const matrix = DOT_FONT[char] || DOT_FONT[' '];
-                    return (
-                      <div key={charIdx} className="flex flex-col gap-1.5 sm:gap-2">
-                        {matrix.map((row, rIdx) => (
-                          <div key={rIdx} className="flex gap-1.5 sm:gap-2">
-                            {row.map((on, cIdx) => (
-                              <motion.span
-                                key={cIdx}
-                                initial={{ scale: 0, opacity: 0 }}
-                                animate={{
-                                  scale: on ? 1 : 0,
-                                  opacity: on ? 1 : 0,
-                                }}
-                                transition={{
-                                  delay: 0.4 + (charIdx * 0.08) + (rIdx * 0.02) + (cIdx * 0.01),
-                                  duration: 0.3,
-                                  ease: 'backOut',
-                                }}
-                                className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 rounded-full bg-[#111b21]"
-                                style={{
-                                  visibility: on ? 'visible' : 'hidden',
-                                }}
-                              />
-                            ))}
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* 
-                Random Words Converging & Reassembling into the "Scroll Down to Simulator ↓" Button 
-              */}
-              <div className="relative w-full h-32 flex items-center justify-center my-6">
-                {/* Floating Scatter Words */}
-                <AnimatePresence>
-                  {!isAssembled && (
-                    <>
-                      {SCATTER_WORDS.map((item) => (
-                        <motion.div
-                          key={item.id}
-                          initial={{
-                            x: item.initX,
-                            y: item.initY,
-                            opacity: 0,
-                            scale: 0.8,
-                          }}
-                          animate={{
-                            x: [item.initX, item.initX * 0.5, 0],
-                            y: [item.initY, item.initY * 0.5, 0],
-                            opacity: [0, 0.85, 0],
-                            scale: [0.8, 1.05, 0.4],
-                          }}
-                          transition={{
-                            duration: 3.8,
-                            ease: [0.16, 1, 0.3, 1],
-                            delay: (item.id * 0.12),
-                          }}
-                          className="absolute pointer-events-none text-xs sm:text-sm font-mono font-bold tracking-widest text-[#00a884] bg-white/70 px-3 py-1 rounded-full border border-[#00a884]/30 backdrop-blur-sm shadow-sm"
-                        >
-                          {item.text}
-                        </motion.div>
+                    {/* Right: Big Dot-Matrix Counter with instant digit changes */}
+                    <div className="flex items-center gap-2 sm:gap-3 bg-[#f0f2f5] px-6 py-5 rounded-2xl border border-[#d1d7db] shadow-inner">
+                      {digits.map((ch, idx) => (
+                        <InstantDotMatrixDigit key={idx} char={ch} dotSize={6} color="#111b21" />
                       ))}
-                    </>
-                  )}
-                </AnimatePresence>
+                    </div>
+                  </div>
 
-                {/* 
-                  Target Assembled Button: Exactly matching Screenshot 2
-                  Green pill: "Scroll Down to Simulator ↓"
-                */}
-                <AnimatePresence>
-                  {isAssembled && (
-                    <motion.div
-                      key="assembled-pill"
-                      initial={{ opacity: 0, scale: 0.6, y: 15 }}
-                      animate={{
-                        opacity: 1,
-                        scale: 1,
-                        y: 0,
-                        transition: {
-                          type: 'spring',
-                          stiffness: 240,
-                          damping: 18,
-                        },
-                      }}
-                      className="relative z-30"
-                    >
-                      <button
-                        onClick={() => {
-                          if (onScrollDown) onScrollDown();
-                        }}
-                        className="group flex items-center justify-center gap-2 px-8 py-3.5 rounded-full text-white font-sans font-semibold text-base sm:text-lg shadow-[0_10px_30px_rgba(0,168,132,0.4)] hover:shadow-[0_14px_40px_rgba(0,168,132,0.55)] transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
-                        style={{
-                          backgroundColor: '#00a884', // WhatsApp teal emerald matching screenshot
-                        }}
-                      >
-                        <span className="tracking-wide">Scroll Down to Simulator</span>
-                        <motion.span
-                          animate={{ y: [0, 3, 0] }}
-                          transition={{ repeat: Infinity, duration: 1.4, ease: 'easeInOut' }}
-                          className="text-xl font-bold"
+                  {/* 
+                    Bottom Section:
+                    - Left: Clean status label
+                    - Bottom Right: Jumbled letters animating across the page and reassembling into:
+                      "Scroll to see the simulator ↓"
+                  */}
+                  <div className="relative flex items-center justify-between w-full border-t border-[#e9edef] pt-4 min-h-[56px]">
+                    <span className="text-xs font-mono text-[#8696a0]">
+                      END-TO-END ENCRYPTION SIMULATOR
+                    </span>
+
+                    {/* Bottom Right Jumbled & Reassembling Area */}
+                    <div className="relative flex items-center justify-end">
+                      {/* During loading (1% -> 99%): Letters are jumbled and scattered */}
+                      {!isLoaded && (
+                        <div className="relative flex items-center font-mono text-sm font-bold text-[#00a884]">
+                          {TARGET_LETTERS.map((item, idx) => (
+                            <motion.span
+                              key={idx}
+                              animate={{
+                                x: [item.initX, item.initX * 0.4, item.initX * 0.15],
+                                y: [item.initY, item.initY * 0.4, item.initY * 0.15],
+                                rotate: [item.initRot, item.initRot * 0.5, 0],
+                                opacity: [0.3, 0.85, 0.6],
+                              }}
+                              transition={{
+                                duration: 3.5,
+                                ease: [0.16, 1, 0.3, 1],
+                                repeat: Infinity,
+                                repeatType: 'reverse',
+                                delay: (idx * 0.03),
+                              }}
+                              className="inline-block pointer-events-none select-none text-[#00a884]"
+                            >
+                              {item.char === ' ' ? '\u00A0' : item.char}
+                            </motion.span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* When Loaded (100%): Letters smoothly snap together into the exact final button */}
+                      {isLoaded && (
+                        <motion.button
+                          initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                          animate={{
+                            opacity: 1,
+                            scale: 1,
+                            y: 0,
+                            transition: {
+                              type: 'spring',
+                              stiffness: 300,
+                              damping: 22,
+                            },
+                          }}
+                          onClick={() => {
+                            if (onScrollDown) onScrollDown();
+                          }}
+                          className="flex items-center gap-2.5 px-6 py-2.5 rounded-full text-white font-sans font-semibold text-sm shadow-[0_8px_24px_rgba(0,168,132,0.35)] hover:shadow-[0_10px_30px_rgba(0,168,132,0.5)] transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer animate-bounce"
+                          style={{
+                            backgroundColor: '#00a884', // Green button matching screenshot
+                          }}
                         >
-                          &darr;
-                        </motion.span>
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </main>
-
-            {/* Clean, minimalist footer (no syntax unveilers label) */}
-            <footer className="relative z-20 w-full px-6 sm:px-12 py-4 flex items-center justify-between text-[#8696a0] font-mono text-[11px] border-t border-[#111b21]/10">
-              <span>END-TO-END ENCRYPTION</span>
-              <span>GVH 2026</span>
-            </footer>
+                          <span className="tracking-wide">Scroll to see the simulator</span>
+                          <span className="text-base font-bold">&darr;</span>
+                        </motion.button>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </div>
       )}
