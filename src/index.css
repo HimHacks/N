@@ -10,24 +10,24 @@
 
 @layer base {
   body {
-    font-family: 'Manrope', system-ui, -apple-system, sans-serif;
-    background-color: #F7F4EC;
-    color: #153A32;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   }
   
-  h1, h2, h3, .font-heading {
-    font-family: 'Fraunces', Georgia, serif;
-  }
-
   code, pre, .font-mono {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'Geist Mono', monospace;
   }
 }
 
-/* Accessible focus ring */
-:focus-visible {
-  outline: 2px solid #176B50;
-  outline-offset: 3px;
+.font-heading {
+  font-family: 'Fraunces', Georgia, serif;
+}
+
+.font-manrope {
+  font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+}
+
+.font-ibm-plex {
+  font-family: 'IBM Plex Mono', monospace;
 }
 
 /* Bootzy TM display font styling */
