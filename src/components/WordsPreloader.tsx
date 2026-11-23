@@ -151,17 +151,70 @@ const InstantDotMatrixDigit: React.FC<{ char: string; dotSize?: number; color?: 
   );
 };
 
-// Target phrase in bottom right:
-// "Scroll to see the simulator"
+// Target text for the bottom right in-place cipher unscrambler
 const TARGET_TEXT = "Scroll to see the simulator";
-const TARGET_LETTERS = TARGET_TEXT.split('').map((char, index) => ({
-  char,
-  index,
-  // Deterministic scatter position across the card
-  initX: ((index * 47) % 360) - 180,
-  initY: ((index * 31) % 220) - 110,
-  initRot: ((index * 29) % 90) - 45,
-}));
+const RANDOM_CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#%&*@!$";
+
+// Component that displays the text already positioned in place,
+// starting from scrambled jumbled characters and progressively resolving in place into the target text
+const ScrambleTextInPlace: React.FC<{
+  target: string;
+  progress: number; // 0 to 100
+  isResolved: boolean;
+}> = ({ target, progress, isResolved }) => {
+  const [displayText, setDisplayText] = useState<string[]>(() =>
+    target.split('').map((char) =>
+      char === ' ' ? ' ' : RANDOM_CHARSET[Math.floor(Math.random() * RANDOM_CHARSET.length)]
+    )
+  );
+
+  useEffect(() => {
+    if (isResolved) {
+      setDisplayText(target.split(''));
+      return;
+    }
+
+    const interval = setInterval(() => {
+      // Calculate how many characters from the start should be locked/resolved based on progress
+      const resolvedCount = Math.floor((progress / 100) * target.length);
+
+      setDisplayText(
+        target.split('').map((targetChar, index) => {
+          if (targetChar === ' ') return ' ';
+          // Characters before resolvedCount are fixed in place; the rest rapidly scramble in place!
+          if (index < resolvedCount) {
+            return targetChar;
+          }
+          return RANDOM_CHARSET[Math.floor(Math.random() * RANDOM_CHARSET.length)];
+        })
+      );
+    }, 45); // Rapid cryptographic character rolling
+
+    return () => clearInterval(interval);
+  }, [progress, isResolved, target]);
+
+  return (
+    <span className="font-mono tracking-wide">
+      {displayText.map((char, i) => {
+        const resolvedCount = Math.floor((progress / 100) * target.length);
+        const isCharFixed = isResolved || i < resolvedCount;
+
+        return (
+          <span
+            key={i}
+            className={`transition-colors duration-150 ${
+              isCharFixed
+                ? 'text-white font-semibold'
+                : 'text-white/70 font-bold opacity-80'
+            }`}
+          >
+            {char === ' ' ? '\u00A0' : char}
+          </span>
+        );
+      })}
+    </span>
+  );
+};
 
 export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   phase,
@@ -224,11 +277,11 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
 
   // WhatsApp signature warm off-white cream (#efeae2 / #f0f2f5) with emerald accents
   const soffitConfig: SoffitGradientConfig = {
-    bgColor: '#f0f2f5',   // WhatsApp warm off-white cream base
-    colorA: '#00a884',    // WhatsApp primary teal-emerald
-    colorB: '#25d366',    // WhatsApp vibrant light green
-    colorC: '#efeae2',    // WhatsApp signature Biscotti Cream accent
-    colorD: '#06b6d4',    // Oceanic cyan accent
+    bgColor: '#f0f2f5',
+    colorA: '#00a884',
+    colorB: '#25d366',
+    colorC: '#efeae2',
+    colorD: '#06b6d4',
     scale: 0.75,
     speed: 0.28,
     tilt: 0.0,
@@ -282,7 +335,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
               phase === 'expanding'
                 ? {
                     clipPath: expandedClip,
-                    backgroundColor: '#efeae2', // WhatsApp off-white cream (#efeae2)
+                    backgroundColor: '#efeae2',
                     transition: {
                       clipPath: { duration: 1.15, ease: customEase },
                       backgroundColor: { duration: 1.0, ease: 'easeInOut' },
@@ -384,67 +437,42 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                     </div>
                   </div>
 
-                  {/* Bottom Section */}
+                  {/* 
+                    Bottom Section:
+                    - Left: Clean label
+                    - Bottom Right: Button is ALREADY FIXED IN PLACE!
+                      Inside the button, jumbled characters rapidly scramble in place,
+                      progressively unscrambling/animating to spell:
+                      "Scroll to see the simulator ↓"
+                  */}
                   <div className="relative flex items-center justify-between w-full border-t border-[#e9edef] pt-4 min-h-[56px]">
-                    <span className="text-xs font-mono text-[#667781]">
+                    <span className="text-xs font-mono text-[#667781] hidden sm:inline">
                       END-TO-END ENCRYPTION SIMULATOR
                     </span>
 
-                    {/* Bottom Right Jumbled & Reassembling Area */}
-                    <div className="relative flex items-center justify-end">
-                      {/* During loading (1% -> 99%): Letters are jumbled and scattered */}
-                      {!isLoaded && (
-                        <div className="relative flex items-center font-mono text-sm font-bold text-[#00a884]">
-                          {TARGET_LETTERS.map((item, idx) => (
-                            <motion.span
-                              key={idx}
-                              animate={{
-                                x: [item.initX, item.initX * 0.4, item.initX * 0.15],
-                                y: [item.initY, item.initY * 0.4, item.initY * 0.15],
-                                rotate: [item.initRot, item.initRot * 0.5, 0],
-                                opacity: [0.3, 0.85, 0.6],
-                              }}
-                              transition={{
-                                duration: 3.5,
-                                ease: [0.16, 1, 0.3, 1],
-                                repeat: Infinity,
-                                repeatType: 'reverse',
-                                delay: (idx * 0.03),
-                              }}
-                              className="inline-block pointer-events-none select-none text-[#00a884]"
-                            >
-                              {item.char === ' ' ? '\u00A0' : item.char}
-                            </motion.span>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* When Loaded (100%): Letters smoothly snap together into the exact final button */}
-                      {isLoaded && (
-                        <motion.button
-                          initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                          animate={{
-                            opacity: 1,
-                            scale: 1,
-                            y: 0,
-                            transition: {
-                              type: 'spring',
-                              stiffness: 300,
-                              damping: 22,
-                            },
-                          }}
-                          onClick={() => {
-                            if (onScrollDown) onScrollDown();
-                          }}
-                          className="flex items-center gap-2.5 px-6 py-2.5 rounded-full text-white font-sans font-semibold text-sm shadow-[0_8px_24px_rgba(0,168,132,0.35)] hover:shadow-[0_10px_30px_rgba(0,168,132,0.5)] transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer animate-bounce"
-                          style={{
-                            backgroundColor: '#00a884', // Green button matching screenshot
-                          }}
-                        >
-                          <span className="tracking-wide">Scroll to see the simulator</span>
-                          <span className="text-base font-bold">&darr;</span>
-                        </motion.button>
-                      )}
+                    {/* Bottom Right: Button fixed in place with in-place rolling text */}
+                    <div className="relative flex items-center justify-end w-full sm:w-auto">
+                      <button
+                        onClick={() => {
+                          if (isLoaded && onScrollDown) onScrollDown();
+                        }}
+                        disabled={!isLoaded}
+                        className={`flex items-center gap-2.5 px-6 py-2.5 rounded-full text-sm font-sans shadow-[0_8px_24px_rgba(0,168,132,0.35)] transition-all duration-300 ${
+                          isLoaded
+                            ? 'bg-[#00a884] hover:bg-[#008f6f] cursor-pointer hover:scale-105 active:scale-95 text-white animate-bounce'
+                            : 'bg-[#00a884]/90 text-white cursor-default'
+                        }`}
+                      >
+                        {/* The in-place scramble text */}
+                        <ScrambleTextInPlace
+                          target={TARGET_TEXT}
+                          progress={progress}
+                          isResolved={isLoaded}
+                        />
+                        <span className={`text-base font-bold transition-transform duration-300 ${isLoaded ? 'translate-y-0 opacity-100' : 'opacity-70'}`}>
+                          &darr;
+                        </span>
+                      </button>
                     </div>
                   </div>
                 </motion.div>
