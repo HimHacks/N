@@ -2,80 +2,118 @@ import React, { useState, useEffect, useRef } from 'react';
 import { E2EEHomePage } from './components/features/E2EEHomePage';
 import { CaesarCipherInteraction } from './components/features/CaesarCipherInteraction';
 import { GreetingPreloader } from './components/GreetingPreloader';
-import { ScrollTransitionPreloader } from './components/ScrollTransitionPreloader';
+import { WordsPreloader, type WordPreloaderPhase } from './components/WordsPreloader';
 
 export const App: React.FC = () => {
   const [hasVisited, setHasVisited] = useState(false);
-  const [showScrollPreloader, setShowScrollPreloader] = useState(false);
-  const hasTriggeredScrollPreloaderRef = useRef(false);
-  const playgroundRef = useRef<HTMLDivElement>(null);
+  const [currentView, setCurrentView] = useState<'home' | 'simulator'>('home');
+  const [preloaderPhase, setPreloaderPhase] = useState<WordPreloaderPhase>('idle');
+  const [buttonOrigin, setButtonOrigin] = useState<{ x: number; y: number } | null>(null);
+  const simulatorRef = useRef<HTMLDivElement>(null);
 
-  // Smooth scroll down to the human interaction section
-  const handleScrollToPlayground = () => {
-    // Show the transition preloader animation when navigating between sections
-    setShowScrollPreloader(true);
-    setTimeout(() => {
-      playgroundRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 400);
-
-    setTimeout(() => {
-      setShowScrollPreloader(false);
-    }, 1300);
+  // 1. User clicks the "Let's take a deep dive" soap bubble button on HomePage
+  const handleStartDeepDive = (origin?: { x: number; y: number }) => {
+    if (origin) {
+      setButtonOrigin(origin);
+    }
+    // Expand curtain directly outward from the bubble button
+    setPreloaderPhase('expanding');
   };
 
-  // Scroll listener to detect when user scrolls towards the interaction section
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const vh = window.innerHeight;
+  // 2. Spreading bubble curtain covers the entire screen -> opens compiling studio card
+  const handleBubbleExpanded = () => {
+    setPreloaderPhase('loading');
+  };
 
-      // When the user scrolls past 30% of the landing page for the first time
-      if (scrollY > vh * 0.3 && !hasTriggeredScrollPreloaderRef.current) {
-        hasTriggeredScrollPreloaderRef.current = true;
-        setShowScrollPreloader(true);
-        setTimeout(() => {
-          setShowScrollPreloader(false);
-        }, 1300);
+  // 3. Compiling reaches 100% -> mount the simulator behind/underneath the compiling card
+  const handleLoadingComplete = () => {
+    setCurrentView('simulator');
+  };
+
+  // 4. From the compiling page, after it loads, user has the option to scroll down to see the simulator!
+  const handleScrollDownFromCompiling = () => {
+    // Reverse preloader smoothly contracts back into the bubble origin
+    setPreloaderPhase('exiting');
+  };
+
+  // 5. Native wheel / touch scroll listener while in the loaded compiling page
+  useEffect(() => {
+    if (preloaderPhase !== 'loading' || currentView !== 'simulator') return;
+
+    let accumulatedDelta = 0;
+    const handleWheel = (e: WheelEvent) => {
+      if (e.deltaY > 20) {
+        accumulatedDelta += e.deltaY;
+        if (accumulatedDelta > 60) {
+          handleScrollDownFromCompiling();
+        }
       }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    let touchStartY = 0;
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartY = e.touches[0].clientY;
+    };
+    const handleTouchMove = (e: TouchEvent) => {
+      const touchY = e.touches[0].clientY;
+      if (touchStartY - touchY > 50) {
+        handleScrollDownFromCompiling();
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [preloaderPhase, currentView]);
+
+  // When reverse contraction finishes, preloader is idle
+  const handlePreloaderExited = () => {
+    setPreloaderPhase('idle');
+  };
 
   return (
     <div className="relative w-full min-h-screen bg-[#0b141a] text-white selection:bg-[#00a884] selection:text-white">
       {/* 
-        1. Initial Visitor Arrival: Word Preloader
-        Cycles multilingual greetings (Mandarin 你好, Malay Apa Khabar, Tamil வணக்கம், Punjabi, Bonjour, Ciao...)
-        Clean typography without green dot, slightly translucent cream backdrop
+        Initial Visitor Arrival: Word Preloader
+        Cycles multilingual greetings (Mandarin, Malay, Tamil, Punjabi, Bonjour, Ciao...)
+        Clean typography, slightly translucent cream backdrop
       */}
       {!hasVisited && (
         <GreetingPreloader onComplete={() => setHasVisited(true)} />
       )}
 
       {/* 
-        Scroll Transition Word Preloader between Home Page and the Human Interaction Section
+        Original Compiling Studio Preloader with Rising Flat Soffit Gradient:
+        Opens on bubble button click. After 100% load, user has the option to scroll down
+        to reveal the simulator!
       */}
-      <ScrollTransitionPreloader isVisible={showScrollPreloader} />
+      <WordsPreloader
+        phase={preloaderPhase}
+        buttonOrigin={buttonOrigin}
+        onExpanded={handleBubbleExpanded}
+        onLoadingComplete={handleLoadingComplete}
+        onExited={handlePreloaderExited}
+        onScrollDown={handleScrollDownFromCompiling}
+      />
 
       {/* 
-        2. Main Homepage (Hero & Lumen Interactive Shader)
-        "The Syntax Unveilers Presents - End-to-End Encryption"
-        Soap Bubble Button linking down to the interactive playground
+        View Routing:
+        - 'home': Main Hero Page with Lumen Interactive Shader and Soap Bubble button
+        - 'simulator': Interactive Human Walk & Caesar Cipher E2EE Simulator
       */}
-      <section className="relative w-full min-h-screen">
-        <E2EEHomePage onScrollToPlayground={handleScrollToPlayground} />
-      </section>
-
-      {/* 
-        3. Single-Scroll Seamless Transition:
-        Interactive Two-Human Walk & Text Caesar Cipher Simulator
-        Retaining the beautiful Soffit gradient background
-      */}
-      <div ref={playgroundRef} id="cipher-playground" className="relative w-full">
-        <CaesarCipherInteraction onScrollToTop={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
-      </div>
+      {currentView === 'simulator' ? (
+        <div ref={simulatorRef} className="relative w-full min-h-screen">
+          <CaesarCipherInteraction onScrollToTop={() => setCurrentView('home')} />
+        </div>
+      ) : (
+        <E2EEHomePage onNavigateToSimulator={handleStartDeepDive} />
+      )}
     </div>
   );
 };

@@ -11,6 +11,7 @@ interface WordsPreloaderProps {
   onExpanded?: () => void;
   onLoadingComplete?: () => void;
   onExited?: () => void;
+  onScrollDown?: () => void;
 }
 
 // Security / Cryptography words cycling seamlessly like Skiper 8
@@ -168,10 +169,12 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   onExpanded,
   onLoadingComplete,
   onExited,
+  onScrollDown,
 }) => {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [wordIndex, setWordIndex] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   // Measure viewport dimensions
   useEffect(() => {
@@ -193,10 +196,11 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
     }
   }, [phase]);
 
-  // Compiling duration: Approximately 6 seconds total (1% -> 100% at ~58ms per tick)
+  // Compiling duration: Approximately 5 seconds total (1% -> 100%)
   // This gives the large WebGL2 Soffit gradient plenty of time to expand and bloom from the bottom
   useEffect(() => {
     if (phase === 'loading') {
+      setIsLoaded(false);
       setProgress(1);
       let current = 1;
       const interval = setInterval(() => {
@@ -204,18 +208,18 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
         if (current >= 100) {
           current = 100;
           setProgress(100);
+          setIsLoaded(true);
           clearInterval(interval);
-          setTimeout(() => {
-            if (onLoadingComplete) onLoadingComplete();
-          }, 500);
+          if (onLoadingComplete) onLoadingComplete();
         } else {
           setProgress(current);
         }
-      }, 58); // 100 ticks * 58ms = ~5.8s + 0.5s settle = ~6.3 seconds total
+      }, 50); // 100 ticks * 50ms = 5 seconds total
       return () => clearInterval(interval);
     } else if (phase === 'idle') {
       setProgress(0);
       setWordIndex(0);
+      setIsLoaded(false);
     }
   }, [phase, onLoadingComplete]);
 
@@ -418,10 +422,26 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                     </div>
                   </div>
 
-                  {/* Bottom Footer Telemetry */}
+                  {/* Bottom Footer Telemetry & Scroll Down Action */}
                   <div className="flex items-center justify-between w-full text-xs font-mono text-[#667781] border-t border-[#e9edef] pt-3.5">
                     <span className="text-[#00a884] font-semibold tracking-wide">THE SYNTAX UNVEILERS</span>
-                    <span className="text-[#667781] hidden sm:inline">END-TO-END ENCRYPTION SIMULATOR</span>
+
+                    {/* Scroll Down Trigger - appears once 100% loaded */}
+                    {isLoaded ? (
+                      <motion.button
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        onClick={() => {
+                          if (onScrollDown) onScrollDown();
+                        }}
+                        className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#00a884] hover:bg-[#008f6f] text-white font-sans font-semibold text-xs shadow-md transition-all duration-200 cursor-pointer animate-bounce"
+                      >
+                        <span>Scroll Down to Simulator</span>
+                        <span className="text-sm font-bold">&darr;</span>
+                      </motion.button>
+                    ) : (
+                      <span className="text-[#667781] hidden sm:inline">END-TO-END ENCRYPTION SIMULATOR</span>
+                    )}
                   </div>
                 </motion.div>
               )}
