@@ -192,7 +192,7 @@ const RollDownText: React.FC<{
   );
 };
 
-// Lottery 3-slot sequential character resolver with cinematic tension on the final 'l'
+// Lottery 3-slot sequential character resolver
 const LotterySlotChar: React.FC<{
   targetChar: string;
   slotIndex: number;
@@ -204,13 +204,15 @@ const LotterySlotChar: React.FC<{
     CHAR_POOL[(slotIndex * 7) % CHAR_POOL.length]
   );
 
-  // Cinematic staggered resolution:
-  // Slots 0..4 (S, c, r, o, l) resolve smoothly between 20% and 88%
-  // The final slot (index 5, final 'l') holds cinematic tension up until 100% complete
-  const lockThreshold =
-    slotIndex === totalSlots - 1
-      ? 100 // Final 'l' holds tension until 100% is locked
-      : Math.round(((slotIndex + 1) / (totalSlots + 0.6)) * 88);
+  // Evenly spaced progressive resolution for all 6 letters (S, c, r, o, l, l):
+  // slot 0 ('S'): resolves at 25%
+  // slot 1 ('c'): resolves at 42%
+  // slot 2 ('r'): resolves at 58%
+  // slot 3 ('o'): resolves at 72%
+  // slot 4 ('l'): resolves at 86%
+  // slot 5 ('l'): resolves at 100%
+  const thresholds = [25, 42, 58, 72, 86, 100];
+  const lockThreshold = thresholds[slotIndex] ?? 100;
 
   const isLocked = isComplete || progress >= lockThreshold;
 
@@ -223,7 +225,7 @@ const LotterySlotChar: React.FC<{
     const interval = setInterval(() => {
       const rand = CHAR_POOL[Math.floor(Math.random() * CHAR_POOL.length)];
       setCurrentChar(rand);
-    }, 28 + (slotIndex * 5));
+    }, 45 + (slotIndex * 6));
 
     return () => clearInterval(interval);
   }, [isLocked, targetChar, slotIndex]);
@@ -312,15 +314,13 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   const originX = buttonOrigin ? `${Math.round(buttonOrigin.x)}px` : 'calc(100% - 140px)';
   const originY = buttonOrigin ? `${Math.round(buttonOrigin.y)}px` : 'calc(100% - 70px)';
 
-  // Multi-stage warping animation from the clicked button:
-  // 1. Starts strictly from the button origin (in the bottom-right area).
-  // 2. Warps outward to hit the bottom and left edges first (the broad expanse).
-  // 3. Spreads across the top and main body of the screen.
-  // 4. Finally closes and completely fills the remaining bottom-right corner area.
+  // Warping expansion strictly from the clicked button:
+  // Starts directly at the button's location in the bottom-right zone,
+  // warps and balloons across the website to cover the whole screen,
+  // transitioning from completely transparent to Biscotti Cream.
   const clipInitial = `circle(0px at ${originX} ${originY})`;
-  const clipStage1Edges = `polygon(0% 100%, 0% 40%, 40% 100%, ${originX} ${originY})`; // sweeps bottom & left edges first
-  const clipStage2Expands = `polygon(0% 0%, 100% 0%, 100% 60%, 55% 100%, 0% 100%)`; // covers left, top, right while corner is catching up
-  const clipFull = `circle(250vw at ${originX} ${originY})`; // fully closes and seals bottom-right corner
+  const clipMid = `circle(80vw at ${originX} ${originY})`;
+  const clipFull = `circle(220vw at ${originX} ${originY})`;
 
   const customEase = [0.16, 1, 0.3, 1] as const;
 
@@ -329,49 +329,49 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
 
   const isVisible = phase !== 'idle';
 
-  // Gradient configuration: richer emerald and WhatsApp primary greens alongside electric cyan
+  // Gradient configuration: thoroughly mixed emerald, cyan, and deep forest green without segregated blocks
   const soffitConfig: SoffitGradientConfig = {
     bgColor: '#00a884',   // WhatsApp primary emerald green
-    colorA: '#059669',    // Rich vibrant emerald green
-    colorB: '#10b981',    // Bright lush green
-    colorC: '#06b6d4',    // Bright Cyan
+    colorA: '#06b6d4',    // Cyan accent
+    colorB: '#059669',    // Vibrant emerald green
+    colorC: '#10b981',    // Lush medium green
     colorD: '#022c22',    // Deep forest dark green
-    scale: 0.85,
-    speed: 0.28,
-    tilt: 0.0,
-    rock: 0.06,
-    horizon: -0.15,
-    breathe: 0.25,
-    spread: 0.65,
-    curve: 2.8,
-    direct: 0.85,
-    bounce: 0.25,
-    bounceCurve: 2.5,
+    scale: 0.95,
+    speed: 0.22,
+    tilt: 0.05,
+    rock: 0.12,
+    horizon: -0.2,
+    breathe: 0.35,
+    spread: 0.85,
+    curve: 3.2,
+    direct: 0.75,
+    bounce: 0.35,
+    bounceCurve: 2.8,
     spillCentre: 0.0,
-    spillWidth: 1.8,
-    spillFloor: 0.2,
-    amount: 0.32,
-    warp: 2.2,
-    warpScale: 0.65,
-    flow: 0.38,
-    roughness: 0.35,
-    lacunarity: 2.0,
-    motes: 0.05,
-    moteScale: 7,
-    ambient: 0.35,
-    contrast: 1.8,
-    midpoint: 0.55,
-    sink: 0.22,
-    glow: 0.45,
+    spillWidth: 2.4,
+    spillFloor: 0.3,
+    amount: 0.45,
+    warp: 2.8,
+    warpScale: 0.8,
+    flow: 0.45,
+    roughness: 0.4,
+    lacunarity: 2.2,
+    motes: 0.08,
+    moteScale: 8,
+    ambient: 0.4,
+    contrast: 1.6,
+    midpoint: 0.5,
+    sink: 0.25,
+    glow: 0.55,
     grain: 0,
     grainAnim: 0,
-    dither: 0.8,
-    vignette: 0.08,
+    dither: 0.85,
+    vignette: 0.06,
     steer: 0.0,
-    lift: 0.08,
-    sweep: 0.2,
+    lift: 0.1,
+    sweep: 0.25,
     cursor: 1,
-    parallax: 0.008,
+    parallax: 0.01,
     maxDpr: 1,
   };
 
@@ -388,16 +388,15 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
             animate={
               phase === 'expanding'
                 ? {
-                    clipPath: [clipInitial, clipStage1Edges, clipStage2Expands, clipFull],
+                    clipPath: [clipInitial, clipMid, clipFull],
                     backgroundColor: [
-                      'rgba(239, 234, 226, 0.15)',
-                      'rgba(239, 234, 226, 0.70)',
-                      'rgba(239, 234, 226, 0.95)',
+                      'rgba(239, 234, 226, 0.0)',
+                      'rgba(239, 234, 226, 0.65)',
                       'rgba(239, 234, 226, 0.96)',
                     ],
                     transition: {
-                      clipPath: { duration: 1.45, ease: customEase, times: [0, 0.38, 0.72, 1] },
-                      backgroundColor: { duration: 1.35, ease: 'easeInOut' },
+                      clipPath: { duration: 1.25, ease: customEase, times: [0, 0.45, 1] },
+                      backgroundColor: { duration: 1.15, ease: 'easeInOut' },
                     },
                   }
                 : phase === 'loading'
@@ -422,15 +421,13 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
           >
             {/* 
               Background of the loading page:
-              Two-stage choreography:
-              1. First, the entire screen expands with authentic WhatsApp Biscotti Cream (#efeae2) with a tiny hint of translucency (0.96).
-              2. Once fully expanded into 'loading' phase, the vibrant Green, Emerald & Cyan fluid ripples
-                 rise up smoothly and deliberately from the bottom to exactly 3.5/8 (43.75%) of the height,
-                 leaving the upper majority cleanly in Biscotti Cream.
+              1. Entire screen expands from transparent to authentic WhatsApp Biscotti Cream (#efeae2) with delicate translucency (0.96).
+              2. Vibrant Green, Emerald & Cyan fluid ripples rise up smoothly and naturally from the bottom,
+                 seamlessly blending into the Biscotti Cream with no harsh border line.
             */}
             <div className="absolute inset-0 pointer-events-none bg-[#efeae2]/96" />
 
-            {/* Cyan, Rich Green & Dark Green fluid background rises up slowly from the bottom (reaching 3.5/8 ratio) */}
+            {/* Cyan, Rich Green & Dark Green fluid background rises up smoothly and blends naturally into the cream */}
             <motion.div
               initial={{ y: '100%', opacity: 0 }}
               animate={
@@ -439,15 +436,15 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   : { y: '100%', opacity: 0 }
               }
               transition={{
-                duration: 2.2, // Deliberate, graceful cinematic rising so it has time to fill
+                duration: 2.4, // Unhurried cinematic glide allowing the fluid ripples to settle
                 ease: [0.16, 1, 0.3, 1],
                 delay: 0.2,
               }}
-              className="absolute inset-x-0 bottom-0 h-[43.75%] pointer-events-none overflow-hidden z-10"
+              className="absolute inset-0 pointer-events-none overflow-hidden z-10"
               style={{
-                // 3.5/8 ratio gradient: rises up to 43.75% height with soft blend into Biscotti Cream
-                maskImage: 'linear-gradient(to top, black 40%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.25) 90%, transparent 100%)',
-                WebkitMaskImage: 'linear-gradient(to top, black 40%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.25) 90%, transparent 100%)',
+                // Natural organic fade without a hard line, gently transitioning from bottom up
+                maskImage: 'linear-gradient(to top, black 0%, rgba(0,0,0,0.9) 25%, rgba(0,0,0,0.5) 45%, rgba(0,0,0,0.15) 60%, transparent 75%)',
+                WebkitMaskImage: 'linear-gradient(to top, black 0%, rgba(0,0,0,0.9) 25%, rgba(0,0,0,0.5) 45%, rgba(0,0,0,0.15) 60%, transparent 75%)',
               }}
             >
               {/* Home page WebGL fluid shader running in background with strong green presence */}
