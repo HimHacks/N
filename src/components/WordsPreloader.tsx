@@ -153,53 +153,54 @@ const InstantDotMatrixDigit: React.FC<{ char: string; dotSize?: number; color?: 
 
 // Target word: "SCROLL"
 const TARGET_WORD = 'SCROLL';
-// Upstream spasoje.dev character pool (uppercase alphanumeric)
+// Exact alphanumeric uppercase character pool from spasoje.dev
 const CHAR_POOL = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','0','1','2','3','4','5','6','7','8','9'];
 
-// Individual character slot that scrambles through random characters in place and settles into its target letter
-const ScrambleCharInPlace: React.FC<{
+// Lottery-3-Slot fast sequential slot-machine resolver:
+// Each slot spins rapidly through random characters.
+// Slot 0 locks first, then Slot 1 locks, then Slot 2, etc., like reels snapping in place!
+const LotterySlotChar: React.FC<{
   targetChar: string;
-  charIndex: number;
-  totalChars: number;
+  slotIndex: number;
+  totalSlots: number;
   progress: number;
   isComplete: boolean;
-}> = ({ targetChar, charIndex, totalChars, progress, isComplete }) => {
+}> = ({ targetChar, slotIndex, totalSlots, progress, isComplete }) => {
   const [currentChar, setCurrentChar] = useState<string>(() =>
-    CHAR_POOL[Math.floor(Math.random() * CHAR_POOL.length)]
+    CHAR_POOL[(slotIndex * 7) % CHAR_POOL.length]
   );
 
+  // Progressive lock threshold for each slot
+  // Slot 0 locks at 16%, Slot 1 at 33%, Slot 2 at 50%, ..., Slot 5 at 100%
+  const lockThreshold = ((slotIndex + 1) / totalSlots) * 100;
+  const isLocked = isComplete || progress >= lockThreshold;
+
   useEffect(() => {
-    if (isComplete) {
+    if (isLocked) {
       setCurrentChar(targetChar);
       return;
     }
 
-    // Characters settle sequentially based on progress:
-    // e.g. char 0 settles at ~20%, char 1 at ~35%, ..., char 5 at 100%
-    const settleThreshold = ((charIndex + 1) / totalChars) * 100;
-
-    if (progress >= settleThreshold) {
-      setCurrentChar(targetChar);
-      return;
-    }
-
-    // Scramble rapidly in its fixed place with subtle jitter
+    // Fast instant rolling (every 28ms - 32ms) like spinning lottery reels
     const interval = setInterval(() => {
-      setCurrentChar(CHAR_POOL[Math.floor(Math.random() * CHAR_POOL.length)]);
-    }, 55 + (charIndex * 12));
+      const rand = CHAR_POOL[Math.floor(Math.random() * CHAR_POOL.length)];
+      setCurrentChar(rand);
+    }, 28 + (slotIndex * 4));
 
     return () => clearInterval(interval);
-  }, [progress, isComplete, targetChar, charIndex, totalChars]);
-
-  const isLocked = isComplete || (progress >= ((charIndex + 1) / totalChars) * 100);
+  }, [isLocked, targetChar, slotIndex]);
 
   return (
     <span
-      className={`inline-flex items-center justify-center font-mono w-[1ch] transition-colors duration-150 ${
+      className={`font-terminal-dots inline-block text-center transition-transform duration-75 select-none ${
         isLocked
-          ? 'text-[#1a1a1a] font-bold'
-          : 'text-[#1a1a1a]/70 font-semibold'
+          ? 'text-[#1a1a1a] scale-100 font-bold'
+          : 'text-[#404040] scale-95 opacity-90'
       }`}
+      style={{
+        width: '1.25ch',
+        letterSpacing: '0.04em',
+      }}
     >
       {currentChar}
     </span>
@@ -228,7 +229,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
     return () => window.removeEventListener('resize', updateDims);
   }, []);
 
-  // Loading duration: ~5.0 seconds (1% -> 100%)
+  // Faster loading duration: ~2.8 seconds total (1% -> 100% at 28ms per tick)
   useEffect(() => {
     if (phase === 'loading') {
       setIsLoaded(false);
@@ -245,7 +246,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
         } else {
           setProgress(current);
         }
-      }, 50);
+      }, 28); // Faster loading animation
       return () => clearInterval(interval);
     } else if (phase === 'idle') {
       setProgress(0);
@@ -273,7 +274,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
     colorC: '#efeae2',
     colorD: '#06b6d4',
     scale: 0.75,
-    speed: 0.28,
+    speed: 0.35, // Faster fluid ripples
     tilt: 0.0,
     rock: 0.06,
     horizon: -0.15,
@@ -327,8 +328,8 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                     clipPath: expandedClip,
                     backgroundColor: '#efeae2',
                     transition: {
-                      clipPath: { duration: 1.15, ease: customEase },
-                      backgroundColor: { duration: 1.0, ease: 'easeInOut' },
+                      clipPath: { duration: 0.85, ease: customEase },
+                      backgroundColor: { duration: 0.75, ease: 'easeInOut' },
                     },
                   }
                 : phase === 'loading'
@@ -341,8 +342,8 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                     clipPath: initialClip,
                     backgroundColor: '#0c1317',
                     transition: {
-                      clipPath: { duration: 0.95, ease: customEase },
-                      backgroundColor: { duration: 0.85, ease: 'easeInOut' },
+                      clipPath: { duration: 0.8, ease: customEase },
+                      backgroundColor: { duration: 0.7, ease: 'easeInOut' },
                     },
                   }
                 : {}
@@ -363,12 +364,12 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   ? {
                       y: '0%',
                       opacity: 0.92,
-                      transition: { duration: 5.0, ease: [0.16, 1, 0.3, 1] },
+                      transition: { duration: 2.8, ease: [0.16, 1, 0.3, 1] },
                     }
                   : phase === 'exiting'
                   ? {
                       opacity: 0,
-                      transition: { duration: 0.4 },
+                      transition: { duration: 0.3 },
                     }
                   : {}
               }
@@ -396,7 +397,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   initial={{ opacity: 0, scale: 0.94 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.96 }}
-                  transition={{ duration: 0.35, ease: 'easeOut' }}
+                  transition={{ duration: 0.28, ease: 'easeOut' }}
                   className="relative z-20 w-full max-w-4xl h-[78vh] max-h-[580px] bg-white/95 rounded-3xl shadow-[0_30px_90px_rgba(11,20,26,0.18)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-[#d1d7db]/80 mx-4 sm:mx-8 backdrop-blur-xl"
                 >
                   {/* Top Bar: Clean minimal header */}
@@ -430,9 +431,8 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   {/* 
                     Bottom Section:
                     - Left: Clean status label
-                    - Bottom Right: spasoje.dev aesthetic button (tactile pill with LED dot)
-                      Letters start as random in-place characters and animate in their fixed positions
-                      to spell the word "SCROLL".
+                    - Bottom Right: Tactile pill button with the exact TerminalDots font matching user upload
+                      Reels spin and resolve like a Lottery 3-slot machine sequentially to spell "SCROLL"
                   */}
                   <div className="relative flex items-center justify-between w-full border-t border-[#e9edef] pt-4 min-h-[56px]">
                     <span className="text-xs font-mono text-[#667781] hidden sm:inline">
@@ -446,18 +446,18 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                           if (isLoaded && onScrollDown) onScrollDown();
                         }}
                         disabled={!isLoaded}
-                        className={`group flex items-center rounded-[36px] transition-all duration-300 select-none ${
+                        className={`group flex items-center rounded-[36px] transition-all duration-200 select-none ${
                           isLoaded ? 'cursor-pointer hover:scale-105 active:scale-95' : 'cursor-default opacity-85'
                         }`}
                         style={{
-                          padding: '10px 16px 8px 14px',
+                          padding: '10px 18px 8px 16px',
                           backgroundColor: '#f2f2f2',
                           boxShadow: '0 2px 2px 0 rgba(0,0,0,0.08), 0 4px 7px 0 rgba(0,0,0,0.2), 0 0.5px 2px 0 rgba(0,0,0,0.15), inset 0 -1px 0.2px 0 rgba(0,0,0,0.12), inset 0 1px 0.2px 0 #ffffff',
                         }}
                       >
-                        {/* Spasoje LED Indicator dot: orange/emerald pulsating glow */}
+                        {/* Spasoje LED Indicator dot */}
                         <span
-                          className={`relative inline-block w-1.5 h-1.5 rounded-full mr-2 mb-0.5 transition-colors duration-300 ${
+                          className={`relative inline-block w-1.5 h-1.5 rounded-full mr-2.5 mb-0.5 transition-colors duration-200 ${
                             isLoaded ? 'bg-[#ff611b]' : 'bg-[#e0e0e0]'
                           }`}
                         >
@@ -466,22 +466,22 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                           )}
                         </span>
 
-                        {/* In-place scrambling letters spelling out "SCROLL" */}
-                        <span className="flex items-center text-[12px] font-mono tracking-wider uppercase text-[#1a1a1a]">
+                        {/* Exact Terminal Dot-matrix letters resolving like a Lottery 3-slot reel */}
+                        <span className="flex items-center text-sm sm:text-base font-normal tracking-wider text-[#1a1a1a]">
                           {TARGET_WORD.split('').map((char, idx) => (
-                            <ScrambleCharInPlace
+                            <LotterySlotChar
                               key={idx}
                               targetChar={char}
-                              charIndex={idx}
-                              totalChars={TARGET_WORD.length}
+                              slotIndex={idx}
+                              totalSlots={TARGET_WORD.length}
                               progress={progress}
                               isComplete={isLoaded}
                             />
                           ))}
                         </span>
 
-                        {/* Subtle down arrow glyph */}
-                        <span className={`ml-2 text-xs font-bold text-[#1a1a1a] transition-transform duration-300 ${isLoaded ? 'translate-y-0.5 opacity-100' : 'opacity-40'}`}>
+                        {/* Down arrow glyph */}
+                        <span className={`ml-2 text-xs font-bold text-[#1a1a1a] transition-transform duration-200 ${isLoaded ? 'translate-y-0.5 opacity-100' : 'opacity-40'}`}>
                           &darr;
                         </span>
                       </button>
