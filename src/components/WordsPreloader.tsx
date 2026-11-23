@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThreeSquaresLoader } from './ThreeSquaresLoader';
 import { SoffitGradient, type SoffitGradientConfig } from './SoffitGradient';
+import { LumenInteractiveShader } from './features/LumenInteractiveShader';
 
 export type WordPreloaderPhase = 'idle' | 'expanding' | 'loading' | 'exiting';
 
@@ -11,7 +12,6 @@ interface WordsPreloaderProps {
   onExpanded?: () => void;
   onLoadingComplete?: () => void;
   onExited?: () => void;
-  onScrollDown?: () => void;
 }
 
 // 5x7 Dot-matrix glyph definitions for loading counter
@@ -117,7 +117,6 @@ const DIGIT_PATTERNS: Record<string, number[][]> = {
   ],
 };
 
-// Dot-Matrix Digit
 const InstantDotMatrixDigit: React.FC<{ char: string; dotSize?: number; color?: string }> = ({
   char,
   dotSize = 5,
@@ -151,14 +150,12 @@ const InstantDotMatrixDigit: React.FC<{ char: string; dotSize?: number; color?: 
   );
 };
 
-// Target word: "SCROLL"
-const TARGET_WORD = 'SCROLL';
-// Exact alphanumeric uppercase character pool from spasoje.dev
-const CHAR_POOL = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','0','1','2','3','4','5','6','7','8','9'];
+// Target word: "Scroll" (Capital S, rest lowercase as requested)
+const TARGET_WORD = 'Scroll';
+const CHAR_POOL = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','0','1','2','3','4','5','6','7','8','9'];
 
-// Lottery-3-Slot fast sequential slot-machine resolver:
-// Each slot spins rapidly through random characters.
-// Slot 0 locks first, then Slot 1 locks, then Slot 2, etc., like reels snapping in place!
+// Lottery 3-slot sequential character resolver
+// Perfectly synced with percentage: when percentage hits 100%, the last letter locks at exactly 100%!
 const LotterySlotChar: React.FC<{
   targetChar: string;
   slotIndex: number;
@@ -170,9 +167,14 @@ const LotterySlotChar: React.FC<{
     CHAR_POOL[(slotIndex * 7) % CHAR_POOL.length]
   );
 
-  // Progressive lock threshold for each slot
-  // Slot 0 locks at 16%, Slot 1 at 33%, Slot 2 at 50%, ..., Slot 5 at 100%
-  const lockThreshold = ((slotIndex + 1) / totalSlots) * 100;
+  // Exact progressive locking synchronized to the 100% counter:
+  // slot 0 (S) locks at ~20%
+  // slot 1 (c) locks at ~40%
+  // slot 2 (r) locks at ~60%
+  // slot 3 (o) locks at ~80%
+  // slot 4 (l) locks at ~92%
+  // slot 5 (l) locks at exactly 100%
+  const lockThreshold = Math.round(((slotIndex + 1) / totalSlots) * 100);
   const isLocked = isComplete || progress >= lockThreshold;
 
   useEffect(() => {
@@ -181,7 +183,6 @@ const LotterySlotChar: React.FC<{
       return;
     }
 
-    // Fast instant rolling (every 28ms - 32ms) like spinning lottery reels
     const interval = setInterval(() => {
       const rand = CHAR_POOL[Math.floor(Math.random() * CHAR_POOL.length)];
       setCurrentChar(rand);
@@ -198,7 +199,7 @@ const LotterySlotChar: React.FC<{
           : 'text-[#404040] scale-95 opacity-90'
       }`}
       style={{
-        width: '1.25ch',
+        width: '1.2ch',
         letterSpacing: '0.04em',
       }}
     >
@@ -213,13 +214,11 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   onExpanded,
   onLoadingComplete,
   onExited,
-  onScrollDown,
 }) => {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [progress, setProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Measure viewport dimensions
   useEffect(() => {
     const updateDims = () => {
       setDimensions({ width: window.innerWidth, height: window.innerHeight });
@@ -229,7 +228,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
     return () => window.removeEventListener('resize', updateDims);
   }, []);
 
-  // Faster loading duration: ~2.8 seconds total (1% -> 100% at 28ms per tick)
+  // Loading animation: ~3.0s total, ticking 1% -> 100%
   useEffect(() => {
     if (phase === 'loading') {
       setIsLoaded(false);
@@ -246,7 +245,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
         } else {
           setProgress(current);
         }
-      }, 28); // Faster loading animation
+      }, 30);
       return () => clearInterval(interval);
     } else if (phase === 'idle') {
       setProgress(0);
@@ -257,24 +256,29 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   const originX = buttonOrigin ? `${Math.round(buttonOrigin.x)}px` : '50%';
   const originY = buttonOrigin ? `${Math.round(buttonOrigin.y)}px` : 'calc(100% - 70px)';
 
-  const initialClip = `circle(0px at ${originX} ${originY})`;
-  const expandedClip = `circle(160vmax at ${originX} ${originY})`;
-  const customEase = [0.76, 0, 0.24, 1] as const;
+  // Organic corner-filling warping animation:
+  // Starts as an ellipse at the button origin, expands horizontally to attract to the side edges first,
+  // then blows out to fill the corners of the viewport!
+  const initialClip = `ellipse(0px 0px at ${originX} ${originY})`;
+  const expandingWarpClip = `ellipse(120vw 100vh at ${originX} ${originY})`;
+  const fullCoverClip = `ellipse(220vw 220vh at ${originX} ${originY})`;
+
+  const customEase = [0.16, 1, 0.3, 1] as const;
 
   const progressStr = String(Math.min(100, progress)).padStart(3, '0') + '%';
   const digits = progressStr.split('');
 
   const isVisible = phase !== 'idle';
 
-  // WhatsApp signature warm off-white cream (#efeae2 / #f0f2f5) with emerald accents
+  // Gradient configuration infused with WhatsApp Biscotti cream, deep emerald, and electric cyan
   const soffitConfig: SoffitGradientConfig = {
-    bgColor: '#f0f2f5',
-    colorA: '#00a884',
-    colorB: '#25d366',
-    colorC: '#efeae2',
-    colorD: '#06b6d4',
+    bgColor: '#efeae2',   // WhatsApp signature Biscotti cream base
+    colorA: '#00a884',    // WhatsApp primary teal-emerald
+    colorB: '#043e2e',    // Deep Signal Emerald
+    colorC: '#efeae2',    // Biscotti Cream accent
+    colorD: '#06b6d4',    // Cyan / teal ribbon
     scale: 0.75,
-    speed: 0.35, // Faster fluid ripples
+    speed: 0.35,
     tilt: 0.0,
     rock: 0.06,
     horizon: -0.15,
@@ -317,34 +321,31 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
       {isVisible && (
         <div className="fixed inset-0 z-[120] pointer-events-auto overflow-hidden select-none">
           <motion.div
-            className="fixed inset-0 z-30 flex items-center justify-center"
+            className="fixed inset-0 z-30 flex items-center justify-center overflow-hidden"
             initial={{
               clipPath: initialClip,
-              backgroundColor: '#0c1317',
+              backgroundColor: 'rgba(239, 234, 226, 0.2)',
             }}
             animate={
               phase === 'expanding'
                 ? {
-                    clipPath: expandedClip,
-                    backgroundColor: '#efeae2',
+                    clipPath: [initialClip, expandingWarpClip, fullCoverClip],
+                    backgroundColor: ['rgba(239, 234, 226, 0.4)', 'rgba(239, 234, 226, 0.85)', '#efeae2'],
                     transition: {
-                      clipPath: { duration: 0.85, ease: customEase },
-                      backgroundColor: { duration: 0.75, ease: 'easeInOut' },
+                      clipPath: { duration: 1.05, ease: customEase, times: [0, 0.55, 1] },
+                      backgroundColor: { duration: 0.95, ease: 'easeInOut' },
                     },
                   }
                 : phase === 'loading'
                 ? {
-                    clipPath: expandedClip,
+                    clipPath: fullCoverClip,
                     backgroundColor: '#efeae2',
                   }
                 : phase === 'exiting'
                 ? {
-                    clipPath: initialClip,
-                    backgroundColor: '#0c1317',
-                    transition: {
-                      clipPath: { duration: 0.8, ease: customEase },
-                      backgroundColor: { duration: 0.7, ease: 'easeInOut' },
-                    },
+                    // Smooth downward exit slide on user scroll
+                    y: '-100vh',
+                    transition: { duration: 0.85, ease: [0.76, 0, 0.24, 1] },
                   }
                 : {}
             }
@@ -356,7 +357,16 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
               }
             }}
           >
-            {/* Flat Soffit WebGL2 Gradient Rising from Bottom */}
+            {/* 
+              Background of the loading page:
+              Incorporating the Lumen Interactive Shader from the home page (subtle behind)
+              + Rising Soffit gradient with deep emerald, cyan, and biscotti cream
+            */}
+            <div className="absolute inset-0 pointer-events-none opacity-30">
+              <LumenInteractiveShader />
+            </div>
+
+            {/* Rising Flat Soffit WebGL2 Gradient */}
             <motion.div
               initial={{ y: '100%', opacity: 0 }}
               animate={
@@ -364,7 +374,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   ? {
                       y: '0%',
                       opacity: 0.92,
-                      transition: { duration: 2.8, ease: [0.16, 1, 0.3, 1] },
+                      transition: { duration: 3.0, ease: [0.16, 1, 0.3, 1] },
                     }
                   : phase === 'exiting'
                   ? {
@@ -394,27 +404,27 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
               {phase === 'loading' && (
                 <motion.div
                   key="loading-card-container"
-                  initial={{ opacity: 0, scale: 0.94 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.96 }}
-                  transition={{ duration: 0.28, ease: 'easeOut' }}
+                  transition={{ duration: 0.3, ease: 'easeOut' }}
                   className="relative z-20 w-full max-w-4xl h-[78vh] max-h-[580px] bg-white/95 rounded-3xl shadow-[0_30px_90px_rgba(11,20,26,0.18)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-[#d1d7db]/80 mx-4 sm:mx-8 backdrop-blur-xl"
                 >
-                  {/* Top Bar: Clean minimal header */}
+                  {/* Top Bar: Clean minimal header with channel/protocol removed */}
                   <div className="flex items-center justify-between w-full border-b border-[#e9edef] pb-3.5">
-                    <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#00a884]">
-                      E2EE • PROTOCOL
+                    <span className="text-xs font-mono font-bold tracking-widest text-[#00a884] uppercase">
+                      THE SYNTAX UNVEILERS
                     </span>
                     <span className="text-xs font-mono text-[#8696a0]">
-                      {progress < 100 ? 'CONNECTING...' : 'CHANNEL ACTIVE'}
+                      GVH 2026
                     </span>
                   </div>
 
-                  {/* Center Loading Telemetry: Bootzy TM display font for "Loading" */}
+                  {/* Center Loading Telemetry: Original font (Large L, rest small: 'Loading') */}
                   <div className="flex flex-col md:flex-row items-center justify-between my-auto w-full gap-8">
-                    {/* Left: "Loading" styled with Bootzy TM font and ThreeSquaresLoader */}
+                    {/* Left: 'Loading' in clean original font with ThreeSquaresLoader */}
                     <div className="flex items-center gap-4">
-                      <span className="font-bootzy text-4xl sm:text-5xl md:text-6xl text-[#111b21] tracking-wide leading-none">
+                      <span className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-[#111b21] tracking-tight leading-none">
                         Loading
                       </span>
                       <ThreeSquaresLoader size={28} color="#00a884" />
@@ -431,42 +441,25 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   {/* 
                     Bottom Section:
                     - Left: Clean status label
-                    - Bottom Right: Tactile pill button with the exact TerminalDots font matching user upload
-                      Reels spin and resolve like a Lottery 3-slot machine sequentially to spell "SCROLL"
+                    - Bottom Right: Tactile pill indicator (NOT CLICKABLE, no red button/icon)
+                      Informs the user to scroll once loaded.
                   */}
                   <div className="relative flex items-center justify-between w-full border-t border-[#e9edef] pt-4 min-h-[56px]">
                     <span className="text-xs font-mono text-[#667781] hidden sm:inline">
                       END-TO-END ENCRYPTION SIMULATOR
                     </span>
 
-                    {/* Bottom Right: Tactile pill button matching spasoje.dev template */}
+                    {/* Bottom Right: Tactile informational pill (not clickable, guide to scroll) */}
                     <div className="relative flex items-center justify-end w-full sm:w-auto">
-                      <button
-                        onClick={() => {
-                          if (isLoaded && onScrollDown) onScrollDown();
-                        }}
-                        disabled={!isLoaded}
-                        className={`group flex items-center rounded-[36px] transition-all duration-200 select-none ${
-                          isLoaded ? 'cursor-pointer hover:scale-105 active:scale-95' : 'cursor-default opacity-85'
-                        }`}
+                      <div
+                        className="flex items-center rounded-[36px] transition-all duration-200 select-none cursor-default"
                         style={{
-                          padding: '10px 18px 8px 16px',
+                          padding: '10px 20px 8px 18px',
                           backgroundColor: '#f2f2f2',
                           boxShadow: '0 2px 2px 0 rgba(0,0,0,0.08), 0 4px 7px 0 rgba(0,0,0,0.2), 0 0.5px 2px 0 rgba(0,0,0,0.15), inset 0 -1px 0.2px 0 rgba(0,0,0,0.12), inset 0 1px 0.2px 0 #ffffff',
                         }}
                       >
-                        {/* Spasoje LED Indicator dot */}
-                        <span
-                          className={`relative inline-block w-1.5 h-1.5 rounded-full mr-2.5 mb-0.5 transition-colors duration-200 ${
-                            isLoaded ? 'bg-[#ff611b]' : 'bg-[#e0e0e0]'
-                          }`}
-                        >
-                          {isLoaded && (
-                            <span className="absolute inset-0 rounded-full bg-[#ff611b] animate-ping opacity-75" />
-                          )}
-                        </span>
-
-                        {/* Exact Terminal Dot-matrix letters resolving like a Lottery 3-slot reel */}
+                        {/* Dot-matrix letters resolving like a Lottery 3-slot reel into 'Scroll' at 100% */}
                         <span className="flex items-center text-sm sm:text-base font-normal tracking-wider text-[#1a1a1a]">
                           {TARGET_WORD.split('').map((char, idx) => (
                             <LotterySlotChar
@@ -480,11 +473,15 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                           ))}
                         </span>
 
-                        {/* Down arrow glyph */}
-                        <span className={`ml-2 text-xs font-bold text-[#1a1a1a] transition-transform duration-200 ${isLoaded ? 'translate-y-0.5 opacity-100' : 'opacity-40'}`}>
+                        {/* Animated down arrow inviting the user to scroll down */}
+                        <motion.span
+                          animate={isLoaded ? { y: [0, 4, 0] } : {}}
+                          transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut' }}
+                          className={`ml-2 text-xs font-bold text-[#1a1a1a] ${isLoaded ? 'opacity-100' : 'opacity-40'}`}
+                        >
                           &darr;
-                        </span>
-                      </button>
+                        </motion.span>
+                      </div>
                     </div>
                   </div>
                 </motion.div>

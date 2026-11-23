@@ -178,31 +178,31 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                   <SoapBubbleMaterial
                     backdrop={pageRef}
                     glass={1.0}
-                    iridescence={1.2}
-                    filmScale={4.0}
-                    oilCoverage={0.85}
-                    oilEdge={16}
-                    oilEdgeFade={1.0}
-                    clearCenter={0.8}
-                    thickness={440}
+                    iridescence={1.3}
+                    filmScale={3.5}
+                    oilCoverage={0.7}
+                    oilEdge={18}
+                    oilEdgeFade={0.9}
+                    clearCenter={0.9}
+                    thickness={480}
                     drainage={0.2}
-                    swirl={0.4}
-                    reflectivity={1.4}
-                    refraction={0.15}
+                    swirl={0.35}
+                    reflectivity={1.6}
+                    refraction={0.2}
                     dispersion={0}
-                    bevel={14}
-                    wobble={0.08}
-                    windowIntensity={1.0}
+                    bevel={16}
+                    wobble={0.06}
+                    windowIntensity={1.2}
                     environment="studio"
                     soapPalette="custom"
-                    soapPaletteRed="#10b981"    // Emerald
-                    soapPaletteGold="#efeae2"   // Biscotti Cream accent
-                    soapPaletteGreen="#00a884"  // Deep Signal Emerald
+                    soapPaletteRed="#00a884"    // Signal Emerald
+                    soapPaletteGold="#efeae2"   // Biscotti Cream glint
+                    soapPaletteGreen="#25d366"  // Mint Green
                     soapPaletteCyan="#22d3ee"   // Electric Cyan
-                    soapPaletteBlue="#06b6d4"   // Vibrant Cyan
+                    soapPaletteBlue="#06b6d4"   // Cyan highlight
                     soapPaletteViolet="#0891b2" // Oceanic Cyan
-                    soapColor="#efeae2"
-                    soapHighlightColor="rgba(239, 234, 226, 0.9)"
+                    soapColor="#ffffff"
+                    soapHighlightColor="rgba(255, 255, 255, 0.95)"
                   >
                     <SoapBubbleButton
                       interactive={0.2}
@@ -214,13 +214,13 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                         };
                         onNavigateToSimulator(origin);
                       }}
-                      className="flex items-center gap-2.5 px-8 py-3.5 text-sm font-medium text-[#efeae2] shadow-[0_12px_45px_rgba(0,0,0,0.4),0_0_28px_rgba(239,234,226,0.2)] border border-[#efeae2]/35 hover:border-[#efeae2]/70 hover:shadow-[0_12px_50px_rgba(0,0,0,0.5),0_0_36px_rgba(239,234,226,0.35)] backdrop-blur-2xl transition-all duration-200 cursor-pointer"
+                      className="flex items-center gap-2.5 px-8 py-3.5 text-sm font-medium text-white shadow-[0_12px_45px_rgba(0,0,0,0.35),0_0_32px_rgba(255,255,255,0.25)] border border-white/50 hover:border-white/80 hover:shadow-[0_12px_50px_rgba(0,0,0,0.45),0_0_40px_rgba(255,255,255,0.4)] backdrop-blur-2xl transition-all duration-300 cursor-pointer"
                       style={{
-                        background: 'rgba(239, 234, 226, 0.08)',
+                        background: 'rgba(255, 255, 255, 0.08)',
                       }}
                     >
-                      <span className="text-[#efeae2] font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">Let's take a deep dive</span>
-                      <span className="text-[#efeae2] font-bold text-base drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">&rarr;</span>
+                      <span className="text-white font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">Let's take a deep dive</span>
+                      <span className="text-white font-bold text-base drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">&rarr;</span>
                     </SoapBubbleButton>
                   </SoapBubbleMaterial>
                 </motion.div>

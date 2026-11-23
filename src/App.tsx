@@ -9,6 +9,7 @@ export const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<'home' | 'simulator'>('home');
   const [preloaderPhase, setPreloaderPhase] = useState<WordPreloaderPhase>('idle');
   const [buttonOrigin, setButtonOrigin] = useState<{ x: number; y: number } | null>(null);
+  const [isCompilingFinished, setIsCompilingFinished] = useState(false);
   const simulatorRef = useRef<HTMLDivElement>(null);
 
   // 1. User clicks the "Let's take a deep dive" soap bubble button on HomePage
@@ -16,6 +17,7 @@ export const App: React.FC = () => {
     if (origin) {
       setButtonOrigin(origin);
     }
+    setIsCompilingFinished(false);
     // Expand curtain directly outward from the bubble button
     setPreloaderPhase('expanding');
   };
@@ -25,27 +27,23 @@ export const App: React.FC = () => {
     setPreloaderPhase('loading');
   };
 
-  // 3. Compiling reaches 100% -> mount the simulator behind/underneath the compiling card
+  // 3. Compiling reaches 100% -> mark compiling finished and mount the simulator underneath
   const handleLoadingComplete = () => {
+    setIsCompilingFinished(true);
     setCurrentView('simulator');
   };
 
-  // 4. From the compiling page, after it loads, user has the option to scroll down to see the simulator!
-  const handleScrollDownFromCompiling = () => {
-    // Reverse preloader smoothly contracts back into the bubble origin
-    setPreloaderPhase('exiting');
-  };
-
-  // 5. Native wheel / touch scroll listener while in the loaded compiling page
+  // 4. Scrolling down triggers navigation ONLY AFTER compiling finishes
   useEffect(() => {
-    if (preloaderPhase !== 'loading' || currentView !== 'simulator') return;
+    if (preloaderPhase !== 'loading' || !isCompilingFinished) return;
 
     let accumulatedDelta = 0;
     const handleWheel = (e: WheelEvent) => {
-      if (e.deltaY > 20) {
+      // User must scroll down
+      if (e.deltaY > 15) {
         accumulatedDelta += e.deltaY;
-        if (accumulatedDelta > 60) {
-          handleScrollDownFromCompiling();
+        if (accumulatedDelta > 45) {
+          setPreloaderPhase('exiting');
         }
       }
     };
@@ -56,8 +54,8 @@ export const App: React.FC = () => {
     };
     const handleTouchMove = (e: TouchEvent) => {
       const touchY = e.touches[0].clientY;
-      if (touchStartY - touchY > 50) {
-        handleScrollDownFromCompiling();
+      if (touchStartY - touchY > 40) {
+        setPreloaderPhase('exiting');
       }
     };
 
@@ -70,9 +68,9 @@ export const App: React.FC = () => {
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
     };
-  }, [preloaderPhase, currentView]);
+  }, [preloaderPhase, isCompilingFinished]);
 
-  // When reverse contraction finishes, preloader is idle
+  // When reverse downward slide finishes, preloader is idle
   const handlePreloaderExited = () => {
     setPreloaderPhase('idle');
   };
@@ -80,18 +78,16 @@ export const App: React.FC = () => {
   return (
     <div className="relative w-full min-h-screen bg-[#0b141a] text-white selection:bg-[#00a884] selection:text-white">
       {/* 
-        Initial Visitor Arrival: Word Preloader
-        Cycles multilingual greetings (Mandarin, Malay, Tamil, Punjabi, Bonjour, Ciao...)
-        Clean typography, slightly translucent cream backdrop
+        Initial Visitor Arrival: Greeting Word Preloader
+        Runs ONLY once when the user first opens the site
       */}
       {!hasVisited && (
         <GreetingPreloader onComplete={() => setHasVisited(true)} />
       )}
 
       {/* 
-        Original Compiling Studio Preloader with Rising Flat Soffit Gradient:
-        Opens on bubble button click. After 100% load, user has the option to scroll down
-        to reveal the simulator!
+        Compiling Studio Preloader with Rising WebGL2 Gradient & Lumen Shader Background:
+        Only appears when the visitor clicks the soap bubble button on the homepage.
       */}
       <WordsPreloader
         phase={preloaderPhase}
@@ -99,7 +95,6 @@ export const App: React.FC = () => {
         onExpanded={handleBubbleExpanded}
         onLoadingComplete={handleLoadingComplete}
         onExited={handlePreloaderExited}
-        onScrollDown={handleScrollDownFromCompiling}
       />
 
       {/* 
