@@ -5,7 +5,14 @@ import { GreetingPreloader } from './components/GreetingPreloader';
 import { WordsPreloader, type WordPreloaderPhase } from './components/WordsPreloader';
 
 export const App: React.FC = () => {
-  const [hasVisited, setHasVisited] = useState(false);
+  // Use sessionStorage to ensure the initial GreetingPreloader runs strictly ONCE per session
+  const [hasVisited, setHasVisited] = useState(() => {
+    try {
+      return sessionStorage.getItem('gvh_greeting_seen') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [currentView, setCurrentView] = useState<'home' | 'simulator'>('home');
   const [preloaderPhase, setPreloaderPhase] = useState<WordPreloaderPhase>('idle');
   const [buttonOrigin, setButtonOrigin] = useState<{ x: number; y: number } | null>(null);
@@ -14,6 +21,8 @@ export const App: React.FC = () => {
 
   // 1. User clicks the "Let's take a deep dive" soap bubble button on HomePage
   const handleStartDeepDive = (origin?: { x: number; y: number }) => {
+    // Prevent re-triggering if already expanding or loading
+    if (preloaderPhase !== 'idle') return;
     if (origin) {
       setButtonOrigin(origin);
     }
@@ -27,10 +36,11 @@ export const App: React.FC = () => {
     setPreloaderPhase('loading');
   };
 
-  // 3. Compiling reaches 100% -> mark compiling finished and mount the simulator underneath
+  // 3. Compiling reaches 100% -> mark compiling finished (Do NOT switch currentView to simulator yet!
+  // Switching currentView would cause re-render and unmount/remount of page components.
+  // We only mount/switch to simulator when the user actually scrolls down and exits the preloader!)
   const handleLoadingComplete = () => {
     setIsCompilingFinished(true);
-    setCurrentView('simulator');
   };
 
   // 4. Scrolling down triggers navigation ONLY AFTER compiling finishes
@@ -70,8 +80,9 @@ export const App: React.FC = () => {
     };
   }, [preloaderPhase, isCompilingFinished]);
 
-  // When reverse downward slide finishes, preloader is idle
+  // When reverse downward/upward slide finishes, switch to simulator and reset preloader
   const handlePreloaderExited = () => {
+    setCurrentView('simulator');
     setPreloaderPhase('idle');
   };
 
@@ -82,7 +93,14 @@ export const App: React.FC = () => {
         Runs ONLY once when the user first opens the site
       */}
       {!hasVisited && (
-        <GreetingPreloader onComplete={() => setHasVisited(true)} />
+        <GreetingPreloader
+          onComplete={() => {
+            try {
+              sessionStorage.setItem('gvh_greeting_seen', 'true');
+            } catch {}
+            setHasVisited(true);
+          }}
+        />
       )}
 
       {/* 

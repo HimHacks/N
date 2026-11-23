@@ -176,33 +176,38 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                   className="pointer-events-auto shrink-0"
                 >
                   <SoapBubbleMaterial
-                    backdrop={pageRef}
-                    glass={1.0}
-                    iridescence={1.5}
-                    filmScale={3.0}
-                    oilCoverage={0.5}
-                    oilEdge={20}
-                    oilEdgeFade={0.8}
-                    clearCenter={0.92}
-                    thickness={520}
-                    drainage={0.25}
-                    swirl={0.3}
-                    reflectivity={1.8}
-                    refraction={0.25}
-                    dispersion={0.08}
-                    bevel={18}
-                    wobble={0.05}
-                    windowIntensity={1.4}
+                    glass={0.95}
+                    iridescence={0.5}
+                    filmScale={4.85}
+                    oilOpacity={1}
+                    oilCoverage={0.73}
+                    oilEdge={18}
+                    oilEdgeFade={2.33}
+                    clearCenter={0.57}
+                    thickness={480}
+                    drainage={0.35}
+                    swirl={0.5}
+                    reflectivity={1.3}
+                    refraction={0.15}
+                    dispersion={1}
+                    bevel={14}
+                    wobble={0.08}
                     environment="studio"
-                    soapPalette="custom"
-                    soapPaletteRed="#ffffff"
-                    soapPaletteGold="#22d3ee"   // Electric Cyan
-                    soapPaletteGreen="#10b981"  // Vibrant Emerald
-                    soapPaletteCyan="#38bdf8"   // Light Cyan
-                    soapPaletteBlue="#06b6d4"   // Bright Cyan
-                    soapPaletteViolet="#e0f2fe" // Frost White
-                    soapColor="#ffffff"
-                    soapHighlightColor="rgba(255, 255, 255, 1.0)"
+                    windowLength={1.3}
+                    windowMargin={0.85}
+                    windowBend={0.75}
+                    windowSize={0.75}
+                    windowWidth={0.8}
+                    windowGradient={0.96}
+                    windowHead={0.7}
+                    windowTail={0.6}
+                    glintSize={1.65}
+                    glintIntensity={0}
+                    glintDistance={-0.45}
+                    glintHeight={0.65}
+                    windowIntensity={0.85}
+                    windowTwin={false}
+                    tint="transparent"
                   >
                     <SoapBubbleButton
                       interactive={0.25}
@@ -214,13 +219,15 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                         };
                         onNavigateToSimulator(origin);
                       }}
-                      className="flex items-center gap-2.5 px-8 py-3.5 text-sm font-medium text-white shadow-[0_12px_45px_rgba(0,0,0,0.25),0_0_36px_rgba(255,255,255,0.45),inset_0_1px_1px_rgba(255,255,255,0.9)] border border-white/70 hover:border-white hover:shadow-[0_12px_50px_rgba(0,0,0,0.35),0_0_48px_rgba(255,255,255,0.65)] backdrop-blur-2xl transition-all duration-300 cursor-pointer"
+                      className="flex items-center gap-2.5 px-8 py-3.5 text-sm font-medium text-white transition-all duration-300 cursor-pointer"
                       style={{
-                        background: 'rgba(255, 255, 255, 0.15)',
+                        background: 'transparent',
+                        border: '1px solid rgba(255, 255, 255, 0.45)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
                       }}
                     >
-                      <span className="text-white font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">Let's take a deep dive</span>
-                      <span className="text-white font-bold text-base drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">&rarr;</span>
+                      <span className="text-white font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">Let's take a deep dive</span>
+                      <span className="text-white font-bold text-base drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">&rarr;</span>
                     </SoapBubbleButton>
                   </SoapBubbleMaterial>
                 </motion.div>

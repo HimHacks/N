@@ -154,6 +154,68 @@ const InstantDotMatrixDigit: React.FC<{ char: string; dotSize?: number; color?: 
 const TARGET_WORD = 'Scroll';
 const CHAR_POOL = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','0','1','2','3','4','5','6','7','8','9'];
 
+// Calming down roll text animation (Cult UI TextAnimate reverse rollIn / rollDown)
+const RollDownText: React.FC<{
+  text: string;
+  isComplete: boolean;
+}> = ({ text, isComplete }) => {
+  const letters = text.split('');
+
+  return (
+    <div
+      className="inline-flex items-center overflow-hidden"
+      style={{ perspective: '800px' }}
+    >
+      <AnimatePresence mode="wait">
+        {!isComplete ? (
+          <motion.div
+            key="loading-active"
+            className="inline-flex items-center"
+            initial="visible"
+            animate="visible"
+            exit="exit"
+          >
+            {letters.map((char, i) => (
+              <motion.span
+                key={i}
+                className="inline-block text-4xl sm:text-5xl md:text-6xl font-bold text-[#111b21] tracking-tight leading-none select-none"
+                style={{
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  transformOrigin: 'bottom center',
+                  display: 'inline-block',
+                }}
+                initial={{ opacity: 0, rotateX: 90, y: -20 }}
+                animate={{
+                  opacity: 1,
+                  rotateX: 0,
+                  y: 0,
+                  transition: {
+                    duration: 0.45,
+                    delay: i * 0.05,
+                    ease: [0.215, 0.61, 0.355, 1],
+                  },
+                }}
+                exit={{
+                  opacity: 0,
+                  rotateX: -90,
+                  y: 28,
+                  transition: {
+                    duration: 0.5,
+                    delay: i * 0.04,
+                    ease: [0.55, 0.055, 0.675, 0.19],
+                  },
+                }}
+              >
+                {char === ' ' ? '\u00A0' : char}
+              </motion.span>
+            ))}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 // Lottery 3-slot sequential character resolver
 const LotterySlotChar: React.FC<{
   targetChar: string;
@@ -338,35 +400,32 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
           >
             {/* 
               Background of the loading page:
-              1. Top ~50%: Authentic WhatsApp Biscotti Cream (#efeae2)
-              2. Bottom ~50%: Vibrant Cyan, Green, and Dark Green fluid gradient
-                 seamlessly feathering up with ZERO sharp cutoff!
+              1. Top half: Authentic WhatsApp Biscotti Cream (#efeae2)
+              2. Bottom half: Vibrant Cyan, Green, and Dark Green fluid gradient from home page
+                 gradually blended upwards with zero harsh cutoff lines.
             */}
             <div className="absolute inset-0 pointer-events-none bg-[#efeae2]" />
 
-            {/* Bottom 50% Cyan & Green gradient container */}
-            <div className="absolute bottom-0 left-0 right-0 h-[52vh] min-h-[380px] pointer-events-none overflow-hidden z-10">
+            {/* Seamless blended background container covering entire viewport with mask fading down */}
+            <div
+              className="absolute inset-0 pointer-events-none overflow-hidden z-10"
+              style={{
+                maskImage: 'linear-gradient(to top, black 25%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.3) 65%, transparent 92%)',
+                WebkitMaskImage: 'linear-gradient(to top, black 25%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.3) 65%, transparent 92%)',
+              }}
+            >
               {/* Home page WebGL fluid shader running in background */}
-              <div className="absolute inset-0 opacity-45">
+              <div className="absolute inset-0 opacity-55">
                 <LumenInteractiveShader />
               </div>
 
               {/* Soffit Cyan & Green generative fluid ripples */}
-              <div className="absolute inset-0 opacity-90">
+              <div className="absolute inset-0 opacity-85">
                 <SoffitGradient
                   config={soffitConfig}
                   className="w-full h-full"
                 />
               </div>
-
-              {/* Smooth organic feathered fade into the top Biscotti Cream (zero sharp cutoff line) */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background:
-                    'linear-gradient(to top, transparent 0%, rgba(239, 234, 226, 0.2) 35%, rgba(239, 234, 226, 0.8) 75%, #efeae2 100%)',
-                }}
-              />
             </div>
 
             {/* Studio Card (Loading Screen) - WhatsApp off-white cream aesthetic */}
@@ -383,17 +442,23 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   {/* Top Bar: Clean minimal dividing line (removed GVH 2026 and syntax unveilers) */}
                   <div className="w-full border-b border-[#e9edef] pb-3.5" />
 
-                  {/* Center Loading Telemetry: Space Grotesk font for "Loading" */}
+                  {/* Center Loading Telemetry: Space Grotesk font for "Loading" with calm roll down exit */}
                   <div className="flex flex-col md:flex-row items-center justify-between my-auto w-full gap-8">
-                    {/* Left: 'Loading' in Space Grotesk font with ThreeSquaresLoader */}
-                    <div className="flex items-center gap-4">
-                      <span
-                        className="text-4xl sm:text-5xl md:text-6xl font-bold text-[#111b21] tracking-tight leading-none select-none"
-                        style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                      >
-                        Loading
-                      </span>
-                      <ThreeSquaresLoader size={28} color="#00a884" />
+                    {/* Left: 'Loading' animated with calm roll down exit when 100% reached */}
+                    <div className="flex items-center gap-4 min-h-[64px]">
+                      <RollDownText text="Loading" isComplete={isLoaded} />
+                      <AnimatePresence>
+                        {!isLoaded && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.6, y: 16 }}
+                            transition={{ duration: 0.4 }}
+                          >
+                            <ThreeSquaresLoader size={28} color="#00a884" />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
 
                     {/* Right: Big Dot-Matrix Counter with instant digit changes */}
