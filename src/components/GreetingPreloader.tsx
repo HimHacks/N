@@ -60,11 +60,12 @@ export const GreetingPreloader: React.FC<GreetingPreloaderProps> = ({ onComplete
     return () => clearTimeout(timer);
   }, [index]);
 
-  // Initial and exit SVG curved path morphs
-  // User explicitly instructed: reverse animation and make the white screen slightly translucent so you can kind of see the background moving
-  const initialPath = `M0 0 L${dimension.width} 0 L${dimension.width} ${dimension.height} Q${dimension.width / 2} ${dimension.height + 300} 0 ${dimension.height}  L0 0`;
-  const targetPath = `M0 0 L${dimension.width} 0 L${dimension.width} ${dimension.height} Q${dimension.width / 2} ${dimension.height} 0 ${dimension.height}  L0 0`;
-  const exitCurvePath = `M0 0 L${dimension.width} 0 L${dimension.width} ${dimension.height} Q${dimension.width / 2} 0 0 ${dimension.height} L0 0`;
+  // SVG Curved Path Morph (Dennis Snellenberg curve as in the original implementation)
+  const initialPath = `M0 0 L${dimension.width} 0 L${dimension.width} ${dimension.height} Q${dimension.width / 2} ${dimension.height + 300} 0 ${dimension.height} L0 0`;
+  const targetPath = `M0 0 L${dimension.width} 0 L${dimension.width} ${dimension.height} Q${dimension.width / 2} ${dimension.height} 0 ${dimension.height} L0 0`;
+  const curveExitPath = `M0 0 L${dimension.width} 0 L${dimension.width} ${dimension.height} Q${dimension.width / 2} ${dimension.height + 300} 0 ${dimension.height} L0 0`;
+
+  const curveTransition = { duration: 0.8, ease: [0.76, 0, 0.24, 1] };
 
   return (
     <AnimatePresence onExitComplete={onComplete}>
@@ -74,17 +75,17 @@ export const GreetingPreloader: React.FC<GreetingPreloaderProps> = ({ onComplete
           initial={{ y: 0 }}
           exit={{
             y: '-100vh',
-            transition: { duration: 0.9, ease: [0.76, 0, 0.24, 1], delay: 0.15 },
+            transition: { duration: 0.8, ease: [0.76, 0, 0.24, 1], delay: 0.1 },
           }}
           className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-auto select-none overflow-hidden"
           style={{
-            // Authentic off-white Biscotti cream with delicate translucency (~94%) so background is subtly noticeable
-            backgroundColor: 'rgba(239, 234, 226, 0.94)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
+            // Clean white background with teeny-tiny translucency (0.97) so background is just subtly visible through it
+            backgroundColor: 'rgba(255, 255, 255, 0.97)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
           }}
         >
-          {/* Greeting Word: Pure clean typography without the green dot */}
+          {/* Greeting Word: Pure clean typography without green dot */}
           <div className="relative z-10 flex items-center justify-center text-center px-4">
             <motion.p
               key={index}
@@ -102,15 +103,15 @@ export const GreetingPreloader: React.FC<GreetingPreloaderProps> = ({ onComplete
             </motion.p>
           </div>
 
-          {/* SVG Reverse Curve Morph Bottom Lip */}
+          {/* Authentic SVG Curved Morphing Bottom Arch */}
           {dimension.width > 0 && (
-            <svg className="absolute top-0 left-0 w-full h-[calc(100%+300px)] pointer-events-none -z-10 fill-[#efeae2]/85">
+            <svg className="absolute top-0 left-0 w-full h-[calc(100%+300px)] pointer-events-none -z-10 fill-white/97">
               <motion.path
                 initial={{ d: initialPath }}
                 animate={{ d: targetPath }}
                 exit={{
-                  d: exitCurvePath,
-                  transition: { duration: 0.9, ease: [0.76, 0, 0.24, 1] },
+                  d: curveExitPath,
+                  transition: curveTransition,
                 }}
               />
             </svg>

@@ -256,11 +256,11 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   const [isLoaded, setIsLoaded] = useState(false);
   const hasFinishedRef = useRef(false);
 
-  // Cinematic pacing loading animation:
-  // - 1% to 75%: fast, responsive, energetic progress (~22ms per tick)
-  // - 75% to 92%: begins noticeably slowing down (~55ms per tick)
-  // - 92% to 99%: dramatic cinematic deceleration (~120ms per tick)
-  // - 99%: deliberate tense pause (~450ms) before snapping into 100%
+  // Cinematic pacing loading animation (calm, unhurried, giving gradients time to settle):
+  // - 1% to 75%: smooth steady progress (~28ms per tick)
+  // - 75% to 92%: noticeably begins slowing down (~68ms per tick)
+  // - 92% to 99%: dramatic cinematic deceleration (~140ms per tick)
+  // - 99%: deliberate tense pause (~500ms) before snapping into 100%
   useEffect(() => {
     if (phase === 'loading') {
       if (hasFinishedRef.current) return;
@@ -283,21 +283,21 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
         setProgress(current);
 
         // Compute delay based on cinematic curve
-        let delay = 22;
+        let delay = 28;
         if (current >= 99) {
-          delay = 450; // Dramatic cinematic pause at 99% before popping to 100%
+          delay = 500; // Dramatic cinematic pause at 99% before popping to 100%
         } else if (current >= 92) {
-          delay = 110 + (current - 92) * 15; // Slow down intensely
+          delay = 130 + (current - 92) * 18; // Slow down intensely
         } else if (current >= 75) {
-          delay = 35 + (current - 75) * 4; // Gradual deceleration
+          delay = 45 + (current - 75) * 6; // Gradual deceleration
         } else {
-          delay = 20; // Fast initial progress
+          delay = 28; // Steady unhurried initial progress
         }
 
         timer = setTimeout(step, delay);
       };
 
-      timer = setTimeout(step, 40);
+      timer = setTimeout(step, 60);
 
       return () => {
         if (timer) clearTimeout(timer);
@@ -312,12 +312,15 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   const originX = buttonOrigin ? `${Math.round(buttonOrigin.x)}px` : 'calc(100% - 140px)';
   const originY = buttonOrigin ? `${Math.round(buttonOrigin.y)}px` : 'calc(100% - 70px)';
 
-  // Multi-stage warping animation:
-  // Starts at the bubble origin -> warps and attracts to the browser sides and edges -> fills corners -> completes in bottom-right
+  // Multi-stage warping animation from the clicked button:
+  // 1. Starts strictly from the button origin (in the bottom-right area).
+  // 2. Warps outward to hit the bottom and left edges first (the broad expanse).
+  // 3. Spreads across the top and main body of the screen.
+  // 4. Finally closes and completely fills the remaining bottom-right corner area.
   const clipInitial = `circle(0px at ${originX} ${originY})`;
-  const clipStage1Edges = `polygon(0% 20%, 100% 15%, 100% 85%, 0% 90%)`;
-  const clipStage2Corners = `polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)`;
-  const clipFull = `circle(220vw at ${originX} ${originY})`;
+  const clipStage1Edges = `polygon(0% 100%, 0% 40%, 40% 100%, ${originX} ${originY})`; // sweeps bottom & left edges first
+  const clipStage2Expands = `polygon(0% 0%, 100% 0%, 100% 60%, 55% 100%, 0% 100%)`; // covers left, top, right while corner is catching up
+  const clipFull = `circle(250vw at ${originX} ${originY})`; // fully closes and seals bottom-right corner
 
   const customEase = [0.16, 1, 0.3, 1] as const;
 
@@ -385,16 +388,16 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
             animate={
               phase === 'expanding'
                 ? {
-                    clipPath: [clipInitial, clipStage1Edges, clipStage2Corners, clipFull],
+                    clipPath: [clipInitial, clipStage1Edges, clipStage2Expands, clipFull],
                     backgroundColor: [
                       'rgba(239, 234, 226, 0.15)',
-                      'rgba(239, 234, 226, 0.75)',
+                      'rgba(239, 234, 226, 0.70)',
                       'rgba(239, 234, 226, 0.95)',
                       'rgba(239, 234, 226, 0.96)',
                     ],
                     transition: {
-                      clipPath: { duration: 1.35, ease: customEase, times: [0, 0.4, 0.75, 1] },
-                      backgroundColor: { duration: 1.2, ease: 'easeInOut' },
+                      clipPath: { duration: 1.45, ease: customEase, times: [0, 0.38, 0.72, 1] },
+                      backgroundColor: { duration: 1.35, ease: 'easeInOut' },
                     },
                   }
                 : phase === 'loading'
@@ -422,11 +425,12 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
               Two-stage choreography:
               1. First, the entire screen expands with authentic WhatsApp Biscotti Cream (#efeae2) with a tiny hint of translucency (0.96).
               2. Once fully expanded into 'loading' phase, the vibrant Green, Emerald & Cyan fluid ripples
-                 rise up smoothly and deliberately from the bottom (slow, non-rushed cinematic curve 1.8s).
+                 rise up smoothly and deliberately from the bottom to exactly 3.5/8 (43.75%) of the height,
+                 leaving the upper majority cleanly in Biscotti Cream.
             */}
             <div className="absolute inset-0 pointer-events-none bg-[#efeae2]/96" />
 
-            {/* Cyan, Rich Green & Dark Green fluid background rises up slowly from the bottom */}
+            {/* Cyan, Rich Green & Dark Green fluid background rises up slowly from the bottom (reaching 3.5/8 ratio) */}
             <motion.div
               initial={{ y: '100%', opacity: 0 }}
               animate={
@@ -435,14 +439,15 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   : { y: '100%', opacity: 0 }
               }
               transition={{
-                duration: 1.85, // Smooth, deliberate, unhurried cinematic rising
+                duration: 2.2, // Deliberate, graceful cinematic rising so it has time to fill
                 ease: [0.16, 1, 0.3, 1],
-                delay: 0.25,
+                delay: 0.2,
               }}
-              className="absolute inset-0 pointer-events-none overflow-hidden z-10"
+              className="absolute inset-x-0 bottom-0 h-[43.75%] pointer-events-none overflow-hidden z-10"
               style={{
-                maskImage: 'linear-gradient(to top, black 30%, rgba(0,0,0,0.85) 55%, rgba(0,0,0,0.3) 75%, transparent 95%)',
-                WebkitMaskImage: 'linear-gradient(to top, black 30%, rgba(0,0,0,0.85) 55%, rgba(0,0,0,0.3) 75%, transparent 95%)',
+                // 3.5/8 ratio gradient: rises up to 43.75% height with soft blend into Biscotti Cream
+                maskImage: 'linear-gradient(to top, black 40%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.25) 90%, transparent 100%)',
+                WebkitMaskImage: 'linear-gradient(to top, black 40%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.25) 90%, transparent 100%)',
               }}
             >
               {/* Home page WebGL fluid shader running in background with strong green presence */}
