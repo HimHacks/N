@@ -222,18 +222,13 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
 
   const isVisible = phase !== 'idle';
 
-  // Aligned with the Homepage palette (Lumen Interactive Shader):
-  // - Base: Deep dark signal emerald (#041912)
-  // - Color A: Signal Emerald (#00a884)
-  // - Color B: Deep lush emerald (#024633)
-  // - Color C: WhatsApp Biscotti Cream (#efeae2)
-  // - Color D: Cyan / teal ocean ribbon (#06b6d4)
+  // WhatsApp signature warm off-white cream (#efeae2 / #f0f2f5) with emerald accents
   const soffitConfig: SoffitGradientConfig = {
-    bgColor: '#071d15',   // Deep emerald dark base matching home page
-    colorA: '#00a884',    // Signal Emerald
-    colorB: '#02523e',    // Deep lush emerald
-    colorC: '#efeae2',    // WhatsApp Biscotti Cream accent
-    colorD: '#0891b2',    // Oceanic cyan accent
+    bgColor: '#f0f2f5',   // WhatsApp warm off-white cream base
+    colorA: '#00a884',    // WhatsApp primary teal-emerald
+    colorB: '#25d366',    // WhatsApp vibrant light green
+    colorC: '#efeae2',    // WhatsApp signature Biscotti Cream accent
+    colorD: '#06b6d4',    // Oceanic cyan accent
     scale: 0.75,
     speed: 0.28,
     tilt: 0.0,
@@ -281,13 +276,13 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
             className="fixed inset-0 z-30 flex items-center justify-center"
             initial={{
               clipPath: initialClip,
-              backgroundColor: '#071d15',
+              backgroundColor: '#0c1317',
             }}
             animate={
               phase === 'expanding'
                 ? {
                     clipPath: expandedClip,
-                    backgroundColor: '#0b1d16',
+                    backgroundColor: '#efeae2', // WhatsApp off-white cream (#efeae2)
                     transition: {
                       clipPath: { duration: 1.15, ease: customEase },
                       backgroundColor: { duration: 1.0, ease: 'easeInOut' },
@@ -296,12 +291,12 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                 : phase === 'loading'
                 ? {
                     clipPath: expandedClip,
-                    backgroundColor: '#0b1d16',
+                    backgroundColor: '#efeae2',
                   }
                 : phase === 'exiting'
                 ? {
                     clipPath: initialClip,
-                    backgroundColor: '#071d15',
+                    backgroundColor: '#0c1317',
                     transition: {
                       clipPath: { duration: 0.95, ease: customEase },
                       backgroundColor: { duration: 0.85, ease: 'easeInOut' },
@@ -345,12 +340,12 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                 className="absolute inset-0 pointer-events-none"
                 style={{
                   background:
-                    'linear-gradient(to top, transparent 0%, rgba(7, 29, 21, 0.3) 40%, rgba(7, 29, 21, 0.85) 80%, #071d15 100%)',
+                    'linear-gradient(to top, transparent 0%, rgba(239, 234, 226, 0.25) 40%, rgba(239, 234, 226, 0.85) 80%, #efeae2 100%)',
                 }}
               />
             </motion.div>
 
-            {/* Studio Card (Loading Screen) - Dark emerald & cream aesthetic aligned with home page */}
+            {/* Studio Card (Loading Screen) - WhatsApp off-white cream aesthetic */}
             <AnimatePresence>
               {phase === 'loading' && (
                 <motion.div
@@ -359,39 +354,39 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.96 }}
                   transition={{ duration: 0.35, ease: 'easeOut' }}
-                  className="relative z-20 w-full max-w-4xl h-[78vh] max-h-[580px] bg-[#0c1f18]/90 rounded-3xl shadow-[0_30px_90px_rgba(0,0,0,0.65)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-white border border-[#00a884]/30 mx-4 sm:mx-8 backdrop-blur-2xl"
+                  className="relative z-20 w-full max-w-4xl h-[78vh] max-h-[580px] bg-white/95 rounded-3xl shadow-[0_30px_90px_rgba(11,20,26,0.18)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-[#d1d7db]/80 mx-4 sm:mx-8 backdrop-blur-xl"
                 >
                   {/* Top Bar: Clean minimal header */}
-                  <div className="flex items-center justify-between w-full border-b border-[#00a884]/20 pb-3.5">
+                  <div className="flex items-center justify-between w-full border-b border-[#e9edef] pb-3.5">
                     <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#00a884]">
                       E2EE • PROTOCOL
                     </span>
-                    <span className="text-xs font-mono text-[#efeae2]/70">
+                    <span className="text-xs font-mono text-[#8696a0]">
                       {progress < 100 ? 'CONNECTING...' : 'CHANNEL ACTIVE'}
                     </span>
                   </div>
 
-                  {/* Center Loading Telemetry */}
+                  {/* Center Loading Telemetry: Bootzy TM display font for "Loading" */}
                   <div className="flex flex-col md:flex-row items-center justify-between my-auto w-full gap-8">
-                    {/* Left: "Loading" with cycling three squares loader */}
+                    {/* Left: "Loading" styled with Bootzy TM font and ThreeSquaresLoader */}
                     <div className="flex items-center gap-4">
-                      <span className="text-3xl sm:text-4xl md:text-5xl font-bold font-mono text-white tracking-tight">
+                      <span className="font-bootzy text-4xl sm:text-5xl md:text-6xl text-[#111b21] tracking-wide leading-none">
                         Loading
                       </span>
                       <ThreeSquaresLoader size={28} color="#00a884" />
                     </div>
 
                     {/* Right: Big Dot-Matrix Counter with instant digit changes */}
-                    <div className="flex items-center gap-2 sm:gap-3 bg-[#061812] px-6 py-5 rounded-2xl border border-[#00a884]/30 shadow-inner">
+                    <div className="flex items-center gap-2 sm:gap-3 bg-[#f0f2f5] px-6 py-5 rounded-2xl border border-[#d1d7db] shadow-inner">
                       {digits.map((ch, idx) => (
-                        <InstantDotMatrixDigit key={idx} char={ch} dotSize={6} color="#efeae2" />
+                        <InstantDotMatrixDigit key={idx} char={ch} dotSize={6} color="#111b21" />
                       ))}
                     </div>
                   </div>
 
                   {/* Bottom Section */}
-                  <div className="relative flex items-center justify-between w-full border-t border-[#00a884]/20 pt-4 min-h-[56px]">
-                    <span className="text-xs font-mono text-[#efeae2]/60">
+                  <div className="relative flex items-center justify-between w-full border-t border-[#e9edef] pt-4 min-h-[56px]">
+                    <span className="text-xs font-mono text-[#667781]">
                       END-TO-END ENCRYPTION SIMULATOR
                     </span>
 
