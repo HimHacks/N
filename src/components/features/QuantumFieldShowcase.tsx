@@ -172,7 +172,7 @@ const DeviceModel: React.FC<DeviceProps> = ({
     []
   );
 
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     if (shaderRef.current) {
       shaderRef.current.uniforms.uTime.value += delta;
       shaderRef.current.uniforms.uSurge.value = THREE.MathUtils.lerp(

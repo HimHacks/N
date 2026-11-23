@@ -150,21 +150,10 @@ const InstantDotMatrixDigit: React.FC<{ char: string; dotSize?: number; color?: 
   );
 };
 
-// Security / Cryptography words cycling seamlessly during loading
-const CRYPTO_WORDS = [
-  'Initializing',
-  'Connecting',
-  'Diffie-Hellman',
-  'Handshake',
-  'Exchanging Keys',
-  'Double Ratchet',
-  'Curve25519',
-  'Encrypted',
-];
 const TARGET_WORD = 'Scroll';
 const CHAR_POOL = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','0','1','2','3','4','5','6','7','8','9'];
 
-// Calming down roll text animation (Cult UI TextAnimate reverse rollIn / rollDown)
+// Stable loading label; proper descender padding for "g" and clean layout
 const RollDownText: React.FC<{
   text: string;
   isComplete: boolean;
@@ -172,49 +161,26 @@ const RollDownText: React.FC<{
   const letters = text.split('');
 
   return (
-    <div
-      className="inline-flex items-center overflow-hidden"
-      style={{ perspective: '800px' }}
-    >
+    <div className="inline-flex items-center overflow-visible pb-1.5 pt-0.5">
       <AnimatePresence mode="wait">
         {!isComplete ? (
           <motion.div
             key="loading-active"
-            className="inline-flex items-center"
-            initial="visible"
-            animate="visible"
-            exit="exit"
+            className="inline-flex items-center overflow-visible leading-normal"
           >
             {letters.map((char, i) => (
               <motion.span
                 key={i}
-                className="inline-block text-4xl sm:text-5xl md:text-6xl font-bold text-[#111b21] tracking-tight leading-none select-none"
+                className="inline-block text-4xl sm:text-5xl md:text-6xl font-bold text-[#111b21] tracking-tight select-none"
                 style={{
                   fontFamily: "'Space Grotesk', sans-serif",
-                  transformOrigin: 'bottom center',
                   display: 'inline-block',
+                  lineHeight: '1.25',
                 }}
-                initial={{ opacity: 0, rotateX: 90, y: -20 }}
-                animate={{
-                  opacity: 1,
-                  rotateX: 0,
-                  y: 0,
-                  transition: {
-                    duration: 0.45,
-                    delay: i * 0.05,
-                    ease: [0.215, 0.61, 0.355, 1],
-                  },
-                }}
-                exit={{
-                  opacity: 0,
-                  rotateX: -90,
-                  y: 28,
-                  transition: {
-                    duration: 0.5,
-                    delay: i * 0.04,
-                    ease: [0.55, 0.055, 0.675, 0.19],
-                  },
-                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.28, delay: i * 0.025 }}
               >
                 {char === ' ' ? '\u00A0' : char}
               </motion.span>
@@ -226,7 +192,7 @@ const RollDownText: React.FC<{
   );
 };
 
-// Lottery 3-slot sequential character resolver
+// Lottery 3-slot sequential character resolver with cinematic tension on the final 'l'
 const LotterySlotChar: React.FC<{
   targetChar: string;
   slotIndex: number;
@@ -238,7 +204,14 @@ const LotterySlotChar: React.FC<{
     CHAR_POOL[(slotIndex * 7) % CHAR_POOL.length]
   );
 
-  const lockThreshold = Math.round(((slotIndex + 1) / totalSlots) * 100);
+  // Cinematic staggered resolution:
+  // Slots 0..4 (S, c, r, o, l) resolve smoothly between 20% and 88%
+  // The final slot (index 5, final 'l') holds cinematic tension up until 100% complete
+  const lockThreshold =
+    slotIndex === totalSlots - 1
+      ? 100 // Final 'l' holds tension until 100% is locked
+      : Math.round(((slotIndex + 1) / (totalSlots + 0.6)) * 88);
+
   const isLocked = isComplete || progress >= lockThreshold;
 
   useEffect(() => {
@@ -250,7 +223,7 @@ const LotterySlotChar: React.FC<{
     const interval = setInterval(() => {
       const rand = CHAR_POOL[Math.floor(Math.random() * CHAR_POOL.length)];
       setCurrentChar(rand);
-    }, 28 + (slotIndex * 4));
+    }, 28 + (slotIndex * 5));
 
     return () => clearInterval(interval);
   }, [isLocked, targetChar, slotIndex]);
@@ -281,41 +254,54 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
 }) => {
   const [progress, setProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [cryptoWordIndex, setCryptoWordIndex] = useState(0);
   const hasFinishedRef = useRef(false);
 
-  // Cycling cryptography words preloader during compilation
-  useEffect(() => {
-    if (phase === 'loading') {
-      const wordInterval = setInterval(() => {
-        setCryptoWordIndex((prev) => (prev + 1) % CRYPTO_WORDS.length);
-      }, 340);
-      return () => clearInterval(wordInterval);
-    }
-  }, [phase]);
-
-  // Loading animation: ~3.0s total, ticking 1% -> 100%
-  // Strictly runs ONCE when entering 'loading' phase.
+  // Cinematic pacing loading animation:
+  // - 1% to 75%: fast, responsive, energetic progress (~22ms per tick)
+  // - 75% to 92%: begins noticeably slowing down (~55ms per tick)
+  // - 92% to 99%: dramatic cinematic deceleration (~120ms per tick)
+  // - 99%: deliberate tense pause (~450ms) before snapping into 100%
   useEffect(() => {
     if (phase === 'loading') {
       if (hasFinishedRef.current) return;
       setIsLoaded(false);
       setProgress(1);
       let current = 1;
-      const interval = setInterval(() => {
+      let timer: ReturnType<typeof setTimeout> | null = null;
+
+      const step = () => {
         current += 1;
         if (current >= 100) {
           current = 100;
           setProgress(100);
           setIsLoaded(true);
           hasFinishedRef.current = true;
-          clearInterval(interval);
           if (onLoadingComplete) onLoadingComplete();
-        } else {
-          setProgress(current);
+          return;
         }
-      }, 30);
-      return () => clearInterval(interval);
+
+        setProgress(current);
+
+        // Compute delay based on cinematic curve
+        let delay = 22;
+        if (current >= 99) {
+          delay = 450; // Dramatic cinematic pause at 99% before popping to 100%
+        } else if (current >= 92) {
+          delay = 110 + (current - 92) * 15; // Slow down intensely
+        } else if (current >= 75) {
+          delay = 35 + (current - 75) * 4; // Gradual deceleration
+        } else {
+          delay = 20; // Fast initial progress
+        }
+
+        timer = setTimeout(step, delay);
+      };
+
+      timer = setTimeout(step, 40);
+
+      return () => {
+        if (timer) clearTimeout(timer);
+      };
     } else if (phase === 'idle') {
       hasFinishedRef.current = false;
       setProgress(0);
@@ -323,13 +309,15 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
     }
   }, [phase, onLoadingComplete]);
 
-  const originX = buttonOrigin ? `${Math.round(buttonOrigin.x)}px` : '50%';
+  const originX = buttonOrigin ? `${Math.round(buttonOrigin.x)}px` : 'calc(100% - 140px)';
   const originY = buttonOrigin ? `${Math.round(buttonOrigin.y)}px` : 'calc(100% - 70px)';
 
-  // Organic corner-filling warping animation:
-  const initialClip = `ellipse(0px 0px at ${originX} ${originY})`;
-  const expandingWarpClip = `ellipse(120vw 100vh at ${originX} ${originY})`;
-  const fullCoverClip = `ellipse(220vw 220vh at ${originX} ${originY})`;
+  // Multi-stage warping animation:
+  // Starts at the bubble origin -> warps and attracts to the browser sides and edges -> fills corners -> completes in bottom-right
+  const clipInitial = `circle(0px at ${originX} ${originY})`;
+  const clipStage1Edges = `polygon(0% 20%, 100% 15%, 100% 85%, 0% 90%)`;
+  const clipStage2Corners = `polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)`;
+  const clipFull = `circle(220vw at ${originX} ${originY})`;
 
   const customEase = [0.16, 1, 0.3, 1] as const;
 
@@ -338,20 +326,20 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
 
   const isVisible = phase !== 'idle';
 
-  // Gradient configuration: vibrant cyan and emerald gradients mixed seamlessly with Biscotti Cream
+  // Gradient configuration: richer emerald and WhatsApp primary greens alongside electric cyan
   const soffitConfig: SoffitGradientConfig = {
-    bgColor: '#00a884',   // Vibrant emerald base
-    colorA: '#00a884',    // WhatsApp primary emerald
-    colorB: '#06b6d4',    // Bright Cyan
-    colorC: '#22d3ee',    // Electric Cyan
-    colorD: '#043e2e',    // Deep dark emerald
-    scale: 0.8,
-    speed: 0.35,
+    bgColor: '#00a884',   // WhatsApp primary emerald green
+    colorA: '#059669',    // Rich vibrant emerald green
+    colorB: '#10b981',    // Bright lush green
+    colorC: '#06b6d4',    // Bright Cyan
+    colorD: '#022c22',    // Deep forest dark green
+    scale: 0.85,
+    speed: 0.28,
     tilt: 0.0,
     rock: 0.06,
     horizon: -0.15,
     breathe: 0.25,
-    spread: 0.6,
+    spread: 0.65,
     curve: 2.8,
     direct: 0.85,
     bounce: 0.25,
@@ -359,7 +347,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
     spillCentre: 0.0,
     spillWidth: 1.8,
     spillFloor: 0.2,
-    amount: 0.28,
+    amount: 0.32,
     warp: 2.2,
     warpScale: 0.65,
     flow: 0.38,
@@ -367,7 +355,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
     lacunarity: 2.0,
     motes: 0.05,
     moteScale: 7,
-    ambient: 0.32,
+    ambient: 0.35,
     contrast: 1.8,
     midpoint: 0.55,
     sink: 0.22,
@@ -391,23 +379,28 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
           <motion.div
             className="fixed inset-0 z-30 flex items-center justify-center overflow-hidden"
             initial={{
-              clipPath: initialClip,
+              clipPath: clipInitial,
               backgroundColor: 'rgba(239, 234, 226, 0.0)',
             }}
             animate={
               phase === 'expanding'
                 ? {
-                    clipPath: [initialClip, expandingWarpClip, fullCoverClip],
-                    backgroundColor: ['rgba(239, 234, 226, 0.1)', 'rgba(239, 234, 226, 0.6)', '#efeae2'],
+                    clipPath: [clipInitial, clipStage1Edges, clipStage2Corners, clipFull],
+                    backgroundColor: [
+                      'rgba(239, 234, 226, 0.15)',
+                      'rgba(239, 234, 226, 0.75)',
+                      'rgba(239, 234, 226, 0.95)',
+                      'rgba(239, 234, 226, 0.96)',
+                    ],
                     transition: {
-                      clipPath: { duration: 1.05, ease: customEase, times: [0, 0.55, 1] },
-                      backgroundColor: { duration: 0.95, ease: 'easeInOut' },
+                      clipPath: { duration: 1.35, ease: customEase, times: [0, 0.4, 0.75, 1] },
+                      backgroundColor: { duration: 1.2, ease: 'easeInOut' },
                     },
                   }
                 : phase === 'loading'
                 ? {
-                    clipPath: fullCoverClip,
-                    backgroundColor: '#efeae2',
+                    clipPath: clipFull,
+                    backgroundColor: 'rgba(239, 234, 226, 0.96)',
                   }
                 : phase === 'exiting'
                 ? {
@@ -427,13 +420,13 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
             {/* 
               Background of the loading page:
               Two-stage choreography:
-              1. First, the entire screen expands with authentic WhatsApp Biscotti Cream (#efeae2) from transparent.
-              2. ONLY THEN, after expanding completes into 'loading' phase, the vibrant Cyan & Green fluid ripples
-                 rise up from the bottom (covering ~50% / 1.5 ratio of the page) and softly blend into the cream background.
+              1. First, the entire screen expands with authentic WhatsApp Biscotti Cream (#efeae2) with a tiny hint of translucency (0.96).
+              2. Once fully expanded into 'loading' phase, the vibrant Green, Emerald & Cyan fluid ripples
+                 rise up smoothly and deliberately from the bottom (slow, non-rushed cinematic curve 1.8s).
             */}
-            <div className="absolute inset-0 pointer-events-none bg-[#efeae2]" />
+            <div className="absolute inset-0 pointer-events-none bg-[#efeae2]/96" />
 
-            {/* Cyan, Green & Dark Green fluid background rises up from the bottom when entering loading phase */}
+            {/* Cyan, Rich Green & Dark Green fluid background rises up slowly from the bottom */}
             <motion.div
               initial={{ y: '100%', opacity: 0 }}
               animate={
@@ -442,23 +435,23 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   : { y: '100%', opacity: 0 }
               }
               transition={{
-                duration: 1.1,
+                duration: 1.85, // Smooth, deliberate, unhurried cinematic rising
                 ease: [0.16, 1, 0.3, 1],
-                delay: 0.15,
+                delay: 0.25,
               }}
               className="absolute inset-0 pointer-events-none overflow-hidden z-10"
               style={{
-                maskImage: 'linear-gradient(to top, black 25%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.3) 65%, transparent 92%)',
-                WebkitMaskImage: 'linear-gradient(to top, black 25%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.3) 65%, transparent 92%)',
+                maskImage: 'linear-gradient(to top, black 30%, rgba(0,0,0,0.85) 55%, rgba(0,0,0,0.3) 75%, transparent 95%)',
+                WebkitMaskImage: 'linear-gradient(to top, black 30%, rgba(0,0,0,0.85) 55%, rgba(0,0,0,0.3) 75%, transparent 95%)',
               }}
             >
-              {/* Home page WebGL fluid shader running in background */}
-              <div className="absolute inset-0 opacity-55">
+              {/* Home page WebGL fluid shader running in background with strong green presence */}
+              <div className="absolute inset-0 opacity-60">
                 <LumenInteractiveShader />
               </div>
 
               {/* Soffit Cyan & Green generative fluid ripples */}
-              <div className="absolute inset-0 opacity-85">
+              <div className="absolute inset-0 opacity-90">
                 <SoffitGradient
                   config={soffitConfig}
                   className="w-full h-full"
@@ -477,17 +470,6 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   transition={{ duration: 0.3, ease: 'easeOut' }}
                   className="relative z-20 w-full max-w-4xl h-[78vh] max-h-[580px] bg-white/95 rounded-3xl shadow-[0_30px_90px_rgba(11,20,26,0.18)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-[#d1d7db]/80 mx-4 sm:mx-8 backdrop-blur-xl"
                 >
-                  {/* Top Bar: Cycling Cryptography Word Preloader Badge */}
-                  <div className="flex items-center justify-between w-full border-b border-[#e9edef] pb-3.5">
-                    <span className="text-xs font-mono font-semibold text-[#00a884] uppercase tracking-wider">
-                      PROTOCOL HANDSHAKE
-                    </span>
-                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#f0f2f5] border border-[#d1d7db] text-xs font-mono font-semibold text-[#00a884]">
-                      <span className="w-2 h-2 rounded-full bg-[#00a884] animate-ping" />
-                      <span className="transition-all duration-200">{CRYPTO_WORDS[cryptoWordIndex]}</span>
-                    </div>
-                  </div>
-
                   {/* Center Loading Telemetry: Space Grotesk font for "Loading" with calm roll down exit */}
                   <div className="flex flex-col md:flex-row items-center justify-between my-auto w-full gap-8">
                     {/* Left: 'Loading' animated with calm roll down exit when 100% reached */}
@@ -501,7 +483,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                             exit={{ opacity: 0, scale: 0.6, y: 16 }}
                             transition={{ duration: 0.4 }}
                           >
-                            <ThreeSquaresLoader size={28} color="#00a884" />
+                            <ThreeSquaresLoader size={28} />
                           </motion.div>
                         )}
                       </AnimatePresence>

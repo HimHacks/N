@@ -5,14 +5,8 @@ import { GreetingPreloader } from './components/GreetingPreloader';
 import { WordsPreloader, type WordPreloaderPhase } from './components/WordsPreloader';
 
 export const App: React.FC = () => {
-  // Use sessionStorage to ensure the initial GreetingPreloader runs strictly ONCE per session
-  const [hasVisited, setHasVisited] = useState(() => {
-    try {
-      return sessionStorage.getItem('gvh_greeting_seen') === 'true';
-    } catch {
-      return false;
-    }
-  });
+  // Greeting Preloader (Skiper 8 Words Preloader) plays on first page entry
+  const [hasVisited, setHasVisited] = useState(false);
   const [currentView, setCurrentView] = useState<'home' | 'simulator'>('home');
   const [preloaderPhase, setPreloaderPhase] = useState<WordPreloaderPhase>('idle');
   const [buttonOrigin, setButtonOrigin] = useState<{ x: number; y: number } | null>(null);
@@ -89,18 +83,11 @@ export const App: React.FC = () => {
   return (
     <div className="relative w-full min-h-screen bg-[#0b141a] text-white selection:bg-[#00a884] selection:text-white">
       {/* 
-        Initial Visitor Arrival: Greeting Word Preloader
-        Runs ONLY once when the user first opens the site
+        Initial Visitor Arrival: Skiper 8 Words Preloader (Dennis Snellenberg curved morph)
+        Cycles multilingual greetings before smoothly rolling up in a curved path
       */}
       {!hasVisited && (
-        <GreetingPreloader
-          onComplete={() => {
-            try {
-              sessionStorage.setItem('gvh_greeting_seen', 'true');
-            } catch {}
-            setHasVisited(true);
-          }}
-        />
+        <GreetingPreloader onComplete={() => setHasVisited(true)} />
       )}
 
       {/* 
@@ -125,7 +112,10 @@ export const App: React.FC = () => {
           <CaesarCipherInteraction onScrollToTop={() => setCurrentView('home')} />
         </div>
       ) : (
-        <E2EEHomePage onNavigateToSimulator={handleStartDeepDive} />
+        <E2EEHomePage
+          onNavigateToSimulator={handleStartDeepDive}
+          isInitialReady={hasVisited}
+        />
       )}
     </div>
   );

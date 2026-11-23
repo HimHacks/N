@@ -5,14 +5,15 @@ import { LumenInteractiveShader } from './LumenInteractiveShader';
 
 interface E2EEHomePageProps {
   onNavigateToSimulator: (origin?: { x: number; y: number }) => void;
+  isInitialReady?: boolean;
 }
 
-export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulator }) => {
+export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulator, isInitialReady = true }) => {
   const pageRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isReadingOver, setIsReadingOver] = useState(false);
-  const autoHideTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const readingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const readingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isHoveredRef = useRef(false);
 
   // Helper to open the pop-up button for precisely 5 seconds, then smoothly hide it unless hovered
@@ -52,11 +53,10 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
     }, 400);
   };
 
-  // Estimated reading time requirement:
-  // The pop-up button will NOT appear until the 6-second reading time completes.
-  // After 6 seconds, it pops up automatically, stays for 5 seconds, and drops down.
-  // After that, hovering anywhere in the bottom-right hotline zone reliably brings it up.
+  // The hero text and reading timer only begin after initial preloader has cleared
   useEffect(() => {
+    if (!isInitialReady) return;
+
     readingTimerRef.current = setTimeout(() => {
       setIsReadingOver(true);
       triggerAutoShow();
@@ -66,7 +66,7 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
       if (readingTimerRef.current) clearTimeout(readingTimerRef.current);
       if (autoHideTimerRef.current) clearTimeout(autoHideTimerRef.current);
     };
-  }, []);
+  }, [isInitialReady]);
 
   return (
     <div
@@ -103,41 +103,47 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
         - Bottom-right: Soap Bubble Button (pops up after 6s, and re-accessible anytime via hotline)
       */}
       <main className="relative z-20 flex flex-col justify-between min-h-screen px-6 sm:px-12 md:px-20 py-12 w-full max-w-7xl mx-auto">
-        {/* Top/Hero Left-Aligned Section */}
+        {/* Top/Hero Left-Aligned Section: Only animates in after the reverse word preloader completes */}
         <div className="mt-12 sm:mt-16 md:mt-24 max-w-4xl text-left">
-          {/* Presenter line: THE SYNTAX UNVEILERS PRESENTS in clean white matching template */}
-          <motion.p
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-xs sm:text-sm md:text-base font-bold tracking-[0.25em] text-white/90 uppercase text-left mb-4 drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]"
-          >
-            THE SYNTAX UNVEILERS PRESENTS
-          </motion.p>
+          {/* Presenter line: THE SYNTAX UNVEILERS PRESENTS */}
+          {isInitialReady && (
+            <motion.p
+              initial={{ opacity: 0, y: 24, filter: 'blur(4px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="text-xs sm:text-sm md:text-base font-bold tracking-[0.25em] text-white/90 uppercase text-left mb-4 drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]"
+            >
+              THE SYNTAX UNVEILERS PRESENTS
+            </motion.p>
+          )}
 
-          {/* Headline: Clean solid white matching Lumen template layout without text gradients */}
-          <motion.h1
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-            className="text-left text-white font-black tracking-tight leading-[1.04] text-4xl sm:text-6xl md:text-7xl lg:text-8xl select-none max-w-full py-1 drop-shadow-[0_4px_30px_rgba(0,0,0,0.45)]"
-          >
-            End-to-End Encryption
-          </motion.h1>
+          {/* Headline: "End-to-End Encryption" comes up using smooth curvy upward fade */}
+          {isInitialReady && (
+            <motion.h1
+              initial={{ opacity: 0, y: 36, filter: 'blur(8px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              transition={{ duration: 0.95, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+              className="text-left text-white font-black tracking-tight leading-[1.04] text-4xl sm:text-6xl md:text-7xl lg:text-8xl select-none max-w-full py-1 drop-shadow-[0_4px_30px_rgba(0,0,0,0.45)]"
+            >
+              End-to-End Encryption
+            </motion.h1>
+          )}
         </div>
 
         {/* Bottom Section: Description on bottom-left, Soap Bubble Pop-up on bottom-right */}
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-8 mt-16 sm:mt-24 w-full">
           {/* Bottom-left description text: strictly 2 lines */}
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-base sm:text-lg md:text-xl text-[#efeae2]/90 font-normal max-w-xl text-left select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] leading-relaxed"
-          >
-            <span className="block">Messages are encrypted directly on your device.</span>
-            <span className="block mt-0.5">Only you and the recipient hold the keys.</span>
-          </motion.p>
+          {isInitialReady && (
+            <motion.p
+              initial={{ opacity: 0, y: 28, filter: 'blur(6px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              transition={{ duration: 0.85, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              className="text-base sm:text-lg md:text-xl text-[#efeae2]/90 font-normal max-w-xl text-left select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] leading-relaxed"
+            >
+              <span className="block">Messages are encrypted directly on your device.</span>
+              <span className="block mt-0.5">Only you and the recipient hold the keys.</span>
+            </motion.p>
+          )}
 
           {/* 
             Right-hand Hotline Zone:

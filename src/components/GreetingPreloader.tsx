@@ -78,10 +78,10 @@ export const GreetingPreloader: React.FC<GreetingPreloaderProps> = ({ onComplete
           }}
           className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-auto select-none overflow-hidden"
           style={{
-            // Slightly translucent Biscotti cream / off-white so background motion is subtly visible
-            backgroundColor: 'rgba(239, 234, 226, 0.82)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
+            // Authentic off-white Biscotti cream with delicate translucency (~94%) so background is subtly noticeable
+            backgroundColor: 'rgba(239, 234, 226, 0.94)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
           }}
         >
           {/* Greeting Word: Pure clean typography without the green dot */}

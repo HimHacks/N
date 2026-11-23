@@ -170,7 +170,7 @@ export const SoapBubbleSurface = forwardRef<HTMLElement, SoapBubbleSurfaceProps>
 
 export type SoapBubbleButtonProps = ButtonHTMLAttributes<HTMLButtonElement> &
   SoapBubbleMaterialProps &
-  Pick<SoapBubbleSurfaceProps, 'reboundKey' | 'rendererRef'>;
+  Pick<SoapBubbleSurfaceProps, 'reboundKey' | 'rendererRef' | 'interactive'>;
 
 /** A button sized by its content, pill-shaped unless radius says otherwise. */
 export const SoapBubbleButton = forwardRef<HTMLButtonElement, SoapBubbleButtonProps>(

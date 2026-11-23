@@ -117,7 +117,7 @@ const PhotorealisticPhone: React.FC<DeviceMeshProps> = ({
     []
   );
 
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     if (shaderRef.current) {
       shaderRef.current.uniforms.uTime.value += delta;
       shaderRef.current.uniforms.uTouchActive.value = THREE.MathUtils.lerp(
