@@ -11,7 +11,6 @@ import {
   RotateCcw,
   Play,
   Pause,
-  ArrowRight,
   Info
 } from 'lucide-react';
 

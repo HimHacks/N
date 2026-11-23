@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThreeSquaresLoader } from './ThreeSquaresLoader';
 import { SoffitGradient, type SoffitGradientConfig } from './SoffitGradient';
@@ -150,7 +150,17 @@ const InstantDotMatrixDigit: React.FC<{ char: string; dotSize?: number; color?: 
   );
 };
 
-// Target word: "Scroll"
+// Security / Cryptography words cycling seamlessly during loading
+const CRYPTO_WORDS = [
+  'Initializing',
+  'Connecting',
+  'Diffie-Hellman',
+  'Handshake',
+  'Exchanging Keys',
+  'Double Ratchet',
+  'Curve25519',
+  'Encrypted',
+];
 const TARGET_WORD = 'Scroll';
 const CHAR_POOL = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','0','1','2','3','4','5','6','7','8','9'];
 
@@ -271,10 +281,24 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
 }) => {
   const [progress, setProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [cryptoWordIndex, setCryptoWordIndex] = useState(0);
+  const hasFinishedRef = useRef(false);
 
-  // Loading animation: ~3.0s total, ticking 1% -> 100%
+  // Cycling cryptography words preloader during compilation
   useEffect(() => {
     if (phase === 'loading') {
+      const wordInterval = setInterval(() => {
+        setCryptoWordIndex((prev) => (prev + 1) % CRYPTO_WORDS.length);
+      }, 340);
+      return () => clearInterval(wordInterval);
+    }
+  }, [phase]);
+
+  // Loading animation: ~3.0s total, ticking 1% -> 100%
+  // Strictly runs ONCE when entering 'loading' phase.
+  useEffect(() => {
+    if (phase === 'loading') {
+      if (hasFinishedRef.current) return;
       setIsLoaded(false);
       setProgress(1);
       let current = 1;
@@ -284,6 +308,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
           current = 100;
           setProgress(100);
           setIsLoaded(true);
+          hasFinishedRef.current = true;
           clearInterval(interval);
           if (onLoadingComplete) onLoadingComplete();
         } else {
@@ -292,6 +317,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
       }, 30);
       return () => clearInterval(interval);
     } else if (phase === 'idle') {
+      hasFinishedRef.current = false;
       setProgress(0);
       setIsLoaded(false);
     }
@@ -400,14 +426,26 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
           >
             {/* 
               Background of the loading page:
-              1. Top half: Authentic WhatsApp Biscotti Cream (#efeae2)
-              2. Bottom half: Vibrant Cyan, Green, and Dark Green fluid gradient from home page
-                 gradually blended upwards with zero harsh cutoff lines.
+              Two-stage choreography:
+              1. First, the entire screen expands with authentic WhatsApp Biscotti Cream (#efeae2) from transparent.
+              2. ONLY THEN, after expanding completes into 'loading' phase, the vibrant Cyan & Green fluid ripples
+                 rise up from the bottom (covering ~50% / 1.5 ratio of the page) and softly blend into the cream background.
             */}
             <div className="absolute inset-0 pointer-events-none bg-[#efeae2]" />
 
-            {/* Seamless blended background container covering entire viewport with mask fading down */}
-            <div
+            {/* Cyan, Green & Dark Green fluid background rises up from the bottom when entering loading phase */}
+            <motion.div
+              initial={{ y: '100%', opacity: 0 }}
+              animate={
+                phase === 'loading'
+                  ? { y: '0%', opacity: 1 }
+                  : { y: '100%', opacity: 0 }
+              }
+              transition={{
+                duration: 1.1,
+                ease: [0.16, 1, 0.3, 1],
+                delay: 0.15,
+              }}
               className="absolute inset-0 pointer-events-none overflow-hidden z-10"
               style={{
                 maskImage: 'linear-gradient(to top, black 25%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.3) 65%, transparent 92%)',
@@ -426,7 +464,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   className="w-full h-full"
                 />
               </div>
-            </div>
+            </motion.div>
 
             {/* Studio Card (Loading Screen) - WhatsApp off-white cream aesthetic */}
             <AnimatePresence>
@@ -439,8 +477,16 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   transition={{ duration: 0.3, ease: 'easeOut' }}
                   className="relative z-20 w-full max-w-4xl h-[78vh] max-h-[580px] bg-white/95 rounded-3xl shadow-[0_30px_90px_rgba(11,20,26,0.18)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-[#d1d7db]/80 mx-4 sm:mx-8 backdrop-blur-xl"
                 >
-                  {/* Top Bar: Clean minimal dividing line (removed GVH 2026 and syntax unveilers) */}
-                  <div className="w-full border-b border-[#e9edef] pb-3.5" />
+                  {/* Top Bar: Cycling Cryptography Word Preloader Badge */}
+                  <div className="flex items-center justify-between w-full border-b border-[#e9edef] pb-3.5">
+                    <span className="text-xs font-mono font-semibold text-[#00a884] uppercase tracking-wider">
+                      PROTOCOL HANDSHAKE
+                    </span>
+                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#f0f2f5] border border-[#d1d7db] text-xs font-mono font-semibold text-[#00a884]">
+                      <span className="w-2 h-2 rounded-full bg-[#00a884] animate-ping" />
+                      <span className="transition-all duration-200">{CRYPTO_WORDS[cryptoWordIndex]}</span>
+                    </div>
+                  </div>
 
                   {/* Center Loading Telemetry: Space Grotesk font for "Loading" with calm roll down exit */}
                   <div className="flex flex-col md:flex-row items-center justify-between my-auto w-full gap-8">
