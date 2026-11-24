@@ -247,21 +247,21 @@ const VerticalSlotReel: React.FC<{
   });
 
   // Calculate target index on the tape based on progress approaching its lock threshold
+  const maxUnlockedIndex = tape.length - 2;
+  const progressRatio = Math.min(1, Math.max(0, progress / threshold));
+  const computedTargetIndex = isLocked
+    ? tape.length - 1
+    : Math.min(maxUnlockedIndex, Math.floor(progressRatio * (tape.length - 1)));
+
   const [tapeIndex, setTapeIndex] = useState(0);
 
   useEffect(() => {
     if (isLocked) {
-      // Snaps decisively into the target letter (the final item on the reel tape)
       setTapeIndex(tape.length - 1);
       return;
     }
 
-    const progressRatio = Math.min(1, Math.max(0, progress / threshold));
-    const maxUnlockedIndex = tape.length - 2;
-    // Map progress linearly to tape position without resetting or plateauing early
-    const computedIndex = Math.min(maxUnlockedIndex, Math.floor(progressRatio * (tape.length - 1)));
-
-    setTapeIndex((prev) => Math.max(prev, computedIndex));
+    setTapeIndex((prev) => Math.max(prev, computedTargetIndex));
 
     let stepSpeed = 46 + (slotIndex % 3) * 6;
     if (isFinal) {
@@ -284,7 +284,7 @@ const VerticalSlotReel: React.FC<{
     }, stepSpeed);
 
     return () => clearInterval(timer);
-  }, [isLocked, progress, isFinal, slotIndex, tape.length, threshold]);
+  }, [isLocked, computedTargetIndex, isFinal, slotIndex, maxUnlockedIndex, tape.length, progress]);
 
   const cellHeight = 22; // Enlarged cell height in px for clear readability
   const cellWidth = 15;  // Enlarged cell width in px
@@ -355,6 +355,11 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   const [isLoaded, setIsLoaded] = useState(false);
   const hasFinishedRef = useRef(false);
 
+  const onLoadingCompleteRef = useRef(onLoadingComplete);
+  useEffect(() => {
+    onLoadingCompleteRef.current = onLoadingComplete;
+  }, [onLoadingComplete]);
+
   // Cinematic pacing loading animation (calm, unhurried):
   // - 1% to 75%: smooth steady progress (~30ms per tick)
   // - 75% to 92%: begins slowing down noticeably (~75ms per tick)
@@ -375,7 +380,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
           setProgress(100);
           setIsLoaded(true);
           hasFinishedRef.current = true;
-          if (onLoadingComplete) onLoadingComplete();
+          if (onLoadingCompleteRef.current) onLoadingCompleteRef.current();
           return;
         }
 
@@ -406,7 +411,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
       setProgress(0);
       setIsLoaded(false);
     }
-  }, [phase, onLoadingComplete]);
+  }, [phase]);
 
   // Normalized coordinates in 1000x1000 viewBox:
   // Button origin (bx, by) defaults to bottom-right hotline zone (~860, 920)
