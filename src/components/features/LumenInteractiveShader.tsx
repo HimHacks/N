@@ -81,13 +81,17 @@ void main(){
   vec2 d3 = vec2( 0.09, -0.16) * t;
 
   float a = m(uv + d1);
-  vec3 col = mix(u_pal_base, u_pal_warm, a * 2.3);
+  vec3 col = mix(u_pal_base, u_pal_warm, a * 2.2);
+
+  // Pale WhatsApp outgoing message mint tint (#E7FCE3)
+  vec3 u_pal_bubble_mint = vec3(0.898, 0.984, 0.886);
+  col = mix(col, u_pal_bubble_mint, a * 0.45);
 
   float b = m(uv + a * 2.4 + d2);
-  col = mix(col, u_pal_mid, b * 1.15);
+  col = mix(col, u_pal_mid, b * 0.95);
 
   float dd = m(uv + b * 3.5 + d3);
-  col = mix(col, u_pal_cool, dd * 1.25);
+  col = mix(col, u_pal_cool, dd * 1.15);
 
   col += u_pal_cursor * fall;
 
@@ -253,9 +257,6 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
       cancelAnimationFrame(resizeReq);
       resizeObserver.disconnect();
       intersectionObserver.disconnect();
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerleave', handlePointerLeave);
-      window.removeEventListener('blur', handlePointerLeave);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       canvas.remove();
       const loseContext = gl.getExtension('WEBGL_lose_context');

@@ -361,14 +361,25 @@ const RollDownText: React.FC<{
   );
 };
 
-// Vegas 3-Slot Lottery Sequential Character Resolver for "SCROLL":
-// All slots continuously scramble random letters.
-// As loading progress advances, slot 0 ('S') locks, then slot 1 ('C'), etc.
-// The final letter ('L') begins slowing down dramatically like the last reel of a lottery machine,
-// pauses suspensefully at 99% ("cheating the letters slowly"), and snaps to 'L' simultaneously when 100% hits!
-// All characters are rendered as authentic circular dot-matrix glyphs!
+// Single-Roll Vegas 3-Slot Reel Sequences for "SCROLL":
+// As requested: each letter on the word "SCROLL" rolls only once, step-by-step,
+// and that once is where the animation stops for each and every letter!
+// - Slot 0: rolls to 'S' and stops.
+// - Slot 1: rolls to 'C' and stops.
+// - Slot 2: rolls to 'R' and stops.
+// - Slot 3: rolls to 'O' and stops.
+// - Slot 4: rolls to 'L' and stops.
+// - Slot 5 (the last 'L'): decelerates cleanly and rolls to 'L' exactly once at 100%!
 const TARGET_WORD = 'SCROLL';
-const CHAR_POOL = ['S', 'C', 'R', 'O', 'L', 'P', 'A', 'B', 'E', 'K', 'T', 'U', 'X', 'Z'];
+const SLOT_REELS: string[][] = [
+  ['P', 'B', 'S'],           // Slot 0 -> resolves to 'S'
+  ['A', 'K', 'C'],           // Slot 1 -> resolves to 'C'
+  ['E', 'T', 'R'],           // Slot 2 -> resolves to 'R'
+  ['U', 'X', 'O'],           // Slot 3 -> resolves to 'O'
+  ['Z', 'E', 'L'],           // Slot 4 -> resolves to 'L'
+  ['P', 'A', 'K', 'T', 'L'], // Slot 5 -> slows down, rolls once to 'L'
+];
+
 const LOCK_THRESHOLDS = [18, 36, 54, 72, 88, 100];
 
 const ScrollLotteryMachine: React.FC<{ progress: number; isLoaded: boolean }> = ({
@@ -376,7 +387,7 @@ const ScrollLotteryMachine: React.FC<{ progress: number; isLoaded: boolean }> = 
   isLoaded,
 }) => {
   const [chars, setChars] = useState<string[]>(() =>
-    TARGET_WORD.split('').map((_, i) => CHAR_POOL[(i * 3) % CHAR_POOL.length])
+    SLOT_REELS.map((reel) => reel[0])
   );
 
   const progressRef = useRef(progress);
@@ -387,6 +398,7 @@ const ScrollLotteryMachine: React.FC<{ progress: number; isLoaded: boolean }> = 
   useEffect(() => {
     let animId: number;
     let lastTick = performance.now();
+    const reelIndices = [0, 0, 0, 0, 0, 0];
     const slotTimers = [0, 0, 0, 0, 0, 0];
 
     const loop = (now: number) => {
@@ -400,40 +412,48 @@ const ScrollLotteryMachine: React.FC<{ progress: number; isLoaded: boolean }> = 
         const next = [...prev];
 
         for (let i = 0; i < TARGET_WORD.length; i++) {
-          const target = TARGET_WORD[i];
+          const reel = SLOT_REELS[i];
+          const targetChar = TARGET_WORD[i];
           const threshold = LOCK_THRESHOLDS[i];
           const isFinal = i === TARGET_WORD.length - 1;
 
-          // If reached threshold or finished, lock permanently to target character
+          // If reached threshold or loaded, lock to final target character
           if (loaded || curProg >= threshold) {
-            if (next[i] !== target) {
-              next[i] = target;
+            if (next[i] !== targetChar) {
+              next[i] = targetChar;
+              reelIndices[i] = reel.length - 1;
               changed = true;
             }
             continue;
           }
 
-          // Compute slot cycle speed:
-          let speed = 40; // Default fast slot spin
+          // If the slot has already completed its single roll to the penultimate letter, wait for threshold
+          if (reelIndices[i] >= reel.length - 1) {
+            continue;
+          }
+
+          // Step cadence: each letter advances along its reel only once
+          let stepDelay = 80;
           if (isFinal) {
-            // Final 'L' slot decelerates dramatically like the last reel of a lottery machine:
-            if (curProg >= 99) {
-              speed = 520; // Suspense pause at 99%, sluggishly crawling
-            } else if (curProg >= 92) {
-              speed = 300; // Noticeably slow
+            // Final reel slows down heavily on its single roll
+            if (curProg >= 95) {
+              stepDelay = 450;
             } else if (curProg >= 85) {
-              speed = 160; // Decelerating
+              stepDelay = 260;
             } else {
-              speed = 45;
+              stepDelay = 140;
             }
           }
 
           slotTimers[i] += dt;
-          if (slotTimers[i] >= speed) {
+          if (slotTimers[i] >= stepDelay) {
             slotTimers[i] = 0;
-            const rand = CHAR_POOL[Math.floor(Math.random() * CHAR_POOL.length)];
-            next[i] = rand;
-            changed = true;
+            // Advance by 1 step only (never loop backwards or duplicate)
+            if (reelIndices[i] < reel.length - 2) {
+              reelIndices[i] += 1;
+              next[i] = reel[reelIndices[i]];
+              changed = true;
+            }
           }
         }
 
@@ -456,7 +476,7 @@ const ScrollLotteryMachine: React.FC<{ progress: number; isLoaded: boolean }> = 
             key={idx}
             char={ch}
             isLocked={isLocked}
-            dotSize={1.5}
+            dotSize={2.0}
           />
         );
       })}
@@ -624,14 +644,17 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
             {/* 
               Loading page background:
               Base is authentic WhatsApp Biscotti Cream (#efeae2).
-              The animated fluid gradient (cyan, deep emerald, and light green)
-              covers strictly 3/8 of the screen (37.5%) rising from the bottom!
+              The animated fluid gradient (cyan, deep emerald, and light green with WhatsApp bubble mint highlights)
+              lives at the bottom covering strictly 3/8 of the screen (37.5%), with rich organic movement!
             */}
             <motion.div
               initial={{ y: '100%', opacity: 0 }}
               animate={
                 phase === 'loading'
-                  ? { y: '0%', opacity: 1 }
+                  ? {
+                      y: '0%',
+                      opacity: 1,
+                    }
                   : { y: '100%', opacity: 0 }
               }
               transition={{
@@ -643,14 +666,27 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
               style={{
                 // Strictly 3/8 height ratio (37.5%) with soft feathered top mask blending into Biscotti Cream (#efeae2)
                 maskImage:
-                  'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.92) 50%, rgba(0,0,0,0.45) 80%, rgba(0,0,0,0.1) 94%, transparent 100%)',
+                  'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.55) 82%, rgba(0,0,0,0.12) 94%, transparent 100%)',
                 WebkitMaskImage:
-                  'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.92) 50%, rgba(0,0,0,0.45) 80%, rgba(0,0,0,0.1) 94%, transparent 100%)',
+                  'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.55) 82%, rgba(0,0,0,0.12) 94%, transparent 100%)',
               }}
             >
-              <div className="absolute inset-0 w-full h-full">
+              {/* Organic lively breathing expansion to give depth and fluid life */}
+              <motion.div
+                animate={{
+                  scale: [1, 1.05, 1],
+                  x: [0, 15, -15, 0],
+                  y: [0, -8, 4, 0],
+                }}
+                transition={{
+                  duration: 12,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+                className="absolute inset-0 w-full h-full"
+              >
                 <LumenInteractiveShader />
-              </div>
+              </motion.div>
             </motion.div>
 
             {/* Studio Card (Loading Screen) - Floating WhatsApp off-white cream aesthetic */}
