@@ -77,8 +77,8 @@ export const GreetingPreloader: React.FC<GreetingPreloaderProps> = ({ onComplete
           }}
           className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-auto select-none overflow-hidden"
           style={{
-            // Translucent white (~78% opacity) with backdrop blur so the home page fluid background is genuinely visible through it
-            backgroundColor: 'rgba(255, 255, 255, 0.78)',
+            // Warm cotton cream / Biscotti cream with delicate translucency (~84% opacity) so the home page fluid background is warm and subtly visible through it
+            backgroundColor: 'rgba(244, 239, 230, 0.84)',
             backdropFilter: 'blur(10px)',
             WebkitBackdropFilter: 'blur(10px)',
           }}
@@ -101,9 +101,9 @@ export const GreetingPreloader: React.FC<GreetingPreloaderProps> = ({ onComplete
             </motion.p>
           </div>
 
-          {/* SVG Reverse Curve Morph Bottom Lip */}
+          {/* SVG Reverse Curve Morph Bottom Lip in matching warm cotton cream */}
           {dimension.width > 0 && (
-            <svg className="absolute top-0 left-0 w-full h-[calc(100%+300px)] pointer-events-none -z-10 fill-white/80">
+            <svg className="absolute top-0 left-0 w-full h-[calc(100%+300px)] pointer-events-none -z-10 fill-[#f4efe6]/88">
               <motion.path
                 initial={{ d: initialPath }}
                 animate={{ d: targetPath }}

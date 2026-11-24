@@ -130,15 +130,15 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
           )}
         </div>
 
-        {/* Bottom Section: Description on bottom-left, Soap Bubble Pop-up on bottom-right */}
-        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-8 mt-16 sm:mt-24 w-full">
-          {/* Bottom-left description text: strictly 2 lines */}
+        {/* Bottom Section: Description on bottom-left elevated higher, Soap Bubble Pop-up on bottom-right */}
+        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-8 mt-8 sm:mt-12 md:mt-16 w-full">
+          {/* Bottom-left description text: elevated noticeably higher off the bottom */}
           {isInitialReady && (
             <motion.p
               initial={{ opacity: 0, y: 28, filter: 'blur(6px)' }}
               animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
               transition={{ duration: 0.85, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
-              className="text-base sm:text-lg md:text-xl text-[#efeae2]/90 font-normal max-w-xl text-left select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] leading-relaxed"
+              className="text-base sm:text-lg md:text-xl text-[#efeae2]/95 font-normal max-w-xl text-left select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] leading-relaxed pb-4 md:pb-6"
             >
               <span className="block">Messages are encrypted directly on your device.</span>
               <span className="block mt-0.5">Only you and the recipient hold the keys.</span>
@@ -183,10 +183,10 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                 >
                   <SoapBubbleMaterial
                     glass={0.95}
-                    iridescence={0.5}
+                    iridescence={0.8}
                     filmScale={4.85}
                     oilOpacity={1}
-                    oilCoverage={0.73}
+                    oilCoverage={0.85}
                     oilEdge={18}
                     oilEdgeFade={2.33}
                     clearCenter={0.57}
@@ -208,7 +208,7 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                     windowHead={0.7}
                     windowTail={0.6}
                     glintSize={1.65}
-                    glintIntensity={0}
+                    glintIntensity={0.4}
                     glintDistance={-0.45}
                     glintHeight={0.65}
                     windowIntensity={0.85}
@@ -216,7 +216,7 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                     tint="transparent"
                   >
                     <SoapBubbleButton
-                      interactive={0.25}
+                      interactive={0.35}
                       onClick={(e) => {
                         const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
                         const origin = {

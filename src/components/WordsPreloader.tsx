@@ -193,6 +193,7 @@ const RollDownText: React.FC<{
 };
 
 // Lottery 3-slot sequential character resolver
+// The final letter 'l' slows down dramatically, cycling sluggishly like the last reel of a 3-slot lottery machine before clicking home
 const LotterySlotChar: React.FC<{
   targetChar: string;
   slotIndex: number;
@@ -204,17 +205,18 @@ const LotterySlotChar: React.FC<{
     CHAR_POOL[(slotIndex * 7) % CHAR_POOL.length]
   );
 
-  // Evenly spaced progressive resolution for all 6 letters (S, c, r, o, l, l):
+  // Progressive resolution thresholds:
   // slot 0 ('S'): resolves at 25%
   // slot 1 ('c'): resolves at 42%
   // slot 2 ('r'): resolves at 58%
   // slot 3 ('o'): resolves at 72%
-  // slot 4 ('l'): resolves at 86%
-  // slot 5 ('l'): resolves at 100%
-  const thresholds = [25, 42, 58, 72, 86, 100];
+  // slot 4 ('l'): resolves at 85%
+  // slot 5 ('l'): resolves strictly at 100%
+  const thresholds = [25, 42, 58, 72, 85, 100];
   const lockThreshold = thresholds[slotIndex] ?? 100;
-
   const isLocked = isComplete || progress >= lockThreshold;
+
+  const isFinalSlot = slotIndex === totalSlots - 1;
 
   useEffect(() => {
     if (isLocked) {
@@ -222,17 +224,34 @@ const LotterySlotChar: React.FC<{
       return;
     }
 
+    // Dynamic tick rate: for earlier slots, rapid spinning (35-65ms).
+    // For the final slot (index 5, final 'l'), as progress climbs from 80% to 99%,
+    // the letters cycle progressively slower and slower (120ms -> 240ms -> 420ms),
+    // creating that suspenseful lottery reel deceleration!
+    let speed = 40 + slotIndex * 6;
+    if (isFinalSlot) {
+      if (progress >= 95) {
+        speed = 360; // Very slow crawl right before 100%
+      } else if (progress >= 85) {
+        speed = 220; // Noticeable deceleration
+      } else if (progress >= 70) {
+        speed = 120; // Starting to slow down
+      } else {
+        speed = 70;
+      }
+    }
+
     const interval = setInterval(() => {
       const rand = CHAR_POOL[Math.floor(Math.random() * CHAR_POOL.length)];
       setCurrentChar(rand);
-    }, 45 + (slotIndex * 6));
+    }, speed);
 
     return () => clearInterval(interval);
-  }, [isLocked, targetChar, slotIndex]);
+  }, [isLocked, targetChar, slotIndex, isFinalSlot, progress]);
 
   return (
     <span
-      className={`font-terminal-dots inline-block text-center transition-transform duration-75 select-none ${
+      className={`font-terminal-dots inline-block text-center transition-transform duration-100 select-none ${
         isLocked
           ? 'text-[#1a1a1a] scale-100 font-bold'
           : 'text-[#404040] scale-95 opacity-90'
@@ -314,15 +333,17 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   const originX = buttonOrigin ? `${Math.round(buttonOrigin.x)}px` : 'calc(100% - 140px)';
   const originY = buttonOrigin ? `${Math.round(buttonOrigin.y)}px` : 'calc(100% - 70px)';
 
-  // Warping expansion strictly from the clicked button:
-  // Starts directly at the button's location in the bottom-right zone,
-  // warps and balloons across the website to cover the whole screen,
-  // transitioning from completely transparent to Biscotti Cream.
+  // Professional, smooth multi-stage warping animation from the clicked button:
+  // Stage 0: Starts at button origin (0% size)
+  // Stage 1: Fluidly warps to touch and hug the left and bottom edges first
+  // Stage 2: Floods across the top, left, and entire center of the website
+  // Stage 3: Smoothly closes and seals into the bottom-right corner before settling
   const clipInitial = `circle(0px at ${originX} ${originY})`;
-  const clipMid = `circle(80vw at ${originX} ${originY})`;
-  const clipFull = `circle(220vw at ${originX} ${originY})`;
+  const clipStage1Edges = `polygon(0% 100%, 0% 25%, 35% 100%, ${originX} ${originY})`;
+  const clipStage2Expands = `polygon(0% 0%, 100% 0%, 100% 50%, 65% 100%, 0% 100%)`;
+  const clipFull = `circle(260vw at ${originX} ${originY})`;
 
-  const customEase = [0.16, 1, 0.3, 1] as const;
+  const customEase = [0.22, 1, 0.36, 1] as const;
 
   const progressStr = String(Math.min(100, progress)).padStart(3, '0') + '%';
   const digits = progressStr.split('');
@@ -388,15 +409,16 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
             animate={
               phase === 'expanding'
                 ? {
-                    clipPath: [clipInitial, clipMid, clipFull],
+                    clipPath: [clipInitial, clipStage1Edges, clipStage2Expands, clipFull],
                     backgroundColor: [
                       'rgba(239, 234, 226, 0.0)',
-                      'rgba(239, 234, 226, 0.65)',
+                      'rgba(239, 234, 226, 0.55)',
+                      'rgba(239, 234, 226, 0.88)',
                       'rgba(239, 234, 226, 0.96)',
                     ],
                     transition: {
-                      clipPath: { duration: 1.25, ease: customEase, times: [0, 0.45, 1] },
-                      backgroundColor: { duration: 1.15, ease: 'easeInOut' },
+                      clipPath: { duration: 1.6, ease: customEase, times: [0, 0.32, 0.68, 1] },
+                      backgroundColor: { duration: 1.5, ease: 'easeInOut' },
                     },
                   }
                 : phase === 'loading'
@@ -436,24 +458,24 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   : { y: '100%', opacity: 0 }
               }
               transition={{
-                duration: 2.4, // Unhurried cinematic glide allowing the fluid ripples to settle
+                duration: 2.6, // Slower, unhurried cinematic glide allowing the fluid ripples to settle
                 ease: [0.16, 1, 0.3, 1],
-                delay: 0.2,
+                delay: 0.15,
               }}
               className="absolute inset-0 pointer-events-none overflow-hidden z-10"
               style={{
                 // Natural organic fade without a hard line, gently transitioning from bottom up
-                maskImage: 'linear-gradient(to top, black 0%, rgba(0,0,0,0.9) 25%, rgba(0,0,0,0.5) 45%, rgba(0,0,0,0.15) 60%, transparent 75%)',
-                WebkitMaskImage: 'linear-gradient(to top, black 0%, rgba(0,0,0,0.9) 25%, rgba(0,0,0,0.5) 45%, rgba(0,0,0,0.15) 60%, transparent 75%)',
+                maskImage: 'linear-gradient(to top, black 0%, rgba(0,0,0,0.92) 28%, rgba(0,0,0,0.6) 48%, rgba(0,0,0,0.2) 65%, transparent 80%)',
+                WebkitMaskImage: 'linear-gradient(to top, black 0%, rgba(0,0,0,0.92) 28%, rgba(0,0,0,0.6) 48%, rgba(0,0,0,0.2) 65%, transparent 80%)',
               }}
             >
               {/* Home page WebGL fluid shader running in background with strong green presence */}
-              <div className="absolute inset-0 opacity-60">
+              <div className="absolute inset-0 opacity-70">
                 <LumenInteractiveShader />
               </div>
 
               {/* Soffit Cyan & Green generative fluid ripples */}
-              <div className="absolute inset-0 opacity-90">
+              <div className="absolute inset-0 opacity-95">
                 <SoffitGradient
                   config={soffitConfig}
                   className="w-full h-full"
