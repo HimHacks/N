@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { newSession, seal, receive, hex } from '../../lib/simulation/teachingProtocolEngine';
+import { BlockReveal } from '../ui/BlockReveal';
 
 interface E2EEHomePageProps {
   onNavigateToSimulator: (origin?: { x: number; y: number }) => void;
@@ -164,13 +165,19 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
               The Syntax Unveilers present
             </p>
 
-            {/* Exact Reference Heading */}
+            {/* Exact Reference Heading with Two-Line Stylish Block Reveal Effect */}
             <h1
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-[68px] font-normal leading-[1.05] tracking-tight text-[#153A32] max-w-2xl"
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-[68px] font-normal leading-[1.12] tracking-tight text-[#153A32] max-w-2xl flex flex-col items-center justify-center"
               style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
             >
-              How does end-to-end<br />
-              <em className="italic text-[#176B50] font-normal">encryption</em> work?
+              <BlockReveal delay={200} duration={0.5} blockColor="#176B50" isReady={isInitialReady}>
+                <span>How does end-to-end</span>
+              </BlockReveal>
+              <BlockReveal delay={480} duration={0.5} blockColor="#176B50" isReady={isInitialReady}>
+                <span>
+                  <em className="italic text-[#176B50] font-normal">encryption</em> work?
+                </span>
+              </BlockReveal>
             </h1>
 
             {/* Exact Reference Supporting Text */}
