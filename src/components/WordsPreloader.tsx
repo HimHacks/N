@@ -440,30 +440,25 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   const isVisible = phase !== 'idle' || isInteractiveScroll;
 
   // SVG multi-point organic boundary for the advancing biscotti cream surface:
-  // Instead of a straight horizontal line or instant edge fill, the crest forms an organically undulating wave
-  // with asymmetric peaks and troughs that deform and morph fluidly as the cream advances upward across the viewport.
-  // Coordinate system: 0..1000 width, 0..1000 height.
-  // baselineY is the leading edge (1000 = bottom, 0 = top).
-  const baselineY = isInteractiveScroll && phase === 'idle'
-    ? Math.max(0, Math.min(1000, Math.round((1 - scrollFraction) * 1000)))
-    : phase === 'expanding'
-    ? 0
-    : phase === 'loading'
-    ? 0
-    : 1000;
+  // - Interactive scrubbing: starts at baselineY = (1 - scrollFraction) * 1000
+  // - Auto-expanding commitment: smoothly interpolates from the current snapshot wave up to wave4 (full screen)
+  //   without jumping back down to bottom or arbitrary points!
+  const currentBaselineYRef = useRef(1000);
+  if (isInteractiveScroll && phase === 'idle') {
+    currentBaselineYRef.current = Math.max(0, Math.min(1000, Math.round((1 - scrollFraction) * 1000)));
+  }
 
-  // Keyframes for the continuously deforming organic boundary during expansion
-  // (Left and right edges do NOT jump; they are pinned to the organic wave contours)
-  const wave0 = `M 0 1000 C 180 1000, 320 1000, 500 1000 C 680 1000, 840 1000, 1000 1000 L 1000 1000 L 0 1000 Z`;
-  const wave1 = `M 0 780 C 160 720, 290 840, 480 750 C 670 660, 830 790, 1000 730 L 1000 1000 L 0 1000 Z`;
-  const wave2 = `M 0 520 C 190 590, 340 440, 520 480 C 700 520, 850 410, 1000 460 L 1000 1000 L 0 1000 Z`;
-  const wave3 = `M 0 240 C 170 170, 310 290, 510 210 C 710 130, 860 260, 1000 180 L 1000 1000 L 0 1000 Z`;
+  // Generate an organic wave path at any given baseline Y
+  const getWavePathAtY = (y: number, ampMultiplier = 1) => {
+    const fraction = (1000 - y) / 1000;
+    const a1 = Math.sin(fraction * Math.PI) * 55 * ampMultiplier;
+    const a2 = Math.cos(fraction * Math.PI) * 45 * ampMultiplier;
+    return `M 0 ${Math.min(1000, y + a1 * 0.4)} C 180 ${Math.max(0, y - a1)}, 340 ${Math.min(1000, y + a2)}, 520 ${Math.max(0, y - a2 * 0.8)} C 700 ${Math.min(1000, y + a1 * 0.7)}, 860 ${Math.max(0, y - a2)}, 1000 ${Math.min(1000, y + a2 * 0.5)} L 1000 1000 L 0 1000 Z`;
+  };
+
+  const currentInteractiveWave = getWavePathAtY(currentBaselineYRef.current);
+  const midWayWave = getWavePathAtY(Math.min(currentBaselineYRef.current, 380) * 0.6);
   const wave4 = `M 0 0 C 250 0, 500 0, 750 0 C 850 0, 950 0, 1000 0 L 1000 1000 L 0 1000 Z`;
-
-  // Interactive dynamic wave path calculated from current baselineY
-  const amp1 = Math.sin(scrollFraction * Math.PI) * 55;
-  const amp2 = Math.cos(scrollFraction * Math.PI) * 45;
-  const currentInteractiveWave = `M 0 ${Math.min(1000, baselineY + amp1 * 0.4)} C 180 ${Math.max(0, baselineY - amp1)}, 340 ${Math.min(1000, baselineY + amp2)}, 520 ${Math.max(0, baselineY - amp2 * 0.8)} C 700 ${Math.min(1000, baselineY + amp1 * 0.7)}, 860 ${Math.max(0, baselineY - amp2)}, 1000 ${Math.min(1000, baselineY + amp2 * 0.5)} L 1000 1000 L 0 1000 Z`;
 
   return (
     <AnimatePresence>
@@ -491,12 +486,12 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                 fill="#efeae2"
                 initial={{ d: currentInteractiveWave }}
                 animate={{
-                  d: [currentInteractiveWave, wave2, wave3, wave4],
+                  d: [currentInteractiveWave, midWayWave, wave4],
                 }}
                 transition={{
                   duration: 1.25,
                   ease: [0.16, 1, 0.3, 1],
-                  times: [0, 0.35, 0.7, 1],
+                  times: [0, 0.45, 1],
                 }}
                 onAnimationComplete={() => {
                   if (onExpanded) onExpanded();
