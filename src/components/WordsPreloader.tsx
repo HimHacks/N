@@ -284,8 +284,8 @@ const VerticalSlotReel: React.FC<{
     return () => clearInterval(timer);
   }, [isLocked, progress, isFinal, slotIndex, tape.length, threshold]);
 
-  const cellHeight = 16; // Exact cell height in px
-  const cellWidth = 11;  // Exact cell width in px
+  const cellHeight = 22; // Enlarged cell height in px for clear readability
+  const cellWidth = 15;  // Enlarged cell width in px
 
   return (
     <div
@@ -319,15 +319,15 @@ const VerticalSlotReel: React.FC<{
           return (
             <div
               key={idx}
-              className="flex items-center justify-center font-terminal-dots select-none uppercase tracking-[0.12em]"
+              className="flex items-center justify-center font-terminal-dots select-none uppercase tracking-[0.12em] font-extrabold"
               style={{
                 height: `${cellHeight}px`,
                 width: `${cellWidth}px`,
-                fontSize: '11px',
-                lineHeight: '16px',
-                color: isAtTarget ? '#111b21' : '#555555',
-                textShadow: isAtTarget ? '0 0.5px 1px rgba(0,0,0,0.18)' : 'none',
-                opacity: isAtTarget ? 1 : 0.7,
+                fontSize: '15px',
+                lineHeight: '22px',
+                color: isAtTarget ? '#111b21' : '#444444',
+                textShadow: isAtTarget ? '0 0.5px 1.5px rgba(0,0,0,0.35)' : 'none',
+                opacity: isAtTarget ? 1 : 0.75,
               }}
             >
               {ch}
@@ -435,69 +435,34 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
       {isVisible && (
         <div className="fixed inset-0 z-[120] pointer-events-auto overflow-hidden select-none">
           {/* 
-            Expanding Warping Biscotti Cream Curtain / Smooth Vertical Rolling Roll-in:
-            - When triggered by button click or scroll: smooth rolling roll-up from the bottom or expanding circle from the button
+            Expanding Biscotti Cream Curtain + Fluid Gradient together:
+            Rolls smoothly together from the bottom (0 -> 100% viewport) as one integrated page
+            without sequential delay, eliminating lag so the fluid background arrives with the roll!
           */}
-          {phase === 'expanding' && triggerType === 'button' && (
-            <motion.div
-              className="fixed inset-0 z-20 w-full h-full pointer-events-none bg-[#efeae2]"
-              initial={{ clipPath: clip0, opacity: 0.9 }}
-              animate={{
-                clipPath: [clip0, clip1, clip2, clip3, clip4],
-                opacity: [0.9, 0.94, 0.97, 0.99, 1],
-              }}
-              transition={{
-                clipPath: {
-                  duration: 1.6,
-                  ease: customEase,
-                  times: [0, 0.25, 0.55, 0.82, 1],
-                },
-                opacity: {
-                  duration: 1.4,
-                  ease: 'easeInOut',
-                },
-              }}
-              onAnimationComplete={() => {
-                if (onExpanded) onExpanded();
-              }}
-            />
-          )}
-
-          {phase === 'expanding' && triggerType === 'scroll' && (
-            <motion.div
-              className="fixed inset-0 z-20 w-full h-full pointer-events-none bg-[#efeae2]"
-              initial={{ y: '100%' }}
-              animate={{ y: '0%' }}
-              transition={{
-                duration: 1.1,
-                ease: [0.16, 1, 0.3, 1],
-              }}
-              onAnimationComplete={() => {
-                if (onExpanded) onExpanded();
-              }}
-            />
-          )}
-
-          {/* Full Loading and Exiting Screen */}
           <motion.div
             className="fixed inset-0 z-30 flex items-center justify-center overflow-hidden bg-[#efeae2]"
-            initial={{
-              opacity: 0,
-            }}
+            initial={{ y: '100%' }}
             animate={
-              phase === 'loading'
+              phase === 'expanding'
                 ? {
-                    opacity: 1,
-                    transition: { duration: 0.15, ease: 'easeOut' },
+                    y: '0%',
+                    transition: { duration: 1.15, ease: [0.16, 1, 0.3, 1] },
+                  }
+                : phase === 'loading'
+                ? {
+                    y: '0%',
                   }
                 : phase === 'exiting'
                 ? {
                     y: '-100vh',
                     transition: { duration: 0.85, ease: [0.76, 0, 0.24, 1] },
                   }
-                : { opacity: 0 }
+                : { y: '100%' }
             }
             onAnimationComplete={() => {
+              if (phase === 'expanding' && onExpanded) {
+                onExpanded();
+              }
               if (phase === 'exiting' && onExited) {
                 onExited();
               }
@@ -505,30 +470,12 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
           >
             {/* 
               Loading page background:
-              Base is authentic WhatsApp Biscotti Cream (#efeae2).
-              The animated fluid gradient extends the existing homepage WebGL/WebGPU green/emerald shader
-              (emerald, deep green, and teal highlights - NO blue-black cinematic background).
-              Anchored at the bottom and expanding dynamically to roughly 3/8 (37.5% - 40%) of the viewport
-              with an organic, flame-like undulating crest!
+              Integrated directly inside the rolling screen so it travels in sync with the roll!
+              Anchored at the bottom at 3/8 height (37.5%) with lively undulating crest.
             */}
-            <motion.div
-              initial={{ y: '100%', opacity: 0 }}
-              animate={
-                phase === 'loading'
-                  ? {
-                      y: '0%',
-                      opacity: 1,
-                    }
-                  : { y: '100%', opacity: 0 }
-              }
-              transition={{
-                duration: 2.2,
-                ease: [0.16, 1, 0.3, 1],
-                delay: 0.1,
-              }}
+            <div
               className="absolute inset-x-0 bottom-0 h-[37.5%] pointer-events-none overflow-hidden z-10"
               style={{
-                // Feathered top mask blending into Biscotti Cream (#efeae2)
                 maskImage:
                   'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.55) 82%, rgba(0,0,0,0.12) 94%, transparent 100%)',
                 WebkitMaskImage:
@@ -556,17 +503,17 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   brightness={1.35}
                 />
               </motion.div>
-            </motion.div>
+            </div>
 
             {/* Studio Card (Loading Screen) - Floating WhatsApp off-white cream aesthetic */}
             <AnimatePresence>
-              {phase === 'loading' && (
+              {(phase === 'loading' || phase === 'expanding') && (
                 <motion.div
                   key="loading-card-container"
-                  initial={{ opacity: 0, scale: 0.95, y: 12 }}
+                  initial={{ opacity: 0, scale: 0.96, y: 16 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.96 }}
-                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                  transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
                   className="relative z-20 w-full max-w-4xl h-[78vh] max-h-[580px] bg-white/95 rounded-3xl shadow-[0_30px_90px_rgba(11,20,26,0.22)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-[#d1d7db]/80 mx-4 sm:mx-8 backdrop-blur-xl"
                 >
                   {/* Center Loading Telemetry: Space Grotesk font for "Loading" with calm roll down exit */}
