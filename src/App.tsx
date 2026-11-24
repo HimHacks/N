@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { E2EEHomePage } from './components/features/E2EEHomePage';
 import { MainGuidedSimulator } from './components/features/MainGuidedSimulator';
-import { CaesarCipherInteraction } from './components/features/CaesarCipherInteraction';
+import { InteractiveE2EEJourney } from './components/features/InteractiveE2EEJourney';
 import { Floating3DShapes } from './components/features/Floating3DShapes';
 import { GreetingPreloader } from './components/GreetingPreloader';
 import { WordsPreloader, type WordPreloaderPhase } from './components/WordsPreloader';
@@ -10,7 +10,7 @@ import { WordsPreloader, type WordPreloaderPhase } from './components/WordsPrelo
 export const App: React.FC = () => {
   // Original Greeting Preloader ('Hello', 'Bonjour', ...) plays at calm natural cadence
   const [hasVisited, setHasVisited] = useState(false);
-  const [currentView, setCurrentView] = useState<'home' | 'simulator' | 'caesar'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'simulator'>('home');
   const [preloaderPhase, setPreloaderPhase] = useState<WordPreloaderPhase>('idle');
   const [triggerType, setTriggerType] = useState<'button' | 'scroll'>('scroll');
   const [scrollFraction, setScrollFraction] = useState<number>(0);
@@ -251,8 +251,7 @@ export const App: React.FC = () => {
       {/* 
         View Routing:
         - 'home': Human-to-Human E2EE Showcase (Aarav, Meera)
-        - 'simulator': Working E2EE Simulator (Sender Device A, Delivery Server Relay, Recipient Device B)
-        - 'caesar': Interactive Caesar Cipher
+        - 'simulator': Main Web Page with Scroll-Triggered E2EE Phones Animation above Guided Simulator
       */}
       {currentView === 'home' && preloaderPhase !== 'exiting' && (
         <E2EEHomePage
@@ -279,31 +278,18 @@ export const App: React.FC = () => {
             >
               &larr; Back to Home
             </button>
-            <button
-              onClick={() => setCurrentView('caesar')}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#176B50] text-white text-xs font-semibold hover:bg-[#12553F] transition-colors cursor-pointer shadow-xs"
-            >
-              Interactive Caesar Cipher Lab &rarr;
-            </button>
           </div>
+
+          {/* E2EE Phones & Scrambled Encryption Animation Section (Positioned just above the guided simulator) */}
+          <div className="relative z-10 max-w-6xl mx-auto mb-10 rounded-3xl bg-[#F7F4EC] border border-[#D3CDC2] shadow-sm overflow-hidden">
+            <InteractiveE2EEJourney />
+          </div>
+
+          {/* Existing Guided Simulator */}
           <div className="relative z-10">
             <MainGuidedSimulator />
           </div>
         </motion.div>
-      )}
-
-      {currentView === 'caesar' && (
-        <div className="relative w-full min-h-screen">
-          <div className="fixed top-4 left-4 z-50">
-            <button
-              onClick={() => setCurrentView('simulator')}
-              className="px-4 py-2 rounded-full bg-[#153A32] text-white text-xs font-semibold hover:bg-[#176B50] transition-colors cursor-pointer shadow-md"
-            >
-              &larr; Back to E2EE Simulator
-            </button>
-          </div>
-          <CaesarCipherInteraction onScrollToTop={() => setCurrentView('simulator')} />
-        </div>
       )}
     </div>
   );

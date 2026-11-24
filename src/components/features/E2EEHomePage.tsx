@@ -106,18 +106,6 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
         </a>
 
         <div className="flex items-center gap-4">
-          <button
-            onClick={(e) => {
-              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-              onNavigateToSimulator({
-                x: rect.left + rect.width / 2,
-                y: rect.top + rect.height / 2,
-              });
-            }}
-            className="rounded-full border border-[#BAC8BB] px-4 sm:px-5 py-2 text-xs sm:text-sm font-medium text-[#153A32] hover:bg-[#E3EDE3] transition-colors cursor-pointer"
-          >
-            Try it yourself
-          </button>
         </div>
       </header>
 
@@ -206,27 +194,22 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                 onNavigateToSimulator(origin);
               }}
             />
-
-            {/* Subtle Supporting Line */}
-            <p className="text-xs text-[#52665F] mt-3.5 select-none">
-              A message you write. An experiment you control.
-            </p>
           </div>
 
           {/* RIGHT: Meera (Enlarged, Facing Inward, Holding Phone) */}
           <div className="w-full lg:w-[24%] flex flex-col items-center lg:items-start justify-center relative order-3 pt-6 lg:pt-0">
             <div className="relative w-[180px] sm:w-[220px] md:w-[250px] lg:w-[270px]">
-              {/* Received Speech Bubble */}
+              {/* Received Speech Bubble: Decrypts when packet arrives */}
               <motion.div
                 initial={false}
                 animate={
                   reducedMotion
                     ? { opacity: 1 }
                     : journeyPhase === 'animating'
-                    ? { opacity: [0, 0, 0, 1, 1], y: [6, 6, 6, 0, 0] }
+                    ? { opacity: [0, 0, 0, 0, 1, 1], y: [6, 6, 6, 6, 0, 0], scale: [0.95, 0.95, 0.95, 0.95, 1, 1] }
                     : { opacity: 1 }
                 }
-                transition={{ duration: 5.6, times: [0, 0.75, 0.82, 0.9, 1] }}
+                transition={{ duration: 5.6, times: [0, 0.72, 0.82, 0.86, 0.92, 1] }}
                 className="absolute -top-7 sm:-top-8 right-6 sm:right-10 z-20 bg-[#FFFEF9] border border-[#CCD7C7] text-[#153A32] text-xs sm:text-sm font-medium px-3 sm:px-3.5 py-1.5 rounded-t-xl rounded-bl-xl shadow-[0_6px_16px_rgba(21,58,50,0.06)] whitespace-nowrap"
               >
                 See you tomorrow?
@@ -248,11 +231,75 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
           </div>
         </div>
 
-        {/* Hero Baseline Footer matching Reference System */}
-        <div className="w-full flex items-center justify-between pt-6 border-t border-[#D3DBCF] text-[11px] sm:text-xs text-[#52665F] font-mono tracking-wider mt-4">
-          <span className="hidden sm:inline">PRIVATE AT BOTH ENDS</span>
-          <span className="mx-auto sm:mx-0 font-sans tracking-normal">Scroll to follow a message &darr;</span>
-          <span className="hidden sm:inline">CURIOUS IN BETWEEN</span>
+        {/* 
+          ANIMATED TRAIL BETWEEN AARAV'S PHONE AND MEERA'S PHONE:
+          Carries message in encrypted letters, travels along the curved trail across public network,
+          and delivers to Meera's phone where she decrypts it!
+        */}
+        <div className="relative w-full max-w-5xl mx-auto mt-4 px-4 flex flex-col items-center">
+          {/* Animated Journey Curve & Travelling Cipher Packet */}
+          <div className="relative w-full h-[76px] sm:h-[88px] overflow-visible">
+            {/* Dashed Sage/Emerald Journey Arc Line */}
+            <svg
+              className="absolute inset-0 w-full h-full pointer-events-none"
+              viewBox="0 0 900 80"
+              preserveAspectRatio="none"
+            >
+              <defs>
+                <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#176B50" stopOpacity="0.4" />
+                  <stop offset="50%" stopColor="#00a884" stopOpacity="0.9" />
+                  <stop offset="100%" stopColor="#176B50" stopOpacity="0.4" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M 60 70 C 260 70, 280 12, 450 12 C 620 12, 640 70, 840 70"
+                fill="none"
+                stroke="url(#arcGrad)"
+                strokeWidth="2"
+                strokeDasharray="4 6"
+              />
+            </svg>
+
+            {/* Travelling Encrypted Cipher Packet */}
+            <motion.div
+              initial={false}
+              animate={
+                reducedMotion
+                  ? { left: '50%', top: '12px', opacity: 1, scale: 1 }
+                  : journeyPhase === 'animating'
+                  ? {
+                      left: ['7%', '18%', '50%', '50%', '82%', '93%'],
+                      top: ['66px', '42px', '12px', '12px', '42px', '66px'],
+                      opacity: [0, 1, 1, 1, 1, 0],
+                      scale: [0.75, 0.9, 1.05, 1.05, 0.9, 0.75],
+                    }
+                  : { opacity: 0 }
+              }
+              transition={{
+                duration: 5.6,
+                times: [0, 0.18, 0.44, 0.60, 0.84, 1],
+                ease: 'easeInOut',
+              }}
+              style={{ transform: 'translate(-50%, -50%)' }}
+              className="absolute z-30 inline-flex items-center gap-2 rounded-full bg-[#153A32] text-[#F7F4EC] px-3.5 sm:px-4 py-1.5 shadow-[0_6px_20px_rgba(21,58,50,0.22)] border border-[#21493F] whitespace-nowrap"
+            >
+              <svg width="14" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4E5C9" strokeWidth="2">
+                <rect x="5" y="10" width="14" height="11" rx="2" />
+                <path d="M8 10V6a4 4 0 018 0v4" />
+              </svg>
+              <span className="font-mono text-[11px] sm:text-xs tracking-wider text-[#D8E5CA]">
+                {ciphertext}
+              </span>
+            </motion.div>
+          </div>
+
+          {/* Central Relay Caption */}
+          <div className="flex items-center gap-2 text-xs text-[#52665F] mt-1.5">
+            <span className="text-[#176B50] font-serif text-lg leading-none">⌁</span>
+            <strong className="font-semibold text-[#153A32]">Encrypted in transit:</strong>
+            <span>Public network relay only passes scrambled ciphertext — deciphered solely on Meera’s phone.</span>
+          </div>
         </div>
       </main>
     </div>
