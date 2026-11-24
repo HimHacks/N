@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThreeSquaresLoader } from './ThreeSquaresLoader';
-import { LumenInteractiveShader } from './features/LumenInteractiveShader';
+import { SoffitGradient, type SoffitGradientConfig } from './SoffitGradient';
 
 export type WordPreloaderPhase = 'idle' | 'expanding' | 'loading' | 'exiting';
 
@@ -280,44 +280,71 @@ const InstantDotMatrixDigit: React.FC<{ char: string; dotSize?: number; color?: 
   );
 };
 
+// Exact Soffit 2 WebGL2 Gradient Configuration provided by user
+const SOFFIT_LOADING_CONFIG: SoffitGradientConfig = {
+  bgColor: '#062334',
+  colorA: '#2b7be8',
+  colorB: '#2bc8e8',
+  colorC: '#4fe0d8',
+  colorD: '#7fe8a0',
+  ambient: 0.24,
+  amount: 0.2,
+  bounce: 0.38,
+  bounceCurve: 4.25,
+  breathe: 0.29,
+  contrast: 2.45,
+  cursor: 1,
+  curve: 3.32,
+  direct: 0.97,
+  dither: 0.58,
+  flow: 0.475,
+  glow: 0.38,
+  grain: 0,
+  grainAnim: 0,
+  horizon: 0.36,
+  lacunarity: 1.99,
+  lift: 0.11,
+  maxDpr: 1,
+  midpoint: 0.57,
+  moteScale: 7,
+  motes: 0.074,
+  parallax: 0.0137,
+  rock: 0.12,
+  roughness: 0.29,
+  scale: 1,
+  sink: 0.24,
+  speed: 0.33,
+  spillCentre: 0.3,
+  spillFloor: 0.26,
+  spillWidth: 2.18,
+  spread: 0.41,
+  steer: -0.13,
+  sweep: 0.5,
+  tilt: 1.87,
+  vignette: 0.21,
+  warp: 2.58,
+  warpScale: 0.78,
+};
+
 // Dot-Matrix Letter component rendering genuine circular dots (as shown in user reference image)
 const DotMatrixLetter: React.FC<{
   char: string;
   isLocked: boolean;
-  dotSize?: number;
-}> = ({ char, isLocked, dotSize = 1.1 }) => {
-  const pattern =
-    LETTER_DOT_PATTERNS[char] ||
-    DIGIT_PATTERNS[char] ||
-    LETTER_DOT_PATTERNS['S'];
-
+}> = ({ char, isLocked }) => {
   return (
-    <div
-      className="inline-grid gap-[1px] p-[0.5px] select-none"
+    <span
+      className="font-terminal-dots inline-block tracking-[0.14em] select-none uppercase"
       style={{
-        gridTemplateColumns: `repeat(5, ${dotSize}px)`,
-        gridTemplateRows: `repeat(7, ${dotSize}px)`,
+        fontSize: '11.5px',
+        lineHeight: 1,
+        color: isLocked ? '#111b21' : '#4b5563',
+        textShadow: isLocked
+          ? '0 0.5px 1px rgba(0,0,0,0.22)'
+          : 'none',
       }}
     >
-      {pattern.flatMap((row, r) =>
-        row.map((on, c) => (
-          <div
-            key={`${r}-${c}`}
-            className="rounded-full"
-            style={{
-              width: dotSize,
-              height: dotSize,
-              backgroundColor: on
-                ? isLocked
-                  ? '#111b21'
-                  : '#4b5563'
-                : 'transparent',
-              opacity: on ? 1 : 0,
-            }}
-          />
-        ))
-      )}
-    </div>
+      {char}
+    </span>
   );
 };
 
@@ -468,7 +495,7 @@ const ScrollLotteryMachine: React.FC<{ progress: number; isLoaded: boolean }> = 
   }, []);
 
   return (
-    <div className="flex items-center gap-[3px]">
+    <div className="flex items-center gap-[2px]">
       {chars.map((ch, idx) => {
         const isLocked = isLoaded || progress >= LOCK_THRESHOLDS[idx];
         return (
@@ -476,7 +503,6 @@ const ScrollLotteryMachine: React.FC<{ progress: number; isLoaded: boolean }> = 
             key={idx}
             char={ch}
             isLocked={isLocked}
-            dotSize={1.1}
           />
         );
       })}
@@ -644,8 +670,9 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
             {/* 
               Loading page background:
               Base is authentic WhatsApp Biscotti Cream (#efeae2).
-              The animated fluid gradient (cyan, deep emerald, and light green with WhatsApp bubble mint highlights)
-              lives at the bottom covering strictly 3/8 of the screen (37.5%), with lively flame-like undulating crests!
+              The animated fluid gradient (Soffit 2 WebGL2 with cyan, deep emerald, light green & blue tones)
+              anchors at the bottom 3/8 of the screen (37.5%), with lively flame-like undulating crests
+              expanding organically upward!
             */}
             <motion.div
               initial={{ y: '100%', opacity: 0 }}
@@ -658,35 +685,32 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   : { y: '100%', opacity: 0 }
               }
               transition={{
-                duration: 2.8,
+                duration: 2.4,
                 ease: [0.16, 1, 0.3, 1],
                 delay: 0.1,
               }}
-              className="absolute inset-x-0 bottom-0 h-[37.5%] pointer-events-none overflow-hidden z-10"
+              className="absolute inset-x-0 bottom-0 h-[45%] pointer-events-none overflow-hidden z-10"
               style={{
-                // Strictly 3/8 height ratio (37.5%) with soft feathered top mask blending into Biscotti Cream (#efeae2)
                 maskImage:
-                  'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.55) 82%, rgba(0,0,0,0.12) 94%, transparent 100%)',
+                  'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 50%, rgba(0,0,0,0.65) 75%, rgba(0,0,0,0.2) 90%, transparent 100%)',
                 WebkitMaskImage:
-                  'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.55) 82%, rgba(0,0,0,0.12) 94%, transparent 100%)',
+                  'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 50%, rgba(0,0,0,0.65) 75%, rgba(0,0,0,0.2) 90%, transparent 100%)',
               }}
             >
-              {/* Lively flame-like undulating motion: drifting, rising, and cresting like a living wave while staying within 3/8 boundary */}
+              {/* Lively flame-like undulating motion: cresting and moving upward dynamically like a living flame */}
               <motion.div
                 animate={{
-                  y: [0, -18, -6, -26, -10, 0],
-                  x: [0, 12, -8, 16, -12, 0],
-                  scaleY: [1, 1.14, 1.05, 1.18, 1.08, 1],
-                  scaleX: [1, 1.04, 0.98, 1.05, 0.99, 1],
+                  y: [0, -22, -8, -32, -14, 0],
+                  scaleY: [1, 1.16, 1.06, 1.22, 1.1, 1],
                 }}
                 transition={{
-                  duration: 8.5,
+                  duration: 7.2,
                   repeat: Infinity,
                   ease: [0.45, 0.05, 0.55, 0.95],
                 }}
                 className="absolute inset-0 w-full h-[125%] -top-[25%]"
               >
-                <LumenInteractiveShader />
+                <SoffitGradient config={SOFFIT_LOADING_CONFIG} />
               </motion.div>
             </motion.div>
 

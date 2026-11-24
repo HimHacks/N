@@ -83,16 +83,16 @@ void main(){
   float a = m(uv + d1);
   vec3 col = mix(u_pal_base, u_pal_warm, a * 2.2);
 
-  // Pale WhatsApp outgoing message mint tint (#E7FCE3) - user requested +10% presence
+  // Pale WhatsApp outgoing message mint tint (#E7FCE3) - boosted presence per user request
   vec3 u_pal_bubble_mint = vec3(0.898, 0.984, 0.886);
-  col = mix(col, u_pal_bubble_mint, a * 0.85);
+  col = mix(col, u_pal_bubble_mint, a * 1.35);
 
   float b = m(uv + a * 2.4 + d2);
   col = mix(col, u_pal_mid, b * 0.85);
 
-  // Subdued cyan influence: reduced to prevent overwhelming cyan dominance
+  // Subdued cyan influence: reduced so background is not overwhelmed by cyan
   float dd = m(uv + b * 3.5 + d3);
-  col = mix(col, u_pal_cool, dd * 0.45);
+  col = mix(col, u_pal_cool, dd * 0.22);
 
   col += u_pal_cursor * fall;
 
