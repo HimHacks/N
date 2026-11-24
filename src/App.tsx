@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { E2EEHomePage } from './components/features/E2EEHomePage';
 import { MainGuidedSimulator } from './components/features/MainGuidedSimulator';
 import { CaesarCipherInteraction } from './components/features/CaesarCipherInteraction';
@@ -200,13 +201,24 @@ export const App: React.FC = () => {
     };
   }, [preloaderPhase, isCompilingFinished]);
 
-  // When reverse downward/upward slide finishes, switch to simulator and reset preloader
+  // When unified curtain exit finishes, lock in simulator view and reset preloader
   const handlePreloaderExited = () => {
     setCurrentView('simulator');
     setPreloaderPhase('idle');
     setIsInteractiveScroll(false);
     setScrollFraction(0);
+    setIsCompilingFinished(false);
   };
+
+  // Close control handler: cleanly dismisses loading screen back to homepage
+  const handleClosePreloader = () => {
+    setPreloaderPhase('idle');
+    setIsInteractiveScroll(false);
+    setScrollFraction(0);
+    setIsCompilingFinished(false);
+  };
+
+  const showSimulatorLayer = currentView === 'simulator' || preloaderPhase === 'exiting';
 
   return (
     <div className="relative w-full min-h-screen bg-[#F7F4EC] text-[#153A32] selection:bg-[#176B50] selection:text-white">
@@ -220,8 +232,8 @@ export const App: React.FC = () => {
 
       {/* 
         Compiling Studio Preloader with Rising WebGL2 Gradient & Lumen Shader Background:
-        - Interactive real-time scrubbing with 75% auto-snap threshold
-        - Auto-scrolls on clicking 'Find out in 2 minutes'
+        - Interactive real-time scrubbing with 50% auto-snap threshold
+        - Auto-scrolls on clicking 'Scroll to find out in 2 minutes'
       */}
       <WordsPreloader
         phase={preloaderPhase}
@@ -232,6 +244,7 @@ export const App: React.FC = () => {
         onExpanded={handleBubbleExpanded}
         onLoadingComplete={handleLoadingComplete}
         onExited={handlePreloaderExited}
+        onClose={handleClosePreloader}
       />
 
       {/* 
@@ -240,15 +253,21 @@ export const App: React.FC = () => {
         - 'simulator': Working E2EE Simulator (Sender Device A, Delivery Server Relay, Recipient Device B)
         - 'caesar': Interactive Caesar Cipher
       */}
-      {currentView === 'home' && (
+      {currentView === 'home' && preloaderPhase !== 'exiting' && (
         <E2EEHomePage
           onNavigateToSimulator={handleStartDeepDive}
           isInitialReady={hasVisited}
         />
       )}
 
-      {currentView === 'simulator' && (
-        <div ref={simulatorRef} className="relative w-full min-h-screen bg-[#E9EEE5] py-8 px-4 sm:px-8">
+      {showSimulatorLayer && (
+        <motion.div
+          ref={simulatorRef}
+          initial={preloaderPhase === 'exiting' ? { opacity: 0.45, y: 36, scale: 0.985 } : false}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.95, ease: [0.16, 1, 0.3, 1] }}
+          className="relative w-full min-h-screen bg-[#E9EEE5] py-8 px-4 sm:px-8"
+        >
           <div className="max-w-6xl mx-auto mb-4 flex items-center justify-between">
             <button
               onClick={() => setCurrentView('home')}
@@ -264,7 +283,7 @@ export const App: React.FC = () => {
             </button>
           </div>
           <MainGuidedSimulator />
-        </div>
+        </motion.div>
       )}
 
       {currentView === 'caesar' && (

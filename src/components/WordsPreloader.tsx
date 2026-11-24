@@ -14,6 +14,7 @@ interface WordsPreloaderProps {
   onExpanded?: () => void;
   onLoadingComplete?: () => void;
   onExited?: () => void;
+  onClose?: () => void;
 }
 
 // 5x7 Dot-matrix glyph definitions for loading counter digits
@@ -257,55 +258,46 @@ const VerticalSlotReel: React.FC<{
     }
   }, [isLoaded, progress, targetIndex]);
 
+  // Clean deterministic stepping without side-effects inside state updaters
+  // Prevents double-scheduling in StrictMode and eliminates micro-hitches on Reel 3 ('O')
+  const [stepDuration, setStepDuration] = useState(0.05);
+
   useEffect(() => {
-    // Only begin rolling once entrance animation has fully completed and settled
-    if (!isEntranceComplete) return;
+    if (!isEntranceComplete || isLocked || tapeIndex >= targetIndex) return;
 
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    let active = true;
+    // For final slot (Reel 5, 'L'): hold on penultimate 'E' (targetIndex - 1) until 100% completion
+    if (isFinal && tapeIndex >= targetIndex - 1 && !isLoadedRef.current && progressRef.current < 100) {
+      return;
+    }
 
-    const tick = () => {
-      if (!active) return;
+    let stepSpeed = 50 + (slotIndex % 3) * 5;
+    if (isFinal) {
+      const currentProgress = progressRef.current;
+      if (currentProgress >= 96) {
+        stepSpeed = 360; // Slow deliberate roll into 'E'
+      } else if (currentProgress >= 88) {
+        stepSpeed = 200; // Progressive deceleration
+      } else if (currentProgress >= 75) {
+        stepSpeed = 110; // Early deceleration
+      } else {
+        stepSpeed = 58;
+      }
+    }
+
+    setStepDuration(stepSpeed / 1000);
+
+    const timer = setTimeout(() => {
       setTapeIndex((prev) => {
         if (prev >= targetIndex) return targetIndex;
-
-        // For the final slot (Reel 5, 'L'):
-        // Sits on penultimate 'E' (targetIndex - 1) during 99% pause until isLoaded/100%
         if (isFinal && prev >= targetIndex - 1 && !isLoadedRef.current && progressRef.current < 100) {
-          timer = setTimeout(tick, 35);
           return prev;
         }
-
-        const next = prev + 1;
-        if (next >= targetIndex) {
-          return targetIndex;
-        }
-
-        // Dynamic step speed
-        let stepSpeed = 46 + (slotIndex % 3) * 4;
-        if (isFinal) {
-          const currentProgress = progressRef.current;
-          if (currentProgress >= 96) {
-            stepSpeed = 380; // Slow deliberate roll through E
-          } else if (currentProgress >= 88) {
-            stepSpeed = 190; // Noticeable progressive deceleration
-          } else if (currentProgress >= 75) {
-            stepSpeed = 100; // Early deceleration
-          }
-        }
-
-        timer = setTimeout(tick, stepSpeed);
-        return next;
+        return prev + 1;
       });
-    };
+    }, stepSpeed);
 
-    timer = setTimeout(tick, 46 + (slotIndex % 3) * 4);
-
-    return () => {
-      active = false;
-      if (timer) clearTimeout(timer);
-    };
-  }, [targetIndex, isFinal, slotIndex, isEntranceComplete]);
+    return () => clearTimeout(timer);
+  }, [tapeIndex, targetIndex, isFinal, slotIndex, isEntranceComplete, isLocked, progress]);
 
   const cellHeight = 20;
   const cellWidth = 14;
@@ -327,11 +319,11 @@ const VerticalSlotReel: React.FC<{
             ? {
                 type: 'spring',
                 stiffness: isFinal ? 180 : 300,
-                damping: isFinal ? 20 : 24,
+                damping: isFinal ? 22 : 26,
                 mass: isFinal ? 1.0 : 0.8,
               }
             : {
-                duration: (isFinal && progress >= 88 ? 0.18 : 0.045),
+                duration: stepDuration,
                 ease: 'linear',
               }
         }
@@ -376,6 +368,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   onExpanded,
   onLoadingComplete,
   onExited,
+  onClose,
 }) => {
   const [progress, setProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -387,17 +380,29 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
     onLoadingCompleteRef.current = onLoadingComplete;
   }, [onLoadingComplete]);
 
+  // Keyboard Escape accessibility for Close control
+  useEffect(() => {
+    if (phase === 'idle' || !onClose) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [phase, onClose]);
+
   // Reset state when preloader returns to idle
   useEffect(() => {
-    if (phase === 'idle') {
+    if (phase === 'idle' && !isInteractiveScroll) {
       hasFinishedRef.current = false;
       setIsLoaded(false);
       setProgress(0);
       setIsEntranceComplete(false);
     }
-  }, [phase]);
+  }, [phase, isInteractiveScroll]);
 
-  // Cinematic pacing loading animation (calm, unhurried):
+  // Deliberate, breathing loading cadence:
   // GATED: Only starts once the upward pull entrance has fully completed and settled!
   useEffect(() => {
     if (phase === 'loading' && isEntranceComplete) {
@@ -420,33 +425,33 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
 
         setProgress(current);
 
-        // Compute delay based on cinematic curve
-        let delay = 30;
+        // Deliberate, natural breathing pace
+        let delay = 34;
         if (current >= 99) {
-          delay = 600; // Dramatic cinematic pause at 99% before popping to 100%
-        } else if (current >= 92) {
-          delay = 140 + (current - 92) * 20; // Slow down intensely
-        } else if (current >= 75) {
-          delay = 45 + (current - 75) * 6; // Gradual deceleration
+          delay = 680; // Intentional 99% suspense pause before synchronized 100% + final 'L'
+        } else if (current >= 88) {
+          delay = 120 + (current - 88) * 14; // Smooth heavy deceleration
+        } else if (current >= 70) {
+          delay = 50 + (current - 70) * 4; // Gradual early deceleration
         } else {
-          delay = 30; // Steady unhurried initial progress
+          delay = 34; // Steady, readable progression
         }
 
         timer = setTimeout(step, delay);
       };
 
-      timer = setTimeout(step, 80);
+      timer = setTimeout(step, 120);
 
       return () => {
         if (timer) clearTimeout(timer);
       };
-    } else if (phase === 'idle') {
+    } else if (phase === 'idle' && !isInteractiveScroll) {
       hasFinishedRef.current = false;
       setProgress(0);
       setIsLoaded(false);
       setIsEntranceComplete(false);
     }
-  }, [phase, isEntranceComplete]);
+  }, [phase, isEntranceComplete, isInteractiveScroll]);
 
   // Normalized coordinates in 1000x1000 viewBox:
   // Button origin (bx, by) defaults to bottom-right hotline zone (~860, 920)
@@ -481,6 +486,8 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   const currentBaselineYRef = useRef(1000);
   if (isInteractiveScroll && phase === 'idle') {
     currentBaselineYRef.current = Math.max(0, Math.min(1000, Math.round((1 - scrollFraction) * 1000)));
+  } else if (phase === 'idle' && !isInteractiveScroll) {
+    currentBaselineYRef.current = 1000;
   }
 
   // Track physical surface Y position for genuine upward pull and reverse-scroll retreat:
@@ -490,7 +497,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   const currentSurfaceYRef = useRef(100);
   if (isInteractiveScroll && phase === 'idle') {
     currentSurfaceYRef.current = Math.max(0, Math.min(100, Math.round((1 - scrollFraction * 1.4) * 100)));
-  } else if (phase === 'idle') {
+  } else if (phase === 'idle' && !isInteractiveScroll) {
     currentSurfaceYRef.current = 100;
   }
 
@@ -509,12 +516,28 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   return (
     <AnimatePresence>
       {isVisible && (
-        <div className="fixed inset-0 z-[120] pointer-events-auto overflow-hidden select-none">
+        <motion.div
+          className="fixed inset-0 z-[120] pointer-events-auto overflow-hidden select-none"
+          initial={{ y: '0vh' }}
+          animate={
+            phase === 'exiting'
+              ? {
+                  y: '-100vh',
+                  transition: { duration: 0.95, ease: [0.76, 0, 0.24, 1] },
+                }
+              : { y: '0vh' }
+          }
+          onAnimationComplete={() => {
+            if (phase === 'exiting' && onExited) {
+              onExited();
+            }
+          }}
+        >
           {/* 
             ORGANIC BISCOTTI CREAM ADVANCING SURFACE:
             - When scrubbing: continuously morphs along an asymmetric fluid wave contour.
             - When committed: smoothly rolls up with continuous multi-keyframe contour morphing (wave0 -> wave4).
-            - No instantaneous filling of left or right edges; cohesive fluid propagation across the entire viewport.
+            - When exiting: lifts together with the loading surface to uncover the simulator underneath.
           */}
           <svg
             className="fixed inset-0 z-20 w-full h-full pointer-events-none"
@@ -535,7 +558,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   d: [currentInteractiveWave, midWayWave, wave4],
                 }}
                 transition={{
-                  duration: 1.1,
+                  duration: 1.05,
                   ease: [0.16, 1, 0.3, 1],
                   times: [0, 0.45, 1],
                 }}
@@ -548,18 +571,22 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
           {/* 
             GENUINE UPWARD-REVEAL LOADING SURFACE:
             - Progressively emerges into the viewport through a controlled upward movement.
+            - Starts from currentSurfaceYRef.current (100vh on button click, or current scroll position).
             - Follows reverse scrolling naturally without resetting or abrupt jumps.
             - Settles into place with smooth natural deceleration.
             - Loading animation (counter and reels) only begins after entrance is 100% complete.
           */}
           <motion.div
             className="fixed inset-0 z-30 flex items-center justify-center overflow-hidden"
-            initial={false}
+            initial={{
+              y: `${currentSurfaceYRef.current}vh`,
+              opacity: triggerType === 'button' ? 0.65 : Math.min(1, Math.max(0.15, (100 - currentSurfaceYRef.current) / 45)),
+            }}
             animate={
               isInteractiveScroll && phase === 'idle'
                 ? {
                     y: `${currentSurfaceYRef.current}vh`,
-                    opacity: Math.min(1, Math.max(0, (100 - currentSurfaceYRef.current) / 45)),
+                    opacity: Math.min(1, Math.max(0.15, (100 - currentSurfaceYRef.current) / 45)),
                     transition: { duration: 0.08, ease: 'easeOut' },
                   }
                 : phase === 'expanding'
@@ -568,16 +595,11 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                     opacity: 1,
                     transition: { duration: 1.05, ease: [0.16, 1, 0.3, 1] },
                   }
-                : phase === 'loading'
+                : phase === 'loading' || phase === 'exiting'
                 ? {
                     y: '0vh',
                     opacity: 1,
                     transition: { duration: 0.35, ease: 'easeOut' },
-                  }
-                : phase === 'exiting'
-                ? {
-                    y: '-100vh',
-                    transition: { duration: 0.85, ease: [0.76, 0, 0.24, 1] },
                   }
                 : { y: '100vh', opacity: 0 }
             }
@@ -585,8 +607,6 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
               if (phase === 'expanding') {
                 setIsEntranceComplete(true);
                 if (onExpanded) onExpanded();
-              } else if (phase === 'exiting' && onExited) {
-                onExited();
               }
             }}
           >
@@ -594,7 +614,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
               Loading page background:
               Anchored at the bottom at 3/8 height (37.5%) with lively undulating crest.
             */}
-            {(isInteractiveScroll || phase === 'expanding' || phase === 'loading') && (
+            {(isInteractiveScroll || phase === 'expanding' || phase === 'loading' || phase === 'exiting') && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -632,10 +652,47 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
             )}
 
             {/* Studio Card (Loading Screen) - Unified physical surface progressively pulled upward */}
-            {(isInteractiveScroll || phase === 'expanding' || phase === 'loading') && (
+            {(isInteractiveScroll || phase === 'expanding' || phase === 'loading' || phase === 'exiting') && (
               <div
                 className="relative z-20 w-full max-w-4xl h-[78vh] max-h-[580px] bg-white/95 rounded-3xl shadow-[0_30px_90px_rgba(11,20,26,0.22)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-[#d1d7db]/80 mx-4 sm:mx-8 backdrop-blur-xl"
               >
+                {/* Top Header Bar with Integrated, Accessible Close Control */}
+                <div className="flex items-center justify-between w-full border-b border-[#e9edef] pb-3.5">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                        isLoaded ? 'bg-[#176B50]' : 'bg-[#25D366] animate-pulse'
+                      }`}
+                    />
+                    <span className="text-[11px] font-mono uppercase tracking-[0.14em] text-[#52665F] select-none">
+                      {isLoaded ? 'Channel Ready — Scroll to Enter' : isEntranceComplete ? 'Preparing Simulator' : 'Opening Studio'}
+                    </span>
+                  </div>
+
+                  {onClose && (
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      aria-label="Close loading screen and return to home"
+                      className="inline-flex items-center justify-center gap-1.5 min-h-[36px] px-3.5 py-1.5 rounded-full border border-[#d1d7db] bg-[#f8f9fa] hover:bg-[#e9edef] active:scale-[0.97] text-[#153A32] text-xs font-medium transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#176B50]"
+                    >
+                      <span>Close</span>
+                      <svg
+                        width="13"
+                        height="13"
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M3 3L11 11M11 3L3 11" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+
                 {/* Center Loading Telemetry: Space Grotesk font for "Loading" with calm roll down exit */}
                 <div className="flex flex-col md:flex-row items-center justify-between my-auto w-full gap-8">
                   {/* Left: 'Loading' animated with calm roll down exit when 100% reached */}
@@ -703,7 +760,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
               </div>
             )}
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );
