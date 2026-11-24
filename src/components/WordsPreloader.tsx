@@ -432,6 +432,8 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   const progressStr = String(Math.min(100, progress)).padStart(3, '0') + '%';
   const digits = progressStr.split('');
 
+  const isVisible = phase !== 'idle' || isInteractiveScroll;
+
   // SVG multi-point organic boundary for the advancing biscotti cream surface:
   // Instead of a straight horizontal line or instant edge fill, the crest forms an organically undulating wave
   // with asymmetric peaks and troughs that deform and morph fluidly as the cream advances upward across the viewport.
