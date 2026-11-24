@@ -13,7 +13,7 @@ interface WordsPreloaderProps {
   onExited?: () => void;
 }
 
-// 5x7 Dot-matrix glyph definitions for loading counter
+// 5x7 Dot-matrix glyph definitions for loading counter digits
 const DIGIT_PATTERNS: Record<string, number[][]> = {
   '0': [
     [0, 1, 1, 1, 0],
@@ -116,6 +116,137 @@ const DIGIT_PATTERNS: Record<string, number[][]> = {
   ],
 };
 
+// 5x7 Dot-matrix glyph definitions for authentic circular dot typography
+// Specifically crafted to match the user's reference image (discrete circular dots in 5x7 grid)
+const LETTER_DOT_PATTERNS: Record<string, number[][]> = {
+  S: [
+    [0, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [0, 1, 1, 1, 0],
+    [0, 0, 0, 0, 1],
+    [0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 0],
+  ],
+  C: [
+    [0, 1, 1, 1, 0],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 1],
+    [0, 1, 1, 1, 0],
+  ],
+  R: [
+    [1, 1, 1, 1, 0],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [1, 1, 1, 1, 0],
+    [1, 0, 1, 0, 0],
+    [1, 0, 0, 1, 0],
+    [1, 0, 0, 0, 1],
+  ],
+  O: [
+    [0, 1, 1, 1, 0],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [0, 1, 1, 1, 0],
+  ],
+  L: [
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 1, 1, 1, 1],
+  ],
+  P: [
+    [1, 1, 1, 1, 0],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [1, 1, 1, 1, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+  ],
+  A: [
+    [0, 1, 1, 1, 0],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+  ],
+  B: [
+    [1, 1, 1, 1, 0],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [1, 1, 1, 1, 0],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [1, 1, 1, 1, 0],
+  ],
+  E: [
+    [1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 1, 1, 1, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 1, 1, 1, 1],
+  ],
+  K: [
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 1, 0],
+    [1, 0, 1, 0, 0],
+    [1, 1, 0, 0, 0],
+    [1, 0, 1, 0, 0],
+    [1, 0, 0, 1, 0],
+    [1, 0, 0, 0, 1],
+  ],
+  T: [
+    [1, 1, 1, 1, 1],
+    [0, 0, 1, 0, 0],
+    [0, 0, 1, 0, 0],
+    [0, 0, 1, 0, 0],
+    [0, 0, 1, 0, 0],
+    [0, 0, 1, 0, 0],
+    [0, 0, 1, 0, 0],
+  ],
+  U: [
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [0, 1, 1, 1, 0],
+  ],
+  X: [
+    [1, 0, 0, 0, 1],
+    [0, 1, 0, 1, 0],
+    [0, 0, 1, 0, 0],
+    [0, 0, 1, 0, 0],
+    [0, 0, 1, 0, 0],
+    [0, 1, 0, 1, 0],
+    [1, 0, 0, 0, 1],
+  ],
+  Z: [
+    [1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 1],
+    [0, 0, 0, 1, 0],
+    [0, 0, 1, 0, 0],
+    [0, 1, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 1, 1, 1, 1],
+  ],
+};
+
 const InstantDotMatrixDigit: React.FC<{ char: string; dotSize?: number; color?: string }> = ({
   char,
   dotSize = 5,
@@ -134,13 +265,54 @@ const InstantDotMatrixDigit: React.FC<{ char: string; dotSize?: number; color?: 
         row.map((on, c) => (
           <div
             key={`${r}-${c}`}
-            className="rounded-[1.5px]"
+            className="rounded-full"
             style={{
               width: dotSize,
               height: dotSize,
               backgroundColor: on ? color : 'rgba(0, 0, 0, 0.06)',
               opacity: on ? 1 : 0.2,
               transition: 'none',
+            }}
+          />
+        ))
+      )}
+    </div>
+  );
+};
+
+// Dot-Matrix Letter component rendering genuine circular dots (as shown in user reference image)
+const DotMatrixLetter: React.FC<{
+  char: string;
+  isLocked: boolean;
+  dotSize?: number;
+}> = ({ char, isLocked, dotSize = 2.4 }) => {
+  const pattern =
+    LETTER_DOT_PATTERNS[char] ||
+    DIGIT_PATTERNS[char] ||
+    LETTER_DOT_PATTERNS['S'];
+
+  return (
+    <div
+      className="inline-grid gap-[2px] p-0.5 select-none"
+      style={{
+        gridTemplateColumns: `repeat(5, ${dotSize}px)`,
+        gridTemplateRows: `repeat(7, ${dotSize}px)`,
+      }}
+    >
+      {pattern.flatMap((row, r) =>
+        row.map((on, c) => (
+          <div
+            key={`${r}-${c}`}
+            className="rounded-full"
+            style={{
+              width: dotSize,
+              height: dotSize,
+              backgroundColor: on
+                ? isLocked
+                  ? '#111b21'
+                  : '#4b5563'
+                : 'transparent',
+              opacity: on ? 1 : 0,
             }}
           />
         ))
@@ -194,8 +366,9 @@ const RollDownText: React.FC<{
 // As loading progress advances, slot 0 ('S') locks, then slot 1 ('C'), etc.
 // The final letter ('L') begins slowing down dramatically like the last reel of a lottery machine,
 // pauses suspensefully at 99% ("cheating the letters slowly"), and snaps to 'L' simultaneously when 100% hits!
+// All characters are rendered as authentic circular dot-matrix glyphs!
 const TARGET_WORD = 'SCROLL';
-const CHAR_POOL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('');
+const CHAR_POOL = ['S', 'C', 'R', 'O', 'L', 'P', 'A', 'B', 'E', 'K', 'T', 'U', 'X', 'Z'];
 const LOCK_THRESHOLDS = [18, 36, 54, 72, 88, 100];
 
 const ScrollLotteryMachine: React.FC<{ progress: number; isLoaded: boolean }> = ({
@@ -203,7 +376,7 @@ const ScrollLotteryMachine: React.FC<{ progress: number; isLoaded: boolean }> = 
   isLoaded,
 }) => {
   const [chars, setChars] = useState<string[]>(() =>
-    TARGET_WORD.split('').map((_, i) => CHAR_POOL[(i * 7) % CHAR_POOL.length])
+    TARGET_WORD.split('').map((_, i) => CHAR_POOL[(i * 3) % CHAR_POOL.length])
   );
 
   const progressRef = useRef(progress);
@@ -275,21 +448,16 @@ const ScrollLotteryMachine: React.FC<{ progress: number; isLoaded: boolean }> = 
   }, []);
 
   return (
-    <div className="flex items-center text-sm sm:text-base font-mono tracking-wider">
+    <div className="flex items-center gap-1.5 sm:gap-2">
       {chars.map((ch, idx) => {
         const isLocked = isLoaded || progress >= LOCK_THRESHOLDS[idx];
         return (
-          <span
+          <DotMatrixLetter
             key={idx}
-            className={`inline-block text-center select-none transition-all duration-150 ${
-              isLocked
-                ? 'text-[#111b21] font-bold scale-100'
-                : 'text-[#667781] font-normal scale-95 opacity-80'
-            }`}
-            style={{ width: '1.25ch' }}
-          >
-            {ch}
-          </span>
+            char={ch}
+            isLocked={isLocked}
+            dotSize={2.5}
+          />
         );
       })}
     </div>
@@ -307,7 +475,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   const [isLoaded, setIsLoaded] = useState(false);
   const hasFinishedRef = useRef(false);
 
-  // Cinematic pacing loading animation (calm, unhurried, giving fluid ripples time to rise):
+  // Cinematic pacing loading animation (calm, unhurried):
   // - 1% to 75%: smooth steady progress (~30ms per tick)
   // - 75% to 92%: begins slowing down noticeably (~75ms per tick)
   // - 92% to 98%: decelerates heavily (~160ms per tick)
@@ -363,20 +531,26 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   // Compute normalized button origin coordinates for the warping animation
   const winW = typeof window !== 'undefined' ? window.innerWidth : 1440;
   const winH = typeof window !== 'undefined' ? window.innerHeight : 900;
-  const bx = buttonOrigin ? Math.round((buttonOrigin.x / winW) * 1000) : 850;
+  const bx = buttonOrigin ? Math.round((buttonOrigin.x / winW) * 1000) : 840;
   const by = buttonOrigin ? Math.round((buttonOrigin.y / winH) * 1000) : 900;
 
-  // Mathematically smooth 4-phase SVG cubic Bezier curve warping:
-  // Starts strictly at the clicked button (bx, by).
-  // Phase 1: Surges down to bottom edge and spreads along bottom towards the left edge first!
-  // Phase 2: Wraps up around the left edge to the top and sweeps across the page.
-  // Phase 3: Finally fills in and seals the bottom-right corner!
-  const pathInitial = `M ${bx} ${by - 2} C ${bx + 1} ${by - 2}, ${bx + 2} ${by - 1}, ${bx + 2} ${by} C ${bx + 2} ${by + 1}, ${bx + 1} ${by + 2}, ${bx} ${by + 2} C ${bx - 1} ${by + 2}, ${bx - 2} ${by + 1}, ${bx - 2} ${by} C ${bx - 2} ${by - 1}, ${bx - 1} ${by - 2}, ${bx} ${by - 2} Z`;
-  const pathStage1Edges = `M ${bx - 50} 600 C 250 500, 0 650, 0 850 C 0 980, 200 1000, 600 1000 C 850 1000, ${bx} 980, ${bx} 900 C ${bx} 800, ${bx} 700, ${bx - 50} 600 Z`;
-  const pathStage2WarpAround = `M 0 0 C 450 0, 850 0, 1000 0 C 1000 350, 1000 650, 920 720 C 780 780, 750 950, 500 1000 C 200 1000, 0 1000, 0 800 C 0 500, 0 250, 0 0 Z`;
-  const pathFull = `M 0 0 C 350 0, 650 0, 1000 0 C 1000 350, 1000 650, 1000 1000 C 650 1000, 350 1000, 0 1000 C 0 650, 0 350, 0 0 Z`;
+  // Exact warping flow requested by user:
+  // 1. Expands from button to the nearest edges (right side and bottom side).
+  // 2. Then fully expands across the rest of the website to other corners.
+  // 3. Specifically, the right-bottom corner gets filled last!
+  // 4. Smooth continuous morphing without any rectangle snapping.
+  const pathInitial = `M ${bx} ${by - 4} C ${bx + 4} ${by - 4}, ${bx + 4} ${by + 4}, ${bx} ${by + 4} C ${bx - 4} ${by + 4}, ${bx - 4} ${by - 4}, ${bx} ${by - 4} C ${bx + 4} ${by - 4}, ${bx + 4} ${by + 4}, ${bx} ${by + 4} C ${bx - 4} ${by + 4}, ${bx - 4} ${by - 4}, ${bx} ${by - 4} Z`;
 
-  const customEase = [0.22, 1, 0.36, 1] as const;
+  // Stage 1: Hits the nearest edges (right side x=1000, and bottom side y=1000) while holding back corner (1000, 1000)
+  const pathNearestEdges = `M ${bx - 120} ${by - 180} C 960 ${by - 120}, 1000 ${by - 80}, 1000 ${by} C 1000 ${by + 60}, 940 920, 920 920 C 920 920, ${bx + 40} 1000, ${bx} 1000 C ${bx - 80} 1000, ${bx - 180} 960, ${bx - 120} ${by - 180} Z`;
+
+  // Stage 2: Sweeps across the entire website (top-right, top-left, bottom-left), keeping bottom-right corner concave
+  const pathSweepWholeSite = `M 0 0 C 450 0, 850 0, 1000 0 C 1000 350, 1000 650, 930 780 C 850 860, 880 940, 780 1000 C 450 1000, 0 1000, 0 1000 C 0 650, 0 350, 0 0 Z`;
+
+  // Stage 3: Finally fills and seals the right-bottom corner last!
+  const pathCornerFilledLast = `M 0 0 C 450 0, 850 0, 1000 0 C 1000 350, 1000 650, 1000 1000 C 650 1000, 350 1000, 0 1000 C 0 650, 0 350, 0 0 Z`;
+
+  const customEase = [0.25, 1, 0.35, 1] as const;
 
   const progressStr = String(Math.min(100, progress)).padStart(3, '0') + '%';
   const digits = progressStr.split('');
@@ -387,7 +561,11 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
     <AnimatePresence>
       {isVisible && (
         <div className="fixed inset-0 z-[120] pointer-events-auto overflow-hidden select-none">
-          {/* Expanding Warping Biscotti Cream Curtain */}
+          {/* 
+            Expanding Warping Biscotti Cream Curtain:
+            Begins at the button, warps first to nearest edges (right & bottom),
+            sweeps across the site, and seals the bottom-right corner last!
+          */}
           {phase === 'expanding' && (
             <svg
               className="fixed inset-0 z-20 w-full h-full pointer-events-none"
@@ -398,14 +576,14 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                 fill="#efeae2"
                 initial={{ d: pathInitial, opacity: 0 }}
                 animate={{
-                  d: [pathInitial, pathStage1Edges, pathStage2WarpAround, pathFull],
-                  opacity: [0, 0.65, 0.92, 0.98],
+                  d: [pathInitial, pathNearestEdges, pathSweepWholeSite, pathCornerFilledLast],
+                  opacity: [0, 0.75, 0.95, 1],
                 }}
                 transition={{
                   d: {
-                    duration: 2.0,
+                    duration: 2.1,
                     ease: customEase,
-                    times: [0, 0.35, 0.72, 1],
+                    times: [0, 0.28, 0.68, 1],
                   },
                   opacity: {
                     duration: 1.8,
@@ -421,7 +599,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
 
           {/* Full Loading and Exiting Screen */}
           <motion.div
-            className="fixed inset-0 z-30 flex items-center justify-center overflow-hidden bg-[#efeae2]"
+            className="fixed inset-0 z-30 flex items-center justify-center overflow-hidden"
             initial={{
               opacity: phase === 'expanding' ? 0 : 1,
             }}
@@ -444,48 +622,33 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
             }}
           >
             {/* 
-              Background of the loading page:
-              1. Base is authentic WhatsApp Biscotti Cream (#efeae2).
-              2. Animated Cyan, Vibrant Emerald & Deep Green fluid ripples from the home page (LumenInteractiveShader).
-                 Rises slowly and smoothly from the bottom to strictly 3/8 height (37.5%).
-                 NO static dark green non-animated layer!
+              Loading page background:
+              The FULL background of the loading screen features the home page's animated fluid shader
+              with combined cyan, deep emerald, and light green gradients!
             */}
-            <motion.div
-              initial={{ y: '100%', opacity: 0 }}
-              animate={
-                phase === 'loading'
-                  ? { y: '0%', opacity: 1 }
-                  : { y: '100%', opacity: 0 }
-              }
-              transition={{
-                duration: 3.0, // Slow, calm, unhurried animation so the fluid ripples rise smoothly
-                ease: [0.16, 1, 0.3, 1],
-                delay: 0.1,
-              }}
-              className="absolute inset-x-0 bottom-0 h-[37.5%] pointer-events-none overflow-hidden z-10"
-              style={{
-                // Strictly 3/8 height ratio (37.5%) with soft organic top mask feathering into Biscotti Cream (#efeae2)
-                maskImage:
-                  'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.92) 50%, rgba(0,0,0,0.45) 80%, rgba(0,0,0,0.1) 94%, transparent 100%)',
-                WebkitMaskImage:
-                  'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.92) 50%, rgba(0,0,0,0.45) 80%, rgba(0,0,0,0.1) 94%, transparent 100%)',
-              }}
-            >
-              <div className="absolute inset-0 w-full h-full">
-                <LumenInteractiveShader />
-              </div>
-            </motion.div>
+            <div className="absolute inset-0 w-full h-full pointer-events-none z-0">
+              <LumenInteractiveShader />
 
-            {/* Studio Card (Loading Screen) - WhatsApp off-white cream aesthetic */}
+              {/* Soft atmospheric overlay preserving crisp studio card contrast without masking colors */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background:
+                    'radial-gradient(ellipse at 50% 50%, rgba(239, 234, 226, 0.45) 0%, rgba(239, 234, 226, 0.72) 100%)',
+                }}
+              />
+            </div>
+
+            {/* Studio Card (Loading Screen) - Floating WhatsApp off-white cream aesthetic */}
             <AnimatePresence>
               {phase === 'loading' && (
                 <motion.div
                   key="loading-card-container"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  initial={{ opacity: 0, scale: 0.95, y: 12 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.96 }}
-                  transition={{ duration: 0.35, ease: 'easeOut' }}
-                  className="relative z-20 w-full max-w-4xl h-[78vh] max-h-[580px] bg-white/95 rounded-3xl shadow-[0_30px_90px_rgba(11,20,26,0.18)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-[#d1d7db]/80 mx-4 sm:mx-8 backdrop-blur-xl"
+                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                  className="relative z-20 w-full max-w-4xl h-[78vh] max-h-[580px] bg-white/95 rounded-3xl shadow-[0_30px_90px_rgba(11,20,26,0.22)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-[#d1d7db]/80 mx-4 sm:mx-8 backdrop-blur-xl"
                 >
                   {/* Center Loading Telemetry: Space Grotesk font for "Loading" with calm roll down exit */}
                   <div className="flex flex-col md:flex-row items-center justify-between my-auto w-full gap-8">
@@ -517,7 +680,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   {/* 
                     Bottom Section:
                     - Left: Retained "END-TO-END ENCRYPTION SIMULATOR"
-                    - Bottom Right: Tactile pill indicator with sequential lottery machine for "SCROLL"
+                    - Bottom Right: Tactile pill indicator with genuine dot-matrix lottery machine for "SCROLL"
                   */}
                   <div className="relative flex items-center justify-between w-full border-t border-[#e9edef] pt-4 min-h-[56px]">
                     <span className="text-xs font-mono text-[#667781] tracking-wide select-none">
@@ -535,7 +698,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                             '0 2px 2px 0 rgba(0,0,0,0.08), 0 4px 7px 0 rgba(0,0,0,0.2), 0 0.5px 2px 0 rgba(0,0,0,0.15), inset 0 -1px 0.2px 0 rgba(0,0,0,0.12), inset 0 1px 0.2px 0 #ffffff',
                         }}
                       >
-                        {/* Dot-matrix lottery machine resolving sequentially into 'SCROLL' */}
+                        {/* Dot-matrix lottery machine resolving sequentially into circular-dot 'SCROLL' */}
                         <ScrollLotteryMachine progress={progress} isLoaded={isLoaded} />
                       </div>
                     </div>

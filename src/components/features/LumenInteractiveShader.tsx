@@ -4,6 +4,13 @@ import { Renderer, Program, Mesh, Triangle } from 'ogl';
 export interface LumenInteractiveShaderProps {
   className?: string;
   style?: React.CSSProperties;
+  // Optional palette overrides
+  baseColor?: [number, number, number];
+  warmColor?: [number, number, number];
+  midColor?: [number, number, number];
+  coolColor?: [number, number, number];
+  cursorColor?: [number, number, number];
+  brightness?: number;
 }
 
 const VERT_SHADER = `
@@ -74,13 +81,13 @@ void main(){
   vec2 d3 = vec2( 0.09, -0.16) * t;
 
   float a = m(uv + d1);
-  vec3 col = mix(u_pal_base, u_pal_warm, a * 2.5);
+  vec3 col = mix(u_pal_base, u_pal_warm, a * 2.3);
 
   float b = m(uv + a * 2.4 + d2);
-  col = mix(col, u_pal_mid, b * 1.65);
+  col = mix(col, u_pal_mid, b * 1.15);
 
   float dd = m(uv + b * 3.5 + d3);
-  col = mix(col, u_pal_cool, dd * 0.85);
+  col = mix(col, u_pal_cool, dd * 1.25);
 
   col += u_pal_cursor * fall;
 
@@ -92,6 +99,12 @@ void main(){
 export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
   className = '',
   style,
+  baseColor,
+  warmColor,
+  midColor,
+  coolColor,
+  cursorColor,
+  brightness,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -122,12 +135,8 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
 
     const geometry = new Triangle(gl);
 
-    // Calibrated palette: rich Deep Signal Emerald (#00a884, #043e2e), prominent WhatsApp Biscotti Cream (#efeae2), and subtle cyan bubble glints
-    // Base: Deep dark signal emerald [0.004, 0.080, 0.045]
-    // Warm: Vibrant signal emerald [0.000, 0.658, 0.518] (#00a884)
-    // Mid: Biscotti Cream (#efeae2) [0.937, 0.918, 0.886]
-    // Cool: Deep sea emerald-cyan [0.015, 0.245, 0.220]
-    // Cursor: Reactive luminous signal cyan wake [0.050, 0.700, 0.650]
+    // Calibrated palette: Rich Deep Signal Emerald, Luminous Cyan, and fresh Light Green accents.
+    // Drastically reduces blinding white and enriches deep emerald across the canvas.
     const program = new Program(gl, {
       vertex: VERT_SHADER,
       fragment: FRAG_SHADER,
@@ -139,13 +148,13 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
         r: { value: [1, 1] },
         c: { value: [0, 0] },
         ci: { value: 0 },
-        u_pal_base: { value: [0.004, 0.080, 0.045] },
-        u_pal_warm: { value: [0.000, 0.658, 0.518] },
-        u_pal_mid: { value: [0.937, 0.918, 0.886] },
-        u_pal_cool: { value: [0.015, 0.245, 0.220] },
-        u_pal_cursor: { value: [0.050, 0.700, 0.650] },
+        u_pal_base: { value: baseColor ?? [0.005, 0.125, 0.082] },      // Deep emerald (#074e3c)
+        u_pal_warm: { value: warmColor ?? [0.000, 0.680, 0.520] },      // Vibrant signal emerald (#00a884)
+        u_pal_mid: { value: midColor ?? [0.160, 0.680, 0.560] },        // Fresh emerald-tinted highlight (reduced white)
+        u_pal_cool: { value: coolColor ?? [0.028, 0.720, 0.700] },      // Luminous cyan (#06b6d4)
+        u_pal_cursor: { value: cursorColor ?? [0.050, 0.820, 0.760] },  // Signal cyan-emerald wake
         u_pal_rgScale: { value: [1.0, 1.0, 1.0] },
-        u_brightness: { value: 1.78 },
+        u_brightness: { value: brightness ?? 1.38 },                    // Balanced brightness preventing blown-out white
       },
     });
 
