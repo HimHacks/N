@@ -16,6 +16,8 @@ interface BlockRevealProps {
  * Recreates the stylish block reveal effect:
  * A colored block sweeps across from the left (scaleX 0 -> 1 with transform-origin: left),
  * the text behind it is revealed, and the block pulls away to the right (scaleX 1 -> 0 with transform-origin: right).
+ * 
+ * Runs EXACTLY ONCE on mount/page load and stays revealed permanently.
  */
 export const BlockReveal: React.FC<BlockRevealProps> = ({
   children,
@@ -23,7 +25,7 @@ export const BlockReveal: React.FC<BlockRevealProps> = ({
   duration = 0.5,
   blockColor = '#176B50',
   isReady = true,
-  repeatInterval = 5200,
+  repeatInterval = 0, // Disabled by default: runs strictly once
   className = '',
   style = {},
 }) => {
@@ -31,54 +33,43 @@ export const BlockReveal: React.FC<BlockRevealProps> = ({
   const [scaleX, setScaleX] = useState(0);
   const [origin, setOrigin] = useState<'left' | 'right'>('left');
   const [transitionEnabled, setTransitionEnabled] = useState(false);
+  const [hasCompleted, setHasCompleted] = useState(false);
   const hasTriggeredRef = useRef(false);
 
-  const triggerAnimation = () => {
-    // 1. Reset origin to left and scale to 0 without transition
+  useEffect(() => {
+    if (!isReady || hasTriggeredRef.current) return;
+    hasTriggeredRef.current = true;
+
+    // 1. Reset origin to left and scale to 0
     setTransitionEnabled(false);
     setOrigin('left');
     setScaleX(0);
 
-    // 2. Expand block from left to right
+    // 2. Expand block from left to right after initial delay
     const t1 = setTimeout(() => {
       setTransitionEnabled(true);
       setScaleX(1);
-    }, 50);
+    }, delay);
 
-    // 3. At peak (when fully covered), reveal text, flip origin to right, and contract block
+    // 3. At peak (when fully covered), reveal text, flip origin to right, and contract block away
     const t2 = setTimeout(() => {
       setTextOpacity(1);
       setOrigin('right');
       setScaleX(0);
-    }, duration * 1000 + 70);
+    }, delay + duration * 1000 + 40);
 
-    return [t1, t2];
-  };
-
-  useEffect(() => {
-    if (!isReady) return;
-
-    let timers: ReturnType<typeof setTimeout>[] = [];
-    let interval: ReturnType<typeof setInterval> | null = null;
-
-    const initialTimer = setTimeout(() => {
-      hasTriggeredRef.current = true;
-      timers = triggerAnimation();
-
-      if (repeatInterval > 0) {
-        interval = setInterval(() => {
-          timers.forEach((t) => clearTimeout(t));
-          timers = triggerAnimation();
-        }, repeatInterval);
-      }
-    }, delay);
+    // 4. Mark permanently completed and cleanup overlay
+    const t3 = setTimeout(() => {
+      setHasCompleted(true);
+      setTransitionEnabled(false);
+    }, delay + duration * 2000 + 100);
 
     return () => {
-      clearTimeout(initialTimer);
-      timers.forEach((t) => clearTimeout(t));
-      if (interval) clearInterval(interval);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
     };
-  }, [isReady, delay, duration, repeatInterval]);
+  }, [isReady, delay, duration]);
 
   return (
     <span
@@ -87,36 +78,38 @@ export const BlockReveal: React.FC<BlockRevealProps> = ({
         ...style,
       }}
     >
-      {/* Content to reveal */}
+      {/* Content to reveal - permanently visible once revealed */}
       <span
         style={{
-          opacity: textOpacity,
+          opacity: hasCompleted ? 1 : textOpacity,
           display: 'inline-block',
-          transition: 'opacity 0.06s ease',
+          transition: hasCompleted ? 'none' : 'opacity 0.05s ease',
         }}
       >
         {children}
       </span>
 
-      {/* Sliding reveal block overlay */}
-      <span
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundColor: blockColor,
-          transformOrigin: origin,
-          transform: `scaleX(${scaleX})`,
-          transition: transitionEnabled
-            ? `transform ${duration}s cubic-bezier(0.86, 0, 0.07, 1)`
-            : 'none',
-          pointerEvents: 'none',
-          zIndex: 10,
-        }}
-      />
+      {/* Sliding reveal block overlay - active only during the single one-time reveal */}
+      {!hasCompleted && (
+        <span
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: blockColor,
+            transformOrigin: origin,
+            transform: `scaleX(${scaleX})`,
+            transition: transitionEnabled
+              ? `transform ${duration}s cubic-bezier(0.86, 0, 0.07, 1)`
+              : 'none',
+            pointerEvents: 'none',
+            zIndex: 10,
+          }}
+        />
+      )}
     </span>
   );
 };
