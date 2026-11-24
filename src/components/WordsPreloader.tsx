@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThreeSquaresLoader } from './ThreeSquaresLoader';
 import { LumenInteractiveShader } from './features/LumenInteractiveShader';
+import { Floating3DShapes } from './features/Floating3DShapes';
 
 export type WordPreloaderPhase = 'idle' | 'expanding' | 'loading' | 'exiting';
 
@@ -14,6 +15,7 @@ interface WordsPreloaderProps {
   onExpanded?: () => void;
   onLoadingComplete?: () => void;
   onExited?: () => void;
+  onClose?: () => void;
 }
 
 // 5x7 Dot-matrix glyph definitions for loading counter digits
@@ -195,99 +197,111 @@ const RollDownText: React.FC<{
 // Target word: "SCROLL"
 const TARGET_WORD = 'SCROLL';
 
-// Curated high-contrast glyph pool for vertical slot reel spinning
-const SLOT_GLYPH_POOL = ['S', 'C', 'R', 'O', 'L', 'A', 'E', 'B', 'M', 'K', 'P', 'T', 'X', 'Z', '8', '3', '0', '9'];
+// Alphanumeric character pool for reel characters
+const GLYPH_POOL = ['A', 'B', 'D', 'F', 'G', 'H', 'J', 'K', 'M', 'N', 'P', 'Q', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '2', '3', '5', '7', '8', '9'];
 
-// Strict sequential settling thresholds:
-// All 6 letters start rolling simultaneously.
-// S rolls and locks in at 26% (leaving 5 letters rolling)
-// C rolls and locks in at 44% (leaving 4 letters rolling)
-// R rolls and locks in at 62% (leaving 3 letters rolling)
-// O rolls and locks in at 78% (leaving 2 letters rolling)
-// First L rolls and locks in at 90% (leaving the final L rolling)
-// Final L decelerates heavily, pauses through 99%, and settles strictly at 100% on the shared timeline!
-const LOCK_THRESHOLDS = [26, 44, 62, 78, 90, 100];
+function createReelTape(targetChar: string, stepCount: number, penultimateChar?: string): string[] {
+  const pool = GLYPH_POOL.filter((c) => c !== targetChar && c !== penultimateChar);
+  const tape: string[] = [];
+  const count = stepCount - (penultimateChar ? 2 : 1);
+  for (let i = 0; i < count; i++) {
+    tape.push(pool[(i * 7 + targetChar.charCodeAt(0) * 3 + 1) % pool.length]);
+  }
+  if (penultimateChar) {
+    tape.push(penultimateChar);
+  }
+  tape.push(targetChar);
+  return tape;
+}
 
 /**
  * Vertical Rolling Physical Slot-Machine Reel Component
  * - All 6 letters roll simultaneously on independent vertical reels from the start.
- * - S rolls and locks into place, while the remaining letters keep rolling.
- * - Next, C rolls and locks into place, while the remaining keep rolling.
- * - Next, R rolls and locks, then O rolls and locks, then the first L rolls and locks.
- * - Finally, the last L decelerates and locks home simultaneously as the progress counter hits 100%.
- * - Each letter rolls smoothly without repeating the final letter twice.
- * - Fixed cell height/width ensures rock-solid stability with zero layout shift.
+ * - Reel 0 ('S') locks in first (~25% loading)
+ * - Reel 1 ('C') locks in second (~45% loading)
+ * - Reel 2 ('R') locks in third (~65% loading)
+ * - Reel 3 ('O') exhibits continuous, smooth, uninterrupted vertical movement without pauses, restarts, or jumps (~80% loading)
+ * - Reel 4 ('L') locks in fifth (~92% loading)
+ * - Reel 5 (final 'L') exhibits smooth, progressive deceleration, rolling visibly through 'E' during the 99% suspense pause,
+ *   and locks home into 'L' simultaneously as the counter hits 100%!
  */
 const VerticalSlotReel: React.FC<{
   targetChar: string;
   slotIndex: number;
   progress: number;
   isLoaded: boolean;
-}> = ({ targetChar, slotIndex, progress, isLoaded }) => {
-  const threshold = LOCK_THRESHOLDS[slotIndex];
+  isEntranceComplete: boolean;
+}> = ({ targetChar, slotIndex, progress, isLoaded, isEntranceComplete }) => {
   const isFinal = slotIndex === TARGET_WORD.length - 1;
-  const isLocked = isLoaded || progress >= threshold;
 
-  // Single sequential reel strip:
-  // Starts with random distinct glyphs and terminates with the targetChar at the end.
-  // For the final slot (index 5, target 'L'), penultimate character is 'E' so it rolls visibly through 'E' before settling on 'L'!
   const [tape] = useState<string[]>(() => {
-    const list: string[] = [];
-    const poolWithoutTarget = SLOT_GLYPH_POOL.filter((g) => g !== targetChar);
-    const count = 18 + slotIndex * 4; // Generous length for continuous fluid stepping
-    for (let i = 0; i < count; i++) {
-      list.push(poolWithoutTarget[(i * 7 + slotIndex * 3) % poolWithoutTarget.length]);
-    }
-    if (isFinal) {
-      // Ensure the penultimate glyph is 'E' so it distinctly rolls through E into L!
-      list[list.length - 1] = 'E';
-    }
-    list.push(targetChar); // Exactly 1 final destination glyph
-    return list;
+    if (slotIndex === 0) return createReelTape('S', 24);
+    if (slotIndex === 1) return createReelTape('C', 42);
+    if (slotIndex === 2) return createReelTape('R', 58);
+    if (slotIndex === 3) return createReelTape('O', 72);
+    if (slotIndex === 4) return createReelTape('L', 84);
+    return createReelTape('L', 94, 'E');
   });
 
-  // Calculate target index on the tape based on progress approaching its lock threshold
   const [tapeIndex, setTapeIndex] = useState(0);
+  const targetIndex = tape.length - 1;
+  const isLocked = isLoaded || (tapeIndex >= targetIndex);
+
+  const progressRef = useRef(progress);
+  progressRef.current = progress;
+  const isLoadedRef = useRef(isLoaded);
+  isLoadedRef.current = isLoaded;
+
+  // Synchronized final 100% trigger: snaps or rolls into the final target character simultaneously with 100%
+  useEffect(() => {
+    if (isLoaded || progress >= 100) {
+      setTapeIndex(targetIndex);
+    }
+  }, [isLoaded, progress, targetIndex]);
+
+  // Clean deterministic stepping without side-effects inside state updaters
+  // Prevents double-scheduling in StrictMode and eliminates micro-hitches on Reel 3 ('O')
+  const [stepDuration, setStepDuration] = useState(0.05);
 
   useEffect(() => {
-    if (isLocked) {
-      // Snaps decisively into the target letter (the final item on the reel tape)
-      setTapeIndex(tape.length - 1);
+    if (!isEntranceComplete || isLocked || tapeIndex >= targetIndex) return;
+
+    // For final slot (Reel 5, 'L'): hold on penultimate 'E' (targetIndex - 1) until 100% completion
+    if (isFinal && tapeIndex >= targetIndex - 1 && !isLoadedRef.current && progressRef.current < 100) {
       return;
     }
 
-    const progressRatio = Math.min(1, Math.max(0, progress / threshold));
-    const maxUnlockedIndex = tape.length - 2;
-    // Map progress linearly to tape position without resetting or plateauing early
-    const computedIndex = Math.min(maxUnlockedIndex, Math.floor(progressRatio * (tape.length - 1)));
-
-    setTapeIndex((prev) => Math.max(prev, computedIndex));
-
-    let stepSpeed = 46 + (slotIndex % 3) * 6;
+    let stepSpeed = 50 + (slotIndex % 3) * 5;
     if (isFinal) {
-      if (progress >= 99) {
-        stepSpeed = 480; // Dramatic slow crawl through 'E' during 99% pause
-      } else if (progress >= 92) {
+      const currentProgress = progressRef.current;
+      if (currentProgress >= 96) {
+        stepSpeed = 360; // Slow deliberate roll into 'E'
+      } else if (currentProgress >= 88) {
         stepSpeed = 200; // Progressive deceleration
-      } else if (progress >= 80) {
-        stepSpeed = 100;
+      } else if (currentProgress >= 75) {
+        stepSpeed = 110; // Early deceleration
+      } else {
+        stepSpeed = 58;
       }
     }
 
-    const timer = setInterval(() => {
+    setStepDuration(stepSpeed / 1000);
+
+    const timer = setTimeout(() => {
       setTapeIndex((prev) => {
-        if (prev < maxUnlockedIndex) {
-          return prev + 1;
+        if (prev >= targetIndex) return targetIndex;
+        if (isFinal && prev >= targetIndex - 1 && !isLoadedRef.current && progressRef.current < 100) {
+          return prev;
         }
-        return prev;
+        return prev + 1;
       });
     }, stepSpeed);
 
-    return () => clearInterval(timer);
-  }, [isLocked, progress, isFinal, slotIndex, tape.length, threshold]);
+    return () => clearTimeout(timer);
+  }, [tapeIndex, targetIndex, isFinal, slotIndex, isEntranceComplete, isLocked]);
 
-  const cellHeight = 22; // Enlarged cell height in px for clear readability
-  const cellWidth = 15;  // Enlarged cell width in px
+  const cellHeight = 20;
+  const cellWidth = 14;
 
   return (
     <div
@@ -305,31 +319,36 @@ const VerticalSlotReel: React.FC<{
           isLocked
             ? {
                 type: 'spring',
-                stiffness: isFinal ? 140 : 320,
-                damping: isFinal ? 18 : 22,
-                mass: isFinal ? 1.1 : 0.8,
+                stiffness: isFinal ? 180 : 300,
+                damping: isFinal ? 22 : 26,
+                mass: isFinal ? 1.0 : 0.8,
               }
             : {
-                duration: isFinal && progress >= 92 ? 0.22 : 0.05,
+                duration: stepDuration,
                 ease: 'linear',
               }
         }
         className="flex flex-col items-center"
       >
         {tape.map((ch, idx) => {
-          const isAtTarget = idx === tape.length - 1 && isLocked;
+          const isAtTarget = idx === targetIndex && isLocked;
+          const isAtE = isFinal && idx === targetIndex - 1 && tapeIndex === targetIndex - 1;
           return (
             <div
               key={idx}
-              className="flex items-center justify-center font-terminal-dots select-none uppercase tracking-[0.12em] font-extrabold"
+              className={`flex items-center justify-center font-terminal-dots select-none uppercase tracking-[0.12em] ${
+                isAtTarget
+                  ? 'text-[#111b21] font-bold'
+                  : isAtE
+                  ? 'text-[#222222] font-semibold'
+                  : 'text-[#444444] font-medium opacity-85'
+              }`}
               style={{
                 height: `${cellHeight}px`,
                 width: `${cellWidth}px`,
-                fontSize: '15px',
-                lineHeight: '22px',
-                color: isAtTarget ? '#111b21' : '#444444',
-                textShadow: isAtTarget ? '0 0.5px 1.5px rgba(0,0,0,0.35)' : 'none',
-                opacity: isAtTarget ? 1 : 0.75,
+                fontSize: '13px',
+                lineHeight: `${cellHeight}px`,
+                textShadow: isAtTarget ? '0 0.5px 1px rgba(0,0,0,0.25)' : 'none',
               }}
             >
               {ch}
@@ -350,18 +369,60 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   onExpanded,
   onLoadingComplete,
   onExited,
+  onClose,
 }) => {
   const [progress, setProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isEntranceComplete, setIsEntranceComplete] = useState(false);
   const hasFinishedRef = useRef(false);
 
-  // Cinematic pacing loading animation (calm, unhurried):
-  // - 1% to 75%: smooth steady progress (~30ms per tick)
-  // - 75% to 92%: begins slowing down noticeably (~75ms per tick)
-  // - 92% to 98%: decelerates heavily (~160ms per tick)
-  // - 99%: deliberate suspense pause (~600ms) before snapping into 100%
+  const onLoadingCompleteRef = useRef(onLoadingComplete);
   useEffect(() => {
-    if (phase === 'loading') {
+    onLoadingCompleteRef.current = onLoadingComplete;
+  }, [onLoadingComplete]);
+
+  // Keyboard Escape accessibility for Close control
+  useEffect(() => {
+    if (phase === 'idle' || !onClose) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [phase, onClose]);
+
+  const onExpandedRef = useRef(onExpanded);
+  useEffect(() => {
+    onExpandedRef.current = onExpanded;
+  }, [onExpanded]);
+
+  // Safety fallback: guarantees entrance completion fires even if onAnimationComplete is skipped under heavy load
+  useEffect(() => {
+    if (phase === 'expanding' && !isEntranceComplete) {
+      const fallbackTimer = setTimeout(() => {
+        setIsEntranceComplete(true);
+        if (onExpandedRef.current) onExpandedRef.current();
+      }, 1100);
+      return () => clearTimeout(fallbackTimer);
+    }
+  }, [phase, isEntranceComplete]);
+
+  // Reset state when preloader returns to idle
+  useEffect(() => {
+    if (phase === 'idle' && !isInteractiveScroll) {
+      hasFinishedRef.current = false;
+      setIsLoaded(false);
+      setProgress(0);
+      setIsEntranceComplete(false);
+    }
+  }, [phase, isInteractiveScroll]);
+
+  // Deliberate, breathing loading cadence:
+  // GATED: Only starts once the upward pull entrance has fully completed and settled!
+  useEffect(() => {
+    if (phase === 'loading' && isEntranceComplete) {
       if (hasFinishedRef.current) return;
       setIsLoaded(false);
       setProgress(1);
@@ -375,38 +436,39 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
           setProgress(100);
           setIsLoaded(true);
           hasFinishedRef.current = true;
-          if (onLoadingComplete) onLoadingComplete();
+          if (onLoadingCompleteRef.current) onLoadingCompleteRef.current();
           return;
         }
 
         setProgress(current);
 
-        // Compute delay based on cinematic curve
-        let delay = 30;
+        // Deliberate, natural breathing pace
+        let delay = 34;
         if (current >= 99) {
-          delay = 600; // Dramatic cinematic pause at 99% before popping to 100%
-        } else if (current >= 92) {
-          delay = 140 + (current - 92) * 20; // Slow down intensely
-        } else if (current >= 75) {
-          delay = 45 + (current - 75) * 6; // Gradual deceleration
+          delay = 680; // Intentional 99% suspense pause before synchronized 100% + final 'L'
+        } else if (current >= 88) {
+          delay = 120 + (current - 88) * 14; // Smooth heavy deceleration
+        } else if (current >= 70) {
+          delay = 50 + (current - 70) * 4; // Gradual early deceleration
         } else {
-          delay = 30; // Steady unhurried initial progress
+          delay = 34; // Steady, readable progression
         }
 
         timer = setTimeout(step, delay);
       };
 
-      timer = setTimeout(step, 80);
+      timer = setTimeout(step, 120);
 
       return () => {
         if (timer) clearTimeout(timer);
       };
-    } else if (phase === 'idle') {
+    } else if (phase === 'idle' && !isInteractiveScroll) {
       hasFinishedRef.current = false;
       setProgress(0);
       setIsLoaded(false);
+      setIsEntranceComplete(false);
     }
-  }, [phase, onLoadingComplete]);
+  }, [phase, isEntranceComplete, isInteractiveScroll]);
 
   // Normalized coordinates in 1000x1000 viewBox:
   // Button origin (bx, by) defaults to bottom-right hotline zone (~860, 920)
@@ -435,40 +497,64 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   const isVisible = phase !== 'idle' || isInteractiveScroll;
 
   // SVG multi-point organic boundary for the advancing biscotti cream surface:
-  // Instead of a straight horizontal line or instant edge fill, the crest forms an organically undulating wave
-  // with asymmetric peaks and troughs that deform and morph fluidly as the cream advances upward across the viewport.
-  // Coordinate system: 0..1000 width, 0..1000 height.
-  // baselineY is the leading edge (1000 = bottom, 0 = top).
-  const baselineY = isInteractiveScroll && phase === 'idle'
-    ? Math.max(0, Math.min(1000, Math.round((1 - scrollFraction) * 1000)))
-    : phase === 'expanding'
-    ? 0
-    : phase === 'loading'
-    ? 0
-    : 1000;
+  // - Interactive scrubbing: starts at baselineY = (1 - scrollFraction) * 1000
+  // - Auto-expanding commitment: smoothly interpolates from the current snapshot wave up to wave4 (full screen)
+  //   without jumping back down to bottom or arbitrary points!
+  const currentBaselineYRef = useRef(1000);
+  if (isInteractiveScroll && phase === 'idle') {
+    currentBaselineYRef.current = Math.max(0, Math.min(1000, Math.round((1 - scrollFraction) * 1000)));
+  } else if (phase === 'idle' && !isInteractiveScroll) {
+    currentBaselineYRef.current = 1000;
+  }
 
-  // Keyframes for the continuously deforming organic boundary during expansion
-  // (Left and right edges do NOT jump; they are pinned to the organic wave contours)
-  const wave0 = `M 0 1000 C 180 1000, 320 1000, 500 1000 C 680 1000, 840 1000, 1000 1000 L 1000 1000 L 0 1000 Z`;
-  const wave1 = `M 0 780 C 160 720, 290 840, 480 750 C 670 660, 830 790, 1000 730 L 1000 1000 L 0 1000 Z`;
-  const wave2 = `M 0 520 C 190 590, 340 440, 520 480 C 700 520, 850 410, 1000 460 L 1000 1000 L 0 1000 Z`;
-  const wave3 = `M 0 240 C 170 170, 310 290, 510 210 C 710 130, 860 260, 1000 180 L 1000 1000 L 0 1000 Z`;
+  // Track physical surface Y position for genuine upward pull and reverse-scroll retreat:
+  // - Interactive scrubbing: surface translates upward from 100vh down to ~30vh
+  // - When scrolling backward: surface smoothly retreats downward back to 100vh
+  // - When committed to expanding: smoothly completes pull-up with natural deceleration into 0vh
+  const currentSurfaceYRef = useRef(100);
+  if (isInteractiveScroll && phase === 'idle') {
+    currentSurfaceYRef.current = Math.max(0, Math.min(100, Math.round((1 - scrollFraction * 1.4) * 100)));
+  } else if (phase === 'idle' && !isInteractiveScroll) {
+    currentSurfaceYRef.current = 100;
+  }
+
+  // Generate an organic wave path at any given baseline Y
+  const getWavePathAtY = (y: number, ampMultiplier = 1) => {
+    const fraction = (1000 - y) / 1000;
+    const a1 = Math.sin(fraction * Math.PI) * 55 * ampMultiplier;
+    const a2 = Math.cos(fraction * Math.PI) * 45 * ampMultiplier;
+    return `M 0 ${Math.min(1000, y + a1 * 0.4)} C 180 ${Math.max(0, y - a1)}, 340 ${Math.min(1000, y + a2)}, 520 ${Math.max(0, y - a2 * 0.8)} C 700 ${Math.min(1000, y + a1 * 0.7)}, 860 ${Math.max(0, y - a2)}, 1000 ${Math.min(1000, y + a2 * 0.5)} L 1000 1000 L 0 1000 Z`;
+  };
+
+  const currentInteractiveWave = getWavePathAtY(currentBaselineYRef.current);
+  const midWayWave = getWavePathAtY(Math.min(currentBaselineYRef.current, 380) * 0.6);
   const wave4 = `M 0 0 C 250 0, 500 0, 750 0 C 850 0, 950 0, 1000 0 L 1000 1000 L 0 1000 Z`;
-
-  // Interactive dynamic wave path calculated from current baselineY
-  const amp1 = Math.sin(scrollFraction * Math.PI) * 55;
-  const amp2 = Math.cos(scrollFraction * Math.PI) * 45;
-  const currentInteractiveWave = `M 0 ${Math.min(1000, baselineY + amp1 * 0.4)} C 180 ${Math.max(0, baselineY - amp1)}, 340 ${Math.min(1000, baselineY + amp2)}, 520 ${Math.max(0, baselineY - amp2 * 0.8)} C 700 ${Math.min(1000, baselineY + amp1 * 0.7)}, 860 ${Math.max(0, baselineY - amp2)}, 1000 ${Math.min(1000, baselineY + amp2 * 0.5)} L 1000 1000 L 0 1000 Z`;
 
   return (
     <AnimatePresence>
       {isVisible && (
-        <div className="fixed inset-0 z-[120] pointer-events-auto overflow-hidden select-none">
+        <motion.div
+          className="fixed inset-0 z-[120] pointer-events-auto overflow-hidden select-none"
+          initial={{ y: '0vh' }}
+          animate={
+            phase === 'exiting'
+              ? {
+                  y: '-100vh',
+                  transition: { duration: 0.95, ease: [0.76, 0, 0.24, 1] },
+                }
+              : { y: '0vh' }
+          }
+          onAnimationComplete={() => {
+            if (phase === 'exiting' && onExited) {
+              onExited();
+            }
+          }}
+        >
           {/* 
             ORGANIC BISCOTTI CREAM ADVANCING SURFACE:
             - When scrubbing: continuously morphs along an asymmetric fluid wave contour.
             - When committed: smoothly rolls up with continuous multi-keyframe contour morphing (wave0 -> wave4).
-            - No instantaneous filling of left or right edges; cohesive fluid propagation across the entire viewport.
+            - When exiting: lifts together with the loading surface to uncover the simulator underneath.
           */}
           <svg
             className="fixed inset-0 z-20 w-full h-full pointer-events-none"
@@ -486,15 +572,12 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                 fill="#efeae2"
                 initial={{ d: currentInteractiveWave }}
                 animate={{
-                  d: [currentInteractiveWave, wave2, wave3, wave4],
+                  d: [currentInteractiveWave, midWayWave, wave4],
                 }}
                 transition={{
-                  duration: 1.25,
+                  duration: 1.05,
                   ease: [0.16, 1, 0.3, 1],
-                  times: [0, 0.35, 0.7, 1],
-                }}
-                onAnimationComplete={() => {
-                  if (onExpanded) onExpanded();
+                  times: [0, 0.45, 1],
                 }}
               />
             ) : (
@@ -502,38 +585,56 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
             )}
           </svg>
 
-          {/* Full Loading and Exiting Screen */}
+          {/* 
+            GENUINE UPWARD-REVEAL LOADING SURFACE:
+            - Progressively emerges into the viewport through a controlled upward movement.
+            - Starts from currentSurfaceYRef.current (100vh on button click, or current scroll position).
+            - Follows reverse scrolling naturally without resetting or abrupt jumps.
+            - Settles into place with smooth natural deceleration.
+            - Loading animation (counter and reels) only begins after entrance is 100% complete.
+          */}
           <motion.div
             className="fixed inset-0 z-30 flex items-center justify-center overflow-hidden"
-            initial={{ opacity: 0 }}
+            initial={{
+              y: `${currentSurfaceYRef.current}vh`,
+              opacity: triggerType === 'button' ? 0.65 : Math.min(1, Math.max(0.15, (100 - currentSurfaceYRef.current) / 45)),
+            }}
             animate={
-              phase === 'loading'
+              isInteractiveScroll && phase === 'idle'
                 ? {
+                    y: `${currentSurfaceYRef.current}vh`,
+                    opacity: Math.min(1, Math.max(0.15, (100 - currentSurfaceYRef.current) / 45)),
+                    transition: { duration: 0.08, ease: 'easeOut' },
+                  }
+                : phase === 'expanding'
+                ? {
+                    y: '0vh',
+                    opacity: 1,
+                    transition: { duration: 1.05, ease: [0.16, 1, 0.3, 1] },
+                  }
+                : phase === 'loading' || phase === 'exiting'
+                ? {
+                    y: '0vh',
                     opacity: 1,
                     transition: { duration: 0.35, ease: 'easeOut' },
                   }
-                : phase === 'exiting'
-                ? {
-                    y: '-100vh',
-                    transition: { duration: 0.85, ease: [0.76, 0, 0.24, 1] },
-                  }
-                : { opacity: 0 }
+                : { y: '100vh', opacity: 0 }
             }
             onAnimationComplete={() => {
-              if (phase === 'exiting' && onExited) {
-                onExited();
+              if (phase === 'expanding') {
+                setIsEntranceComplete(true);
+                if (onExpanded) onExpanded();
               }
             }}
           >
             {/* 
               Loading page background:
-              Only appears once cream expansion has completed and phase enters 'loading'!
               Anchored at the bottom at 3/8 height (37.5%) with lively undulating crest.
             */}
-            {phase === 'loading' && (
+            {(isInteractiveScroll || phase === 'expanding' || phase === 'loading' || phase === 'exiting') && (
               <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 className="absolute inset-x-0 bottom-0 h-[37.5%] pointer-events-none overflow-hidden z-10"
                 style={{
@@ -567,85 +668,86 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
               </motion.div>
             )}
 
-            {/* Studio Card (Loading Screen) - ONLY rendered once transition completes into 'loading' */}
-            <AnimatePresence>
-              {phase === 'loading' && (
-                <motion.div
-                  key="loading-card-container"
-                  initial={{ opacity: 0, scale: 0.95, y: 16 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.96 }}
-                  transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                  className="relative z-20 w-full max-w-4xl h-[78vh] max-h-[580px] bg-white/95 rounded-3xl shadow-[0_30px_90px_rgba(11,20,26,0.22)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-[#d1d7db]/80 mx-4 sm:mx-8 backdrop-blur-xl"
-                >
-                  {/* Center Loading Telemetry: Space Grotesk font for "Loading" with calm roll down exit */}
-                  <div className="flex flex-col md:flex-row items-center justify-between my-auto w-full gap-8">
-                    {/* Left: 'Loading' animated with calm roll down exit when 100% reached */}
-                    <div className="flex items-center gap-4 min-h-[64px]">
-                      <RollDownText text="Loading" isComplete={isLoaded} />
-                      <AnimatePresence>
-                        {!isLoaded && (
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.6, y: 16 }}
-                            transition={{ duration: 0.4 }}
-                          >
-                            <ThreeSquaresLoader size={28} />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
+            {/* Floating 3D green/white bubbles & cross shapes originating on the loading page */}
+            {(isInteractiveScroll || phase === 'expanding' || phase === 'loading' || phase === 'exiting') && (
+              <div className="absolute inset-0 z-[15] pointer-events-none">
+                <Floating3DShapes isTransitioning={false} />
+              </div>
+            )}
 
-                    {/* Right: Big Dot-Matrix Counter with instant digit changes */}
-                    <div className="flex items-center gap-2 sm:gap-3 bg-[#f0f2f5] px-6 py-5 rounded-2xl border border-[#d1d7db] shadow-inner">
-                      {digits.map((ch, idx) => (
-                        <InstantDotMatrixDigit key={idx} char={ch} dotSize={6} color="#111b21" />
-                      ))}
-                    </div>
+            {/* Studio Card (Loading Screen) - Unified physical surface progressively pulled upward */}
+            {(isInteractiveScroll || phase === 'expanding' || phase === 'loading' || phase === 'exiting') && (
+              <div
+                className="relative z-20 w-full max-w-4xl h-[78vh] max-h-[580px] bg-white/95 rounded-3xl shadow-[0_30px_90px_rgba(11,20,26,0.22)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-[#d1d7db]/80 mx-4 sm:mx-8 backdrop-blur-xl"
+              >
+                {/* Center Loading Telemetry: Space Grotesk font for "Loading" with calm roll down exit */}
+                <div className="flex flex-col md:flex-row items-center justify-between my-auto w-full gap-8">
+                  {/* Left: 'Loading' animated with calm roll down exit when 100% reached */}
+                  <div className="flex items-center gap-4 min-h-[64px]">
+                    <RollDownText text="Loading" isComplete={isLoaded} />
+                    <AnimatePresence>
+                      {!isLoaded && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.6, y: 16 }}
+                          transition={{ duration: 0.4 }}
+                        >
+                          <ThreeSquaresLoader size={28} />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
 
-                  {/* 
-                    Bottom Section:
-                    - Left: Retained "END-TO-END ENCRYPTION SIMULATOR"
-                    - Bottom Right: Tactile pill indicator with genuine dot-matrix lottery machine for "SCROLL"
-                  */}
-                  <div className="relative flex items-center justify-between w-full border-t border-[#e9edef] pt-4 min-h-[56px]">
-                    <span className="text-xs font-mono text-[#667781] tracking-wide select-none">
-                      END-TO-END ENCRYPTION SIMULATOR
-                    </span>
+                  {/* Right: Big Dot-Matrix Counter with instant digit changes */}
+                  <div className="flex items-center gap-2 sm:gap-3 bg-[#f0f2f5] px-6 py-5 rounded-2xl border border-[#d1d7db] shadow-inner">
+                    {digits.map((ch, idx) => (
+                      <InstantDotMatrixDigit key={idx} char={ch} dotSize={6} color="#111b21" />
+                    ))}
+                  </div>
+                </div>
 
-                    {/* Bottom Right: Tactile pill indicator with genuine dot-matrix lottery machine for "SCROLL" */}
-                    <div className="relative flex items-center justify-end">
-                      <div
-                        className="group flex items-center rounded-[36px] transition-all duration-300 select-none cursor-default"
-                        style={{
-                          padding: '10px 18px 8px 18px',
-                          backgroundColor: '#f2f2f2',
-                          boxShadow:
-                            '0 2px 2px 0 rgba(0,0,0,0.08), 0 4px 7px 0 rgba(0,0,0,0.2), 0 0.5px 2px 0 rgba(0,0,0,0.15), inset 0 -1px 0.2px 0 rgba(0,0,0,0.12), inset 0 1px 0.2px 0 #ffffff',
-                        }}
-                      >
-                        {/* Authentic dot-matrix letters rolling on independent vertical slot reels */}
-                        <span className="flex items-center tracking-normal text-[#1a1a1a]">
-                          {TARGET_WORD.split('').map((char, idx) => (
-                            <VerticalSlotReel
-                              key={idx}
-                              targetChar={char}
-                              slotIndex={idx}
-                              progress={progress}
-                              isLoaded={isLoaded}
-                            />
-                          ))}
-                        </span>
+                {/* 
+                  Bottom Section:
+                  - Left: Retained "END-TO-END ENCRYPTION SIMULATOR"
+                  - Bottom Right: Tactile pill indicator with genuine dot-matrix lottery machine for "SCROLL"
+                */}
+                <div className="relative flex items-center justify-between w-full border-t border-[#e9edef] pt-4 min-h-[56px]">
+                  <span className="text-xs font-mono text-[#667781] tracking-wide select-none">
+                    END-TO-END ENCRYPTION SIMULATOR
+                  </span>
+
+                  {/* Bottom Right: Tactile pill indicator with genuine dot-matrix lottery machine for "SCROLL" */}
+                  <div className="relative flex items-center justify-end">
+                    <div
+                      className="group flex items-center rounded-[36px] transition-all duration-300 select-none cursor-default"
+                      style={{
+                        padding: '10px 18px 8px 18px',
+                        backgroundColor: '#f2f2f2',
+                        boxShadow:
+                          '0 2px 2px 0 rgba(0,0,0,0.08), 0 4px 7px 0 rgba(0,0,0,0.2), 0 0.5px 2px 0 rgba(0,0,0,0.15), inset 0 -1px 0.2px 0 rgba(0,0,0,0.12), inset 0 1px 0.2px 0 #ffffff',
+                      }}
+                    >
+                      {/* Authentic dot-matrix letters rolling on 6 independent vertical slot reels */}
+                      <div className="flex items-center tracking-normal text-[#1a1a1a]">
+                        {TARGET_WORD.split('').map((char, idx) => (
+                          <VerticalSlotReel
+                            key={idx}
+                            targetChar={char}
+                            slotIndex={idx}
+                            progress={progress}
+                            isLoaded={isLoaded}
+                            isEntranceComplete={isEntranceComplete}
+                          />
+                        ))}
                       </div>
                     </div>
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                </div>
+              </div>
+            )}
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );
