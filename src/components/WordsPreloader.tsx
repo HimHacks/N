@@ -194,87 +194,172 @@ const RollDownText: React.FC<{
 
 // Target word: "SCROLL"
 const TARGET_WORD = 'SCROLL';
-// Alphanumeric character pool for rapid lottery scrambling
-const CHAR_POOL = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','0','1','2','3','4','5','6','7','8','9'];
 
-// Individual character slot that scrambles rapidly through random characters in place and settles into its target letter
-const LotterySlotChar: React.FC<{
+// Alphanumeric character pool for reel characters
+const GLYPH_POOL = ['A', 'B', 'D', 'F', 'G', 'H', 'J', 'K', 'M', 'N', 'P', 'Q', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '2', '3', '5', '7', '8', '9'];
+
+function createReelTape(targetChar: string, stepCount: number, penultimateChar?: string): string[] {
+  const pool = GLYPH_POOL.filter((c) => c !== targetChar && c !== penultimateChar);
+  const tape: string[] = [];
+  const count = stepCount - (penultimateChar ? 2 : 1);
+  for (let i = 0; i < count; i++) {
+    tape.push(pool[(i * 7 + targetChar.charCodeAt(0) * 3 + 1) % pool.length]);
+  }
+  if (penultimateChar) {
+    tape.push(penultimateChar);
+  }
+  tape.push(targetChar);
+  return tape;
+}
+
+/**
+ * Vertical Rolling Physical Slot-Machine Reel Component
+ * - All 6 letters roll simultaneously on independent vertical reels from the start.
+ * - Reel 0 ('S') locks in first (~25% loading)
+ * - Reel 1 ('C') locks in second (~45% loading)
+ * - Reel 2 ('R') locks in third (~65% loading)
+ * - Reel 3 ('O') exhibits continuous, smooth, uninterrupted vertical movement without pauses, restarts, or jumps (~80% loading)
+ * - Reel 4 ('L') locks in fifth (~92% loading)
+ * - Reel 5 (final 'L') exhibits smooth, progressive deceleration, rolling visibly through 'E' during the 99% suspense pause,
+ *   and locks home into 'L' simultaneously as the counter hits 100%!
+ */
+const VerticalSlotReel: React.FC<{
   targetChar: string;
   slotIndex: number;
-  totalSlots: number;
   progress: number;
-  isComplete: boolean;
-}> = ({ targetChar, slotIndex, totalSlots, progress, isComplete }) => {
-  const [currentChar, setCurrentChar] = useState<string>(() =>
-    CHAR_POOL[(slotIndex * 7) % CHAR_POOL.length]
-  );
+  isLoaded: boolean;
+}> = ({ targetChar, slotIndex, progress, isLoaded }) => {
+  const isFinal = slotIndex === TARGET_WORD.length - 1;
 
-  // Progressive lock threshold for each slot:
-  // Slot 0 locks at 16%, Slot 1 at 33%, Slot 2 at 50%, ..., Slot 5 at 100%
-  const lockThreshold = ((slotIndex + 1) / totalSlots) * 100;
-  const isLocked = isComplete || progress >= lockThreshold;
-  const isFinal = slotIndex === totalSlots - 1;
+  const [tape] = useState<string[]>(() => {
+    if (slotIndex === 0) return createReelTape('S', 24);
+    if (slotIndex === 1) return createReelTape('C', 42);
+    if (slotIndex === 2) return createReelTape('R', 58);
+    if (slotIndex === 3) return createReelTape('O', 72);
+    if (slotIndex === 4) return createReelTape('L', 84);
+    return createReelTape('L', 94, 'E');
+  });
+
+  const [tapeIndex, setTapeIndex] = useState(0);
+  const targetIndex = tape.length - 1;
+  const isLocked = isLoaded || (tapeIndex >= targetIndex);
+
+  const progressRef = useRef(progress);
+  progressRef.current = progress;
+  const isLoadedRef = useRef(isLoaded);
+  isLoadedRef.current = isLoaded;
+
+  // Synchronized final 100% trigger: snaps or rolls into the final target character simultaneously with 100%
+  useEffect(() => {
+    if (isLoaded || progress >= 100) {
+      setTapeIndex(targetIndex);
+    }
+  }, [isLoaded, progress, targetIndex]);
 
   useEffect(() => {
-    if (isLocked) {
-      setCurrentChar(targetChar);
-      return;
-    }
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let active = true;
 
-    // Fast instant lottery scramble roll (every 28ms - 40ms)
-    let speed = 28 + (slotIndex * 4);
-    if (isFinal) {
-      if (progress >= 99) {
-        speed = 420; // Dramatic suspense pause at 99% before snapping into 100%
-      } else if (progress >= 92) {
-        speed = 180;
-      }
-    }
+    const tick = () => {
+      if (!active) return;
+      setTapeIndex((prev) => {
+        if (prev >= targetIndex) return targetIndex;
 
-    const interval = setInterval(() => {
-      const rand = CHAR_POOL[Math.floor(Math.random() * CHAR_POOL.length)];
-      setCurrentChar(rand);
-    }, speed);
+        // For the final slot (Reel 5, 'L'):
+        // Sits on penultimate 'E' (targetIndex - 1) during 99% pause until isLoaded/100%
+        if (isFinal && prev >= targetIndex - 1 && !isLoadedRef.current && progressRef.current < 100) {
+          timer = setTimeout(tick, 35);
+          return prev;
+        }
 
-    return () => clearInterval(interval);
-  }, [isLocked, targetChar, slotIndex, isFinal, progress]);
+        const next = prev + 1;
+        if (next >= targetIndex) {
+          return targetIndex;
+        }
+
+        // Dynamic step speed
+        let stepSpeed = 46 + (slotIndex % 3) * 4;
+        if (isFinal) {
+          const currentProgress = progressRef.current;
+          if (currentProgress >= 96) {
+            stepSpeed = 380; // Slow deliberate roll through E
+          } else if (currentProgress >= 88) {
+            stepSpeed = 190; // Noticeable progressive deceleration
+          } else if (currentProgress >= 75) {
+            stepSpeed = 100; // Early deceleration
+          }
+        }
+
+        timer = setTimeout(tick, stepSpeed);
+        return next;
+      });
+    };
+
+    timer = setTimeout(tick, 46 + (slotIndex % 3) * 4);
+
+    return () => {
+      active = false;
+      if (timer) clearTimeout(timer);
+    };
+  }, [targetIndex, isFinal, slotIndex]);
+
+  const cellHeight = 20;
+  const cellWidth = 14;
 
   return (
-    <span
-      className={`font-terminal-dots inline-block text-center transition-transform duration-75 select-none ${
-        isLocked
-          ? 'text-[#1a1a1a] scale-100 font-bold'
-          : 'text-[#404040] scale-95 opacity-90'
-      }`}
+    <div
+      className="relative inline-block overflow-hidden select-none align-middle"
       style={{
-        width: '1.2ch',
-        letterSpacing: '0.04em',
-        fontSize: '11.5px',
-        lineHeight: 1,
+        height: `${cellHeight}px`,
+        width: `${cellWidth}px`,
       }}
     >
-      {currentChar}
-    </span>
-  );
-};
-
-const ScrollLotteryMachine: React.FC<{ progress: number; isLoaded: boolean }> = ({
-  progress,
-  isLoaded,
-}) => {
-  return (
-    <span className="flex items-center text-sm sm:text-base font-normal tracking-wider text-[#1a1a1a]">
-      {TARGET_WORD.split('').map((char, idx) => (
-        <LotterySlotChar
-          key={idx}
-          targetChar={char}
-          slotIndex={idx}
-          totalSlots={TARGET_WORD.length}
-          progress={progress}
-          isComplete={isLoaded}
-        />
-      ))}
-    </span>
+      <motion.div
+        animate={{
+          y: -tapeIndex * cellHeight,
+        }}
+        transition={
+          isLocked
+            ? {
+                type: 'spring',
+                stiffness: isFinal ? 180 : 300,
+                damping: isFinal ? 20 : 24,
+                mass: isFinal ? 1.0 : 0.8,
+              }
+            : {
+                duration: (isFinal && progress >= 88 ? 0.18 : 0.045),
+                ease: 'linear',
+              }
+        }
+        className="flex flex-col items-center"
+      >
+        {tape.map((ch, idx) => {
+          const isAtTarget = idx === targetIndex && isLocked;
+          const isAtE = isFinal && idx === targetIndex - 1 && tapeIndex === targetIndex - 1;
+          return (
+            <div
+              key={idx}
+              className={`flex items-center justify-center font-terminal-dots select-none uppercase tracking-[0.12em] ${
+                isAtTarget
+                  ? 'text-[#111b21] font-bold'
+                  : isAtE
+                  ? 'text-[#222222] font-semibold'
+                  : 'text-[#444444] font-medium opacity-85'
+              }`}
+              style={{
+                height: `${cellHeight}px`,
+                width: `${cellWidth}px`,
+                fontSize: '13px',
+                lineHeight: `${cellHeight}px`,
+                textShadow: isAtTarget ? '0 0.5px 1px rgba(0,0,0,0.25)' : 'none',
+              }}
+            >
+              {ch}
+            </div>
+          );
+        })}
+      </motion.div>
+    </div>
   );
 };
 
@@ -296,6 +381,15 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   useEffect(() => {
     onLoadingCompleteRef.current = onLoadingComplete;
   }, [onLoadingComplete]);
+
+  // Reset state when preloader returns to idle
+  useEffect(() => {
+    if (phase === 'idle') {
+      hasFinishedRef.current = false;
+      setIsLoaded(false);
+      setProgress(0);
+    }
+  }, [phase]);
 
   // Cinematic pacing loading animation (calm, unhurried):
   // - 1% to 75%: smooth steady progress (~30ms per tick)
@@ -563,8 +657,18 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                             '0 2px 2px 0 rgba(0,0,0,0.08), 0 4px 7px 0 rgba(0,0,0,0.2), 0 0.5px 2px 0 rgba(0,0,0,0.15), inset 0 -1px 0.2px 0 rgba(0,0,0,0.12), inset 0 1px 0.2px 0 #ffffff',
                         }}
                       >
-                        {/* Dot-matrix lottery machine resolving sequentially into circular-dot 'SCROLL' */}
-                        <ScrollLotteryMachine progress={progress} isLoaded={isLoaded} />
+                        {/* Authentic dot-matrix letters rolling on 6 independent vertical slot reels */}
+                        <div className="flex items-center tracking-normal text-[#1a1a1a]">
+                          {TARGET_WORD.split('').map((char, idx) => (
+                            <VerticalSlotReel
+                              key={idx}
+                              targetChar={char}
+                              slotIndex={idx}
+                              progress={progress}
+                              isLoaded={isLoaded}
+                            />
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
