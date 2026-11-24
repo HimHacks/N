@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { newSession, seal, receive, hex } from '../../lib/simulation/teachingProtocolEngine';
 import { BlockReveal } from '../ui/BlockReveal';
+import { DotExpandButton } from '../ui/DotExpandButton';
 
 interface E2EEHomePageProps {
   onNavigateToSimulator: (origin?: { x: number; y: number }) => void;
@@ -186,8 +187,9 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
               How does it stay between the two of you?
             </p>
 
-            {/* Primary Action Button */}
-            <button
+            {/* Primary Action Button with Expanding Dot Pill Micro-Interaction */}
+            <DotExpandButton
+              text="Scroll to find out in 2 minutes"
               onClick={(e) => {
                 const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
                 const origin = {
@@ -196,10 +198,7 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
                 };
                 onNavigateToSimulator(origin);
               }}
-              className="inline-flex items-center justify-center min-h-[50px] px-8 py-3.5 rounded-lg bg-[#176B50] hover:bg-[#12553F] active:translate-y-0.5 text-white font-semibold text-sm sm:text-base shadow-[0_4px_0_#104B39] transition-all cursor-pointer"
-            >
-              Find out in 2 minutes
-            </button>
+            />
 
             {/* Supporting Line */}
             <p className="text-xs text-[#52665F] mt-3 sm:mt-3.5">
