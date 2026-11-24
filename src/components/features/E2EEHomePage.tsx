@@ -128,22 +128,23 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
               End-to-End Encryption
             </motion.h1>
           )}
-        </div>
 
-        {/* Bottom Section: Description on bottom-left elevated higher, Soap Bubble Pop-up on bottom-right */}
-        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-8 mt-8 sm:mt-12 md:mt-16 w-full">
-          {/* Bottom-left description text: elevated noticeably higher off the bottom */}
+          {/* Elevated Description: positioned directly up with the hero message */}
           {isInitialReady && (
             <motion.p
               initial={{ opacity: 0, y: 28, filter: 'blur(6px)' }}
               animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
               transition={{ duration: 0.85, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
-              className="text-base sm:text-lg md:text-xl text-[#efeae2]/95 font-normal max-w-xl text-left select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] leading-relaxed pb-4 md:pb-6"
+              className="text-base sm:text-lg md:text-xl text-[#efeae2]/95 font-normal max-w-xl text-left select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] leading-relaxed mt-8"
             >
               <span className="block">Messages are encrypted directly on your device.</span>
-              <span className="block mt-0.5">Only you and the recipient hold the keys.</span>
+              <span className="block mt-1">Only you and the recipient hold the keys.</span>
             </motion.p>
           )}
+        </div>
+
+        {/* Bottom Section: Soap Bubble Pop-up on bottom-right */}
+        <div className="flex flex-col md:flex-row items-end justify-end gap-8 pb-4 w-full">
 
           {/* 
             Right-hand Hotline Zone:

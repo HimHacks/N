@@ -192,8 +192,11 @@ const RollDownText: React.FC<{
   );
 };
 
-// Lottery 3-slot sequential character resolver
-// The final letter 'l' slows down dramatically, cycling sluggishly like the last reel of a 3-slot lottery machine before clicking home
+// 3-slot Lottery Sequential Character Resolver:
+// Each slot constantly random-scrambles. As progress advances, slot 0 ('S') locks in, then slot 1 ('c'),
+// while remaining slots keep frantically scrambling.
+// At the end, slot 5 (the final 'l') starts slowing down dramatically just like the last reel of a lottery machine,
+// holding tense suspense alongside the 99% pause, and snaps to 'l' simultaneously when 100% hits!
 const LotterySlotChar: React.FC<{
   targetChar: string;
   slotIndex: number;
@@ -205,14 +208,14 @@ const LotterySlotChar: React.FC<{
     CHAR_POOL[(slotIndex * 7) % CHAR_POOL.length]
   );
 
-  // Progressive resolution thresholds:
-  // slot 0 ('S'): resolves at 25%
-  // slot 1 ('c'): resolves at 42%
-  // slot 2 ('r'): resolves at 58%
-  // slot 3 ('o'): resolves at 72%
-  // slot 4 ('l'): resolves at 85%
-  // slot 5 ('l'): resolves strictly at 100%
-  const thresholds = [25, 42, 58, 72, 85, 100];
+  // Progressive lock-in thresholds:
+  // Slot 0 ('S') locks at 25%
+  // Slot 1 ('c') locks at 42%
+  // Slot 2 ('r') locks at 58%
+  // Slot 3 ('o') locks at 72%
+  // Slot 4 ('l') locks at 86%
+  // Slot 5 ('l') locks strictly at 100%
+  const thresholds = [25, 42, 58, 72, 86, 100];
   const lockThreshold = thresholds[slotIndex] ?? 100;
   const isLocked = isComplete || progress >= lockThreshold;
 
@@ -224,21 +227,21 @@ const LotterySlotChar: React.FC<{
       return;
     }
 
-    // Dynamic tick rate: for earlier slots, rapid spinning (35-65ms).
-    // For the final slot (index 5, final 'l'), as progress climbs from 80% to 99%,
-    // the letters cycle progressively slower and slower (120ms -> 240ms -> 420ms),
-    // creating that suspenseful lottery reel deceleration!
-    let speed = 40 + slotIndex * 6;
+    // Earlier slots and unlocked slots constantly cycle random letters rapidly.
+    // For the final 'l', as progress enters 80% -> 92% -> 99%, the reel slows down heavily.
+    let speed = 45;
     if (isFinalSlot) {
-      if (progress >= 95) {
-        speed = 360; // Very slow crawl right before 100%
-      } else if (progress >= 85) {
-        speed = 220; // Noticeable deceleration
-      } else if (progress >= 70) {
-        speed = 120; // Starting to slow down
+      if (progress >= 99) {
+        speed = 520; // Suspense pause at 99%, sluggishly crawling
+      } else if (progress >= 92) {
+        speed = 320; // Noticeably slow
+      } else if (progress >= 80) {
+        speed = 160; // Decelerating
       } else {
-        speed = 70;
+        speed = 65;
       }
+    } else {
+      speed = 35 + slotIndex * 8; // Constant rapid scramble before locking
     }
 
     const interval = setInterval(() => {
@@ -333,15 +336,14 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   const originX = buttonOrigin ? `${Math.round(buttonOrigin.x)}px` : 'calc(100% - 140px)';
   const originY = buttonOrigin ? `${Math.round(buttonOrigin.y)}px` : 'calc(100% - 70px)';
 
-  // Professional, smooth multi-stage warping animation from the clicked button:
-  // Stage 0: Starts at button origin (0% size)
-  // Stage 1: Fluidly warps to touch and hug the left and bottom edges first
-  // Stage 2: Floods across the top, left, and entire center of the website
-  // Stage 3: Smoothly closes and seals into the bottom-right corner before settling
+  // Professional, smooth warping expansion starting strictly from the clicked button:
+  // Starts with zero radius right at the button coordinate (originX, originY).
+  // First warps outwards towards the left and bottom edges of the viewport,
+  // floods the main page, and finally fills the corners, completing in the bottom-right.
   const clipInitial = `circle(0px at ${originX} ${originY})`;
-  const clipStage1Edges = `polygon(0% 100%, 0% 25%, 35% 100%, ${originX} ${originY})`;
-  const clipStage2Expands = `polygon(0% 0%, 100% 0%, 100% 50%, 65% 100%, 0% 100%)`;
-  const clipFull = `circle(260vw at ${originX} ${originY})`;
+  const clipStage1Edges = `polygon(0% 100%, 0% 30%, 35% 100%, ${originX} ${originY})`;
+  const clipStage2Expands = `polygon(0% 0%, 100% 0%, 100% 45%, 65% 100%, 0% 100%)`;
+  const clipFull = `circle(280vw at ${originX} ${originY})`;
 
   const customEase = [0.22, 1, 0.36, 1] as const;
 
@@ -417,8 +419,8 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                       'rgba(239, 234, 226, 0.96)',
                     ],
                     transition: {
-                      clipPath: { duration: 1.6, ease: customEase, times: [0, 0.32, 0.68, 1] },
-                      backgroundColor: { duration: 1.5, ease: 'easeInOut' },
+                      clipPath: { duration: 1.85, ease: customEase, times: [0, 0.34, 0.7, 1] },
+                      backgroundColor: { duration: 1.7, ease: 'easeInOut' },
                     },
                   }
                 : phase === 'loading'
@@ -445,11 +447,11 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
               Background of the loading page:
               1. Entire screen expands from transparent to authentic WhatsApp Biscotti Cream (#efeae2) with delicate translucency (0.96).
               2. Vibrant Green, Emerald & Cyan fluid ripples rise up smoothly and naturally from the bottom,
-                 seamlessly blending into the Biscotti Cream with no harsh border line.
+                 reaching exactly 3/8 (37.5%) of the height with an organic soft fade into the Biscotti Cream.
             */}
             <div className="absolute inset-0 pointer-events-none bg-[#efeae2]/96" />
 
-            {/* Cyan, Rich Green & Dark Green fluid background rises up smoothly and blends naturally into the cream */}
+            {/* Cyan, Rich Green & Dark Green fluid background rises up smoothly to exactly 3/8 height */}
             <motion.div
               initial={{ y: '100%', opacity: 0 }}
               animate={
@@ -458,15 +460,15 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   : { y: '100%', opacity: 0 }
               }
               transition={{
-                duration: 2.6, // Slower, unhurried cinematic glide allowing the fluid ripples to settle
+                duration: 2.5, // Smooth, unhurried cinematic glide allowing the fluid ripples to settle
                 ease: [0.16, 1, 0.3, 1],
                 delay: 0.15,
               }}
-              className="absolute inset-0 pointer-events-none overflow-hidden z-10"
+              className="absolute inset-x-0 bottom-0 h-[37.5%] pointer-events-none overflow-hidden z-10"
               style={{
-                // Natural organic fade without a hard line, gently transitioning from bottom up
-                maskImage: 'linear-gradient(to top, black 0%, rgba(0,0,0,0.92) 28%, rgba(0,0,0,0.6) 48%, rgba(0,0,0,0.2) 65%, transparent 80%)',
-                WebkitMaskImage: 'linear-gradient(to top, black 0%, rgba(0,0,0,0.92) 28%, rgba(0,0,0,0.6) 48%, rgba(0,0,0,0.2) 65%, transparent 80%)',
+                // 3/8 height ratio (37.5%) with organic soft feathering at the top edge
+                maskImage: 'linear-gradient(to top, black 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.5) 80%, rgba(0,0,0,0.15) 92%, transparent 100%)',
+                WebkitMaskImage: 'linear-gradient(to top, black 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.5) 80%, rgba(0,0,0,0.15) 92%, transparent 100%)',
               }}
             >
               {/* Home page WebGL fluid shader running in background with strong green presence */}
