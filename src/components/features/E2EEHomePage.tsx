@@ -68,50 +68,21 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
       }}
     >
       {/* 
-        WhatsApp-Style Chat Doodles Background:
-        Fine SVG vector doodles (chat bubbles, paper planes, phones, locks, keys, stars, speech marks)
-        rendered at 9% opacity with a soft radial center mask so the center title is clean and legible.
+        Authentic WhatsApp Doodle Wallpaper Background:
+        Using the exact authentic WhatsApp doodle artwork at balanced subtle opacity (10-12%)
+        with an elliptical center gradient mask to keep title and buttons crisp and legible.
       */}
       <div
         className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
         style={{
-          opacity: 0.09,
-          maskImage: 'radial-gradient(ellipse 65% 55% at 50% 45%, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.95) 75%, black 100%)',
-          WebkitMaskImage: 'radial-gradient(ellipse 65% 55% at 50% 45%, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.95) 75%, black 100%)',
+          opacity: 0.11,
+          backgroundImage: 'url(/whatsapp-doodle.jpg)',
+          backgroundSize: '420px 420px',
+          backgroundRepeat: 'repeat',
+          maskImage: 'radial-gradient(ellipse 65% 55% at 50% 45%, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.85) 75%, black 100%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 65% 55% at 50% 45%, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.85) 75%, black 100%)',
         }}
-      >
-        <svg className="w-full h-full" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern id="chat-doodles" width="220" height="220" patternUnits="userSpaceOnUse">
-              {/* Lock & Key */}
-              <g stroke="#153A32" strokeWidth="1.2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                {/* Lock */}
-                <rect x="25" y="35" width="24" height="20" rx="4" />
-                <path d="M31 35 V27 C31 22 43 22 43 27 V35" />
-                <circle cx="37" cy="44" r="2.5" fill="#153A32" />
-                {/* Key */}
-                <circle cx="165" cy="40" r="6" />
-                <path d="M171 40 L190 40 M182 40 V46 M187 40 V45" />
-                {/* Speech Bubble */}
-                <path d="M30 140 C20 140 16 150 16 160 C16 172 26 178 38 178 L38 188 L48 178 C60 178 68 170 68 160 C68 148 58 140 30 140 Z" />
-                {/* Paper Plane */}
-                <path d="M160 145 L200 130 L180 180 L168 156 Z M180 140 L168 156" />
-                {/* Phone */}
-                <rect x="95" y="80" width="18" height="30" rx="3" />
-                <line x1="101" y1="83" x2="107" y2="83" />
-                <circle cx="104" cy="105" r="1.5" />
-                {/* Stars / Glints */}
-                <path d="M125 30 L127 36 L133 38 L127 40 L125 46 L123 40 L117 38 L123 36 Z" />
-                <path d="M100 175 L101 179 L105 180 L101 181 L100 185 L99 181 L95 180 L99 179 Z" />
-                {/* Curved handwritten notes */}
-                <path d="M60 85 Q75 75 90 85 T110 85" strokeDasharray="3 3" />
-                <path d="M130 150 C140 165 155 160 160 155" />
-              </g>
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#chat-doodles)" />
-        </svg>
-      </div>
+      />
 
       {/* Top Site Navigation Bar matching Reference Layout */}
       <header className="sticky top-0 z-40 flex items-center justify-between h-[76px] sm:h-[86px] px-6 sm:px-12 border-b border-[#D3DBCF] bg-[#F7F4EC]/95 backdrop-blur-md">
