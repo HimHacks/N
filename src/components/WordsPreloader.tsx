@@ -191,86 +191,55 @@ const RollDownText: React.FC<{
 
 // Target word: "SCROLL"
 const TARGET_WORD = 'SCROLL';
-// Alphanumeric character pool for rapid lottery scrambling
+// Upstream spasoje.dev character pool (uppercase alphanumeric)
 const CHAR_POOL = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','0','1','2','3','4','5','6','7','8','9'];
 
-// Individual character slot that scrambles rapidly through random characters in place and settles into its target letter
-const LotterySlotChar: React.FC<{
+// Individual character slot that scrambles through random characters in place and settles into its target letter
+const ScrambleCharInPlace: React.FC<{
   targetChar: string;
-  slotIndex: number;
-  totalSlots: number;
+  charIndex: number;
+  totalChars: number;
   progress: number;
   isComplete: boolean;
-}> = ({ targetChar, slotIndex, totalSlots, progress, isComplete }) => {
+}> = ({ targetChar, charIndex, totalChars, progress, isComplete }) => {
   const [currentChar, setCurrentChar] = useState<string>(() =>
-    CHAR_POOL[(slotIndex * 7) % CHAR_POOL.length]
+    CHAR_POOL[Math.floor(Math.random() * CHAR_POOL.length)]
   );
 
-  // Progressive lock threshold for each slot:
-  // Slot 0 locks at 16%, Slot 1 at 33%, Slot 2 at 50%, ..., Slot 5 at 100%
-  const lockThreshold = ((slotIndex + 1) / totalSlots) * 100;
-  const isLocked = isComplete || progress >= lockThreshold;
-  const isFinal = slotIndex === totalSlots - 1;
-
   useEffect(() => {
-    if (isLocked) {
+    if (isComplete) {
       setCurrentChar(targetChar);
       return;
     }
 
-    // Fast instant lottery scramble roll (every 28ms - 40ms)
-    let speed = 28 + (slotIndex * 4);
-    if (isFinal) {
-      if (progress >= 99) {
-        speed = 420; // Dramatic suspense pause at 99% before snapping into 100%
-      } else if (progress >= 92) {
-        speed = 180;
-      }
+    // Characters settle sequentially based on progress:
+    // e.g. char 0 settles at ~20%, char 1 at ~35%, ..., char 5 at 100%
+    const settleThreshold = ((charIndex + 1) / totalChars) * 100;
+
+    if (progress >= settleThreshold) {
+      setCurrentChar(targetChar);
+      return;
     }
 
+    // Scramble rapidly in its fixed place with subtle jitter
     const interval = setInterval(() => {
-      const rand = CHAR_POOL[Math.floor(Math.random() * CHAR_POOL.length)];
-      setCurrentChar(rand);
-    }, speed);
+      setCurrentChar(CHAR_POOL[Math.floor(Math.random() * CHAR_POOL.length)]);
+    }, 55 + (charIndex * 12));
 
     return () => clearInterval(interval);
-  }, [isLocked, targetChar, slotIndex, isFinal, progress]);
+  }, [progress, isComplete, targetChar, charIndex, totalChars]);
+
+  const isLocked = isComplete || (progress >= ((charIndex + 1) / totalChars) * 100);
 
   return (
     <span
-      className={`font-terminal-dots inline-block text-center transition-transform duration-75 select-none ${
+      className={`inline-flex items-center justify-center font-mono w-[1ch] transition-colors duration-150 ${
         isLocked
-          ? 'text-[#1a1a1a] scale-100 font-bold'
-          : 'text-[#404040] scale-95 opacity-90'
+          ? 'text-[#1a1a1a] font-bold'
+          : 'text-[#1a1a1a]/70 font-semibold'
       }`}
-      style={{
-        width: '1.2ch',
-        letterSpacing: '0.04em',
-        fontSize: '11.5px',
-        lineHeight: 1,
-      }}
     >
       {currentChar}
-    </span>
-  );
-};
-
-const ScrollLotteryMachine: React.FC<{ progress: number; isLoaded: boolean }> = ({
-  progress,
-  isLoaded,
-}) => {
-  return (
-    <span className="flex items-center text-sm sm:text-base font-normal tracking-wider text-[#1a1a1a]">
-      {TARGET_WORD.split('').map((char, idx) => (
-        <LotterySlotChar
-          key={idx}
-          targetChar={char}
-          slotIndex={idx}
-          totalSlots={TARGET_WORD.length}
-          progress={progress}
-          isComplete={isLoaded}
-        />
-      ))}
     </span>
   );
 };
@@ -542,19 +511,50 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                       END-TO-END ENCRYPTION SIMULATOR
                     </span>
 
-                    {/* Bottom Right: Clean tactile informational pill (not clickable, no arrow) */}
+                    {/* Bottom Right: spasoje.dev aesthetic button (tactile pill with LED dot) */}
                     <div className="relative flex items-center justify-end">
                       <div
-                        className="flex items-center rounded-[36px] transition-all duration-200 select-none cursor-default"
+                        className="group flex items-center rounded-[36px] transition-all duration-300 select-none cursor-default"
                         style={{
-                          padding: '10px 22px 8px 22px',
+                          padding: '10px 16px 8px 14px',
                           backgroundColor: '#f2f2f2',
                           boxShadow:
                             '0 2px 2px 0 rgba(0,0,0,0.08), 0 4px 7px 0 rgba(0,0,0,0.2), 0 0.5px 2px 0 rgba(0,0,0,0.15), inset 0 -1px 0.2px 0 rgba(0,0,0,0.12), inset 0 1px 0.2px 0 #ffffff',
                         }}
                       >
-                        {/* Dot-matrix lottery machine resolving sequentially into circular-dot 'SCROLL' */}
-                        <ScrollLotteryMachine progress={progress} isLoaded={isLoaded} />
+                        {/* Spasoje LED Indicator dot: orange/emerald pulsating glow */}
+                        <span
+                          className={`relative inline-block w-1.5 h-1.5 rounded-full mr-2 mb-0.5 transition-colors duration-300 ${
+                            isLoaded ? 'bg-[#ff611b]' : 'bg-[#e0e0e0]'
+                          }`}
+                        >
+                          {isLoaded && (
+                            <span className="absolute inset-0 rounded-full bg-[#ff611b] animate-ping opacity-75" />
+                          )}
+                        </span>
+
+                        {/* In-place scrambling letters spelling out "SCROLL" */}
+                        <span className="flex items-center text-[12px] font-mono tracking-wider uppercase text-[#1a1a1a]">
+                          {TARGET_WORD.split('').map((char, idx) => (
+                            <ScrambleCharInPlace
+                              key={idx}
+                              targetChar={char}
+                              charIndex={idx}
+                              totalChars={TARGET_WORD.length}
+                              progress={progress}
+                              isComplete={isLoaded}
+                            />
+                          ))}
+                        </span>
+
+                        {/* Subtle down arrow glyph */}
+                        <span
+                          className={`ml-2 text-xs font-bold text-[#1a1a1a] transition-transform duration-300 ${
+                            isLoaded ? 'translate-y-0.5 opacity-100' : 'opacity-40'
+                          }`}
+                        >
+                          &darr;
+                        </span>
                       </div>
                     </div>
                   </div>
