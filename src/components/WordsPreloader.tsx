@@ -228,7 +228,8 @@ const VerticalSlotReel: React.FC<{
   slotIndex: number;
   progress: number;
   isLoaded: boolean;
-}> = ({ targetChar, slotIndex, progress, isLoaded }) => {
+  isEntranceComplete: boolean;
+}> = ({ targetChar, slotIndex, progress, isLoaded, isEntranceComplete }) => {
   const isFinal = slotIndex === TARGET_WORD.length - 1;
 
   const [tape] = useState<string[]>(() => {
@@ -257,6 +258,9 @@ const VerticalSlotReel: React.FC<{
   }, [isLoaded, progress, targetIndex]);
 
   useEffect(() => {
+    // Only begin rolling once entrance animation has fully completed and settled
+    if (!isEntranceComplete) return;
+
     let timer: ReturnType<typeof setTimeout> | null = null;
     let active = true;
 
@@ -301,7 +305,7 @@ const VerticalSlotReel: React.FC<{
       active = false;
       if (timer) clearTimeout(timer);
     };
-  }, [targetIndex, isFinal, slotIndex]);
+  }, [targetIndex, isFinal, slotIndex, isEntranceComplete]);
 
   const cellHeight = 20;
   const cellWidth = 14;
@@ -375,6 +379,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
 }) => {
   const [progress, setProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isEntranceComplete, setIsEntranceComplete] = useState(false);
   const hasFinishedRef = useRef(false);
 
   const onLoadingCompleteRef = useRef(onLoadingComplete);
@@ -388,16 +393,14 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
       hasFinishedRef.current = false;
       setIsLoaded(false);
       setProgress(0);
+      setIsEntranceComplete(false);
     }
   }, [phase]);
 
   // Cinematic pacing loading animation (calm, unhurried):
-  // - 1% to 75%: smooth steady progress (~30ms per tick)
-  // - 75% to 92%: begins slowing down noticeably (~75ms per tick)
-  // - 92% to 98%: decelerates heavily (~160ms per tick)
-  // - 99%: deliberate suspense pause (~600ms) before snapping into 100%
+  // GATED: Only starts once the upward pull entrance has fully completed and settled!
   useEffect(() => {
-    if (phase === 'loading') {
+    if (phase === 'loading' && isEntranceComplete) {
       if (hasFinishedRef.current) return;
       setIsLoaded(false);
       setProgress(1);
@@ -441,8 +444,9 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
       hasFinishedRef.current = false;
       setProgress(0);
       setIsLoaded(false);
+      setIsEntranceComplete(false);
     }
-  }, [phase]);
+  }, [phase, isEntranceComplete]);
 
   // Normalized coordinates in 1000x1000 viewBox:
   // Button origin (bx, by) defaults to bottom-right hotline zone (~860, 920)
@@ -477,6 +481,17 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   const currentBaselineYRef = useRef(1000);
   if (isInteractiveScroll && phase === 'idle') {
     currentBaselineYRef.current = Math.max(0, Math.min(1000, Math.round((1 - scrollFraction) * 1000)));
+  }
+
+  // Track physical surface Y position for genuine upward pull and reverse-scroll retreat:
+  // - Interactive scrubbing: surface translates upward from 100vh down to ~30vh
+  // - When scrolling backward: surface smoothly retreats downward back to 100vh
+  // - When committed to expanding: smoothly completes pull-up with natural deceleration into 0vh
+  const currentSurfaceYRef = useRef(100);
+  if (isInteractiveScroll && phase === 'idle') {
+    currentSurfaceYRef.current = Math.max(0, Math.min(100, Math.round((1 - scrollFraction * 1.4) * 100)));
+  } else if (phase === 'idle') {
+    currentSurfaceYRef.current = 100;
   }
 
   // Generate an organic wave path at any given baseline Y
@@ -520,12 +535,9 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   d: [currentInteractiveWave, midWayWave, wave4],
                 }}
                 transition={{
-                  duration: 1.25,
+                  duration: 1.1,
                   ease: [0.16, 1, 0.3, 1],
                   times: [0, 0.45, 1],
-                }}
-                onAnimationComplete={() => {
-                  if (onExpanded) onExpanded();
                 }}
               />
             ) : (
@@ -533,13 +545,32 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
             )}
           </svg>
 
-          {/* Full Loading and Exiting Screen */}
+          {/* 
+            GENUINE UPWARD-REVEAL LOADING SURFACE:
+            - Progressively emerges into the viewport through a controlled upward movement.
+            - Follows reverse scrolling naturally without resetting or abrupt jumps.
+            - Settles into place with smooth natural deceleration.
+            - Loading animation (counter and reels) only begins after entrance is 100% complete.
+          */}
           <motion.div
             className="fixed inset-0 z-30 flex items-center justify-center overflow-hidden"
-            initial={{ opacity: 0 }}
+            initial={false}
             animate={
-              phase === 'loading'
+              isInteractiveScroll && phase === 'idle'
                 ? {
+                    y: `${currentSurfaceYRef.current}vh`,
+                    opacity: Math.min(1, Math.max(0, (100 - currentSurfaceYRef.current) / 45)),
+                    transition: { duration: 0.08, ease: 'easeOut' },
+                  }
+                : phase === 'expanding'
+                ? {
+                    y: '0vh',
+                    opacity: 1,
+                    transition: { duration: 1.05, ease: [0.16, 1, 0.3, 1] },
+                  }
+                : phase === 'loading'
+                ? {
+                    y: '0vh',
                     opacity: 1,
                     transition: { duration: 0.35, ease: 'easeOut' },
                   }
@@ -548,23 +579,25 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                     y: '-100vh',
                     transition: { duration: 0.85, ease: [0.76, 0, 0.24, 1] },
                   }
-                : { opacity: 0 }
+                : { y: '100vh', opacity: 0 }
             }
             onAnimationComplete={() => {
-              if (phase === 'exiting' && onExited) {
+              if (phase === 'expanding') {
+                setIsEntranceComplete(true);
+                if (onExpanded) onExpanded();
+              } else if (phase === 'exiting' && onExited) {
                 onExited();
               }
             }}
           >
             {/* 
               Loading page background:
-              Only appears once cream expansion has completed and phase enters 'loading'!
               Anchored at the bottom at 3/8 height (37.5%) with lively undulating crest.
             */}
-            {phase === 'loading' && (
+            {(isInteractiveScroll || phase === 'expanding' || phase === 'loading') && (
               <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 className="absolute inset-x-0 bottom-0 h-[37.5%] pointer-events-none overflow-hidden z-10"
                 style={{
@@ -598,83 +631,77 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
               </motion.div>
             )}
 
-            {/* Studio Card (Loading Screen) - ONLY rendered once transition completes into 'loading' */}
-            <AnimatePresence>
-              {phase === 'loading' && (
-                <motion.div
-                  key="loading-card-container"
-                  initial={{ opacity: 0, scale: 0.95, y: 16 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.96 }}
-                  transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                  className="relative z-20 w-full max-w-4xl h-[78vh] max-h-[580px] bg-white/95 rounded-3xl shadow-[0_30px_90px_rgba(11,20,26,0.22)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-[#d1d7db]/80 mx-4 sm:mx-8 backdrop-blur-xl"
-                >
-                  {/* Center Loading Telemetry: Space Grotesk font for "Loading" with calm roll down exit */}
-                  <div className="flex flex-col md:flex-row items-center justify-between my-auto w-full gap-8">
-                    {/* Left: 'Loading' animated with calm roll down exit when 100% reached */}
-                    <div className="flex items-center gap-4 min-h-[64px]">
-                      <RollDownText text="Loading" isComplete={isLoaded} />
-                      <AnimatePresence>
-                        {!isLoaded && (
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.6, y: 16 }}
-                            transition={{ duration: 0.4 }}
-                          >
-                            <ThreeSquaresLoader size={28} />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-
-                    {/* Right: Big Dot-Matrix Counter with instant digit changes */}
-                    <div className="flex items-center gap-2 sm:gap-3 bg-[#f0f2f5] px-6 py-5 rounded-2xl border border-[#d1d7db] shadow-inner">
-                      {digits.map((ch, idx) => (
-                        <InstantDotMatrixDigit key={idx} char={ch} dotSize={6} color="#111b21" />
-                      ))}
-                    </div>
+            {/* Studio Card (Loading Screen) - Unified physical surface progressively pulled upward */}
+            {(isInteractiveScroll || phase === 'expanding' || phase === 'loading') && (
+              <div
+                className="relative z-20 w-full max-w-4xl h-[78vh] max-h-[580px] bg-white/95 rounded-3xl shadow-[0_30px_90px_rgba(11,20,26,0.22)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-[#d1d7db]/80 mx-4 sm:mx-8 backdrop-blur-xl"
+              >
+                {/* Center Loading Telemetry: Space Grotesk font for "Loading" with calm roll down exit */}
+                <div className="flex flex-col md:flex-row items-center justify-between my-auto w-full gap-8">
+                  {/* Left: 'Loading' animated with calm roll down exit when 100% reached */}
+                  <div className="flex items-center gap-4 min-h-[64px]">
+                    <RollDownText text="Loading" isComplete={isLoaded} />
+                    <AnimatePresence>
+                      {!isLoaded && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.6, y: 16 }}
+                          transition={{ duration: 0.4 }}
+                        >
+                          <ThreeSquaresLoader size={28} />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
 
-                  {/* 
-                    Bottom Section:
-                    - Left: Retained "END-TO-END ENCRYPTION SIMULATOR"
-                    - Bottom Right: Tactile pill indicator with genuine dot-matrix lottery machine for "SCROLL"
-                  */}
-                  <div className="relative flex items-center justify-between w-full border-t border-[#e9edef] pt-4 min-h-[56px]">
-                    <span className="text-xs font-mono text-[#667781] tracking-wide select-none">
-                      END-TO-END ENCRYPTION SIMULATOR
-                    </span>
+                  {/* Right: Big Dot-Matrix Counter with instant digit changes */}
+                  <div className="flex items-center gap-2 sm:gap-3 bg-[#f0f2f5] px-6 py-5 rounded-2xl border border-[#d1d7db] shadow-inner">
+                    {digits.map((ch, idx) => (
+                      <InstantDotMatrixDigit key={idx} char={ch} dotSize={6} color="#111b21" />
+                    ))}
+                  </div>
+                </div>
 
-                    {/* Bottom Right: Tactile pill indicator with genuine dot-matrix lottery machine for "SCROLL" */}
-                    <div className="relative flex items-center justify-end">
-                      <div
-                        className="group flex items-center rounded-[36px] transition-all duration-300 select-none cursor-default"
-                        style={{
-                          padding: '10px 18px 8px 18px',
-                          backgroundColor: '#f2f2f2',
-                          boxShadow:
-                            '0 2px 2px 0 rgba(0,0,0,0.08), 0 4px 7px 0 rgba(0,0,0,0.2), 0 0.5px 2px 0 rgba(0,0,0,0.15), inset 0 -1px 0.2px 0 rgba(0,0,0,0.12), inset 0 1px 0.2px 0 #ffffff',
-                        }}
-                      >
-                        {/* Authentic dot-matrix letters rolling on 6 independent vertical slot reels */}
-                        <div className="flex items-center tracking-normal text-[#1a1a1a]">
-                          {TARGET_WORD.split('').map((char, idx) => (
-                            <VerticalSlotReel
-                              key={idx}
-                              targetChar={char}
-                              slotIndex={idx}
-                              progress={progress}
-                              isLoaded={isLoaded}
-                            />
-                          ))}
-                        </div>
+                {/* 
+                  Bottom Section:
+                  - Left: Retained "END-TO-END ENCRYPTION SIMULATOR"
+                  - Bottom Right: Tactile pill indicator with genuine dot-matrix lottery machine for "SCROLL"
+                */}
+                <div className="relative flex items-center justify-between w-full border-t border-[#e9edef] pt-4 min-h-[56px]">
+                  <span className="text-xs font-mono text-[#667781] tracking-wide select-none">
+                    END-TO-END ENCRYPTION SIMULATOR
+                  </span>
+
+                  {/* Bottom Right: Tactile pill indicator with genuine dot-matrix lottery machine for "SCROLL" */}
+                  <div className="relative flex items-center justify-end">
+                    <div
+                      className="group flex items-center rounded-[36px] transition-all duration-300 select-none cursor-default"
+                      style={{
+                        padding: '10px 18px 8px 18px',
+                        backgroundColor: '#f2f2f2',
+                        boxShadow:
+                          '0 2px 2px 0 rgba(0,0,0,0.08), 0 4px 7px 0 rgba(0,0,0,0.2), 0 0.5px 2px 0 rgba(0,0,0,0.15), inset 0 -1px 0.2px 0 rgba(0,0,0,0.12), inset 0 1px 0.2px 0 #ffffff',
+                      }}
+                    >
+                      {/* Authentic dot-matrix letters rolling on 6 independent vertical slot reels */}
+                      <div className="flex items-center tracking-normal text-[#1a1a1a]">
+                        {TARGET_WORD.split('').map((char, idx) => (
+                          <VerticalSlotReel
+                            key={idx}
+                            targetChar={char}
+                            slotIndex={idx}
+                            progress={progress}
+                            isLoaded={isLoaded}
+                            isEntranceComplete={isEntranceComplete}
+                          />
+                        ))}
                       </div>
                     </div>
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                </div>
+              </div>
+            )}
           </motion.div>
         </div>
       )}
