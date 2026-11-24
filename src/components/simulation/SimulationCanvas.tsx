@@ -158,7 +158,6 @@ export const SimulationCanvas: React.FC<SimulationCanvasProps> = ({
         const p = particles[i];
 
         // Harmonic oscillator motion around node
-        const freqOffset = (params.frequencyKhz / 100) * 0.05;
         const targetX = p.originX + Math.sin(time + p.originY * 0.02) * 12;
         const targetY = p.originY + Math.cos(time + p.originX * 0.02) * 12;
 

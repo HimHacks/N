@@ -47,7 +47,7 @@ export interface SoffitGradientConfig {
   maxDpr?: number;
 }
 
-export interface SoffitGradientProps {
+export interface SoffitGradientProps extends SoffitGradientConfig {
   className?: string;
   style?: React.CSSProperties;
   config?: SoffitGradientConfig;
@@ -229,10 +229,11 @@ export const SoffitGradient: React.FC<SoffitGradientProps> = ({
   className = '',
   style,
   config = {},
+  ...directConfig
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const cfgRef = useRef({ ...DEFAULT_CONFIG, ...config });
-  cfgRef.current = { ...DEFAULT_CONFIG, ...config };
+  const cfgRef = useRef({ ...DEFAULT_CONFIG, ...config, ...directConfig });
+  cfgRef.current = { ...DEFAULT_CONFIG, ...config, ...directConfig };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -378,7 +379,7 @@ export const SoffitGradient: React.FC<SoffitGradientProps> = ({
     let raf = 0;
 
     applyConfig();
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl!.drawArrays(gl!.TRIANGLES, 0, 3);
 
     function frame(now: number) {
       raf = requestAnimationFrame(frame);
@@ -403,7 +404,7 @@ export const SoffitGradient: React.FC<SoffitGradientProps> = ({
         mouse.ty = mouse.rest.y;
       }
       u2f('iMouse', mouse.x, mouse.y);
-      gl!.drawArrays(gl.TRIANGLES, 0, 3);
+      gl!.drawArrays(gl!.TRIANGLES, 0, 3);
     }
 
     raf = requestAnimationFrame(frame);

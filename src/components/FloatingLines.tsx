@@ -416,14 +416,14 @@ const FloatingLines = ({
     });
     if (!container || !canvas || !gl) return undefined;
 
+    const parallel = gl.getExtension('KHR_parallel_shader_compile') as KHR_parallel_shader_compile | null;
     let linking = link(gl);
-    let program = linking && !parallel ? finish(gl, linking) : null;
+    let program = linking && (!parallel || gl.getProgramParameter(linking, parallel.COMPLETION_STATUS_KHR)) ? finish(gl, linking) : null;
     if (!program) {
       console.error('[FloatingLines] WebGL shader compilation or linking failed');
       return undefined;
     }
     linking = null;
-    const parallel = null;
 
     const buffer = gl.createBuffer();
     const vao = gl.createVertexArray();

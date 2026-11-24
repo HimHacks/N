@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { gsap } from 'gsap';
@@ -11,8 +11,6 @@ import { CanvasErrorBoundary } from '../ui/CanvasErrorBoundary';
 import {
   Play,
   RotateCcw,
-  Sparkles,
-  Zap,
   Activity,
   Layers,
   ArrowRight,
@@ -119,7 +117,7 @@ const PhotorealisticPhone: React.FC<DeviceMeshProps> = ({
     []
   );
 
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     if (shaderRef.current) {
       shaderRef.current.uniforms.uTime.value += delta;
       shaderRef.current.uniforms.uTouchActive.value = THREE.MathUtils.lerp(

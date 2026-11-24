@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { E2EEHomePage } from './components/features/E2EEHomePage';
 import { CaesarCipherInteraction } from './components/features/CaesarCipherInteraction';
-import { GreetingPreloader } from './components/GreetingPreloader';
+import { Skiper8 } from './components/ui/skiper8';
 import { WordsPreloader, type WordPreloaderPhase } from './components/WordsPreloader';
 
 export const App: React.FC = () => {
+  // Greeting Preloader (Skiper 8 Words Preloader) plays on first page entry
   const [hasVisited, setHasVisited] = useState(false);
   const [currentView, setCurrentView] = useState<'home' | 'simulator'>('home');
   const [preloaderPhase, setPreloaderPhase] = useState<WordPreloaderPhase>('idle');
@@ -14,6 +15,8 @@ export const App: React.FC = () => {
 
   // 1. User clicks the "Let's take a deep dive" soap bubble button on HomePage
   const handleStartDeepDive = (origin?: { x: number; y: number }) => {
+    // Prevent re-triggering if already expanding or loading
+    if (preloaderPhase !== 'idle') return;
     if (origin) {
       setButtonOrigin(origin);
     }
@@ -27,10 +30,11 @@ export const App: React.FC = () => {
     setPreloaderPhase('loading');
   };
 
-  // 3. Compiling reaches 100% -> mark compiling finished and mount the simulator underneath
+  // 3. Compiling reaches 100% -> mark compiling finished (Do NOT switch currentView to simulator yet!
+  // Switching currentView would cause re-render and unmount/remount of page components.
+  // We only mount/switch to simulator when the user actually scrolls down and exits the preloader!)
   const handleLoadingComplete = () => {
     setIsCompilingFinished(true);
-    setCurrentView('simulator');
   };
 
   // 4. Scrolling down triggers navigation ONLY AFTER compiling finishes
@@ -70,19 +74,20 @@ export const App: React.FC = () => {
     };
   }, [preloaderPhase, isCompilingFinished]);
 
-  // When reverse downward slide finishes, preloader is idle
+  // When reverse downward/upward slide finishes, switch to simulator and reset preloader
   const handlePreloaderExited = () => {
+    setCurrentView('simulator');
     setPreloaderPhase('idle');
   };
 
   return (
     <div className="relative w-full min-h-screen bg-[#0b141a] text-white selection:bg-[#00a884] selection:text-white">
       {/* 
-        Initial Visitor Arrival: Greeting Word Preloader
-        Runs ONLY once when the user first opens the site
+        Initial Visitor Arrival: Skiper 8 Words Preloader (Dennis Snellenberg curved morph)
+        Cycles multilingual greetings before smoothly rolling up in a curved path
       */}
       {!hasVisited && (
-        <GreetingPreloader onComplete={() => setHasVisited(true)} />
+        <Skiper8 onComplete={() => setHasVisited(true)} />
       )}
 
       {/* 
@@ -100,14 +105,17 @@ export const App: React.FC = () => {
       {/* 
         View Routing:
         - 'home': Main Hero Page with Lumen Interactive Shader and Soap Bubble button
-        - 'simulator': Interactive Human Walk & Caesar Cipher E2EE Simulator
+        - 'simulator': E2EE Simulator Lab with Step 1-5, ECDH/AES-GCM, and Soffit Gradient background
       */}
       {currentView === 'simulator' ? (
         <div ref={simulatorRef} className="relative w-full min-h-screen">
           <CaesarCipherInteraction onScrollToTop={() => setCurrentView('home')} />
         </div>
       ) : (
-        <E2EEHomePage onNavigateToSimulator={handleStartDeepDive} />
+        <E2EEHomePage
+          onNavigateToSimulator={handleStartDeepDive}
+          isInitialReady={hasVisited}
+        />
       )}
     </div>
   );

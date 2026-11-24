@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import Iridescence, { type IridescenceProps } from '../Iridescence';
 
 export type WhatsAppBackgroundPreset =
@@ -90,9 +90,9 @@ export const E2EEPageBackground: React.FC<E2EEPageBackgroundProps> = ({
           whiteColor={activeWhite}
           hueShift={activeHue}
           speed={speed}
-          amplitude={0}
-          stir={0}
-          sheen={0}
+          amplitude={amplitude}
+          stir={stir}
+          sheen={sheen}
           scale={1}
           detail={5}
           warp={0.32}

@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThreeSquaresLoader } from './ThreeSquaresLoader';
-import { SoffitGradient, type SoffitGradientConfig } from './SoffitGradient';
 import { LumenInteractiveShader } from './features/LumenInteractiveShader';
 
 export type WordPreloaderPhase = 'idle' | 'expanding' | 'loading' | 'exiting';
@@ -150,53 +149,150 @@ const InstantDotMatrixDigit: React.FC<{ char: string; dotSize?: number; color?: 
   );
 };
 
-// Target word: "Scroll"
-const TARGET_WORD = 'Scroll';
-const CHAR_POOL = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','0','1','2','3','4','5','6','7','8','9'];
-
-// Lottery 3-slot sequential character resolver
-const LotterySlotChar: React.FC<{
-  targetChar: string;
-  slotIndex: number;
-  totalSlots: number;
-  progress: number;
+// Stable loading label with generous descender space so 'g' is never cut off
+const RollDownText: React.FC<{
+  text: string;
   isComplete: boolean;
-}> = ({ targetChar, slotIndex, totalSlots, progress, isComplete }) => {
-  const [currentChar, setCurrentChar] = useState<string>(() =>
-    CHAR_POOL[(slotIndex * 7) % CHAR_POOL.length]
-  );
-
-  const lockThreshold = Math.round(((slotIndex + 1) / totalSlots) * 100);
-  const isLocked = isComplete || progress >= lockThreshold;
-
-  useEffect(() => {
-    if (isLocked) {
-      setCurrentChar(targetChar);
-      return;
-    }
-
-    const interval = setInterval(() => {
-      const rand = CHAR_POOL[Math.floor(Math.random() * CHAR_POOL.length)];
-      setCurrentChar(rand);
-    }, 28 + (slotIndex * 4));
-
-    return () => clearInterval(interval);
-  }, [isLocked, targetChar, slotIndex]);
+}> = ({ text, isComplete }) => {
+  const letters = text.split('');
 
   return (
-    <span
-      className={`font-terminal-dots inline-block text-center transition-transform duration-75 select-none ${
-        isLocked
-          ? 'text-[#1a1a1a] scale-100 font-bold'
-          : 'text-[#404040] scale-95 opacity-90'
-      }`}
-      style={{
-        width: '1.2ch',
-        letterSpacing: '0.04em',
-      }}
-    >
-      {currentChar}
-    </span>
+    <div className="inline-flex items-center overflow-visible pb-3 pt-1">
+      <AnimatePresence mode="wait">
+        {!isComplete ? (
+          <motion.div
+            key="loading-active"
+            className="inline-flex items-center overflow-visible leading-relaxed"
+          >
+            {letters.map((char, i) => (
+              <motion.span
+                key={i}
+                className="inline-block text-4xl sm:text-5xl md:text-6xl font-bold text-[#111b21] tracking-tight select-none"
+                style={{
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  display: 'inline-block',
+                  lineHeight: '1.35',
+                  paddingBottom: '4px',
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.28, delay: i * 0.025 }}
+              >
+                {char === ' ' ? '\u00A0' : char}
+              </motion.span>
+            ))}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// Vegas 3-Slot Lottery Sequential Character Resolver for "SCROLL":
+// All slots continuously scramble random letters.
+// As loading progress advances, slot 0 ('S') locks, then slot 1 ('C'), etc.
+// The final letter ('L') begins slowing down dramatically like the last reel of a lottery machine,
+// pauses suspensefully at 99% ("cheating the letters slowly"), and snaps to 'L' simultaneously when 100% hits!
+const TARGET_WORD = 'SCROLL';
+const CHAR_POOL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('');
+const LOCK_THRESHOLDS = [18, 36, 54, 72, 88, 100];
+
+const ScrollLotteryMachine: React.FC<{ progress: number; isLoaded: boolean }> = ({
+  progress,
+  isLoaded,
+}) => {
+  const [chars, setChars] = useState<string[]>(() =>
+    TARGET_WORD.split('').map((_, i) => CHAR_POOL[(i * 7) % CHAR_POOL.length])
+  );
+
+  const progressRef = useRef(progress);
+  progressRef.current = progress;
+  const isLoadedRef = useRef(isLoaded);
+  isLoadedRef.current = isLoaded;
+
+  useEffect(() => {
+    let animId: number;
+    let lastTick = performance.now();
+    const slotTimers = [0, 0, 0, 0, 0, 0];
+
+    const loop = (now: number) => {
+      const dt = now - lastTick;
+      lastTick = now;
+      const curProg = progressRef.current;
+      const loaded = isLoadedRef.current;
+
+      setChars((prev) => {
+        let changed = false;
+        const next = [...prev];
+
+        for (let i = 0; i < TARGET_WORD.length; i++) {
+          const target = TARGET_WORD[i];
+          const threshold = LOCK_THRESHOLDS[i];
+          const isFinal = i === TARGET_WORD.length - 1;
+
+          // If reached threshold or finished, lock permanently to target character
+          if (loaded || curProg >= threshold) {
+            if (next[i] !== target) {
+              next[i] = target;
+              changed = true;
+            }
+            continue;
+          }
+
+          // Compute slot cycle speed:
+          let speed = 40; // Default fast slot spin
+          if (isFinal) {
+            // Final 'L' slot decelerates dramatically like the last reel of a lottery machine:
+            if (curProg >= 99) {
+              speed = 520; // Suspense pause at 99%, sluggishly crawling
+            } else if (curProg >= 92) {
+              speed = 300; // Noticeably slow
+            } else if (curProg >= 85) {
+              speed = 160; // Decelerating
+            } else {
+              speed = 45;
+            }
+          }
+
+          slotTimers[i] += dt;
+          if (slotTimers[i] >= speed) {
+            slotTimers[i] = 0;
+            const rand = CHAR_POOL[Math.floor(Math.random() * CHAR_POOL.length)];
+            next[i] = rand;
+            changed = true;
+          }
+        }
+
+        return changed ? next : prev;
+      });
+
+      animId = requestAnimationFrame(loop);
+    };
+
+    animId = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(animId);
+  }, []);
+
+  return (
+    <div className="flex items-center text-sm sm:text-base font-mono tracking-wider">
+      {chars.map((ch, idx) => {
+        const isLocked = isLoaded || progress >= LOCK_THRESHOLDS[idx];
+        return (
+          <span
+            key={idx}
+            className={`inline-block text-center select-none transition-all duration-150 ${
+              isLocked
+                ? 'text-[#111b21] font-bold scale-100'
+                : 'text-[#667781] font-normal scale-95 opacity-80'
+            }`}
+            style={{ width: '1.25ch' }}
+          >
+            {ch}
+          </span>
+        );
+      })}
+    </div>
   );
 };
 
@@ -209,165 +305,176 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
 }) => {
   const [progress, setProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
+  const hasFinishedRef = useRef(false);
 
-  // Loading animation: ~3.0s total, ticking 1% -> 100%
+  // Cinematic pacing loading animation (calm, unhurried, giving fluid ripples time to rise):
+  // - 1% to 75%: smooth steady progress (~30ms per tick)
+  // - 75% to 92%: begins slowing down noticeably (~75ms per tick)
+  // - 92% to 98%: decelerates heavily (~160ms per tick)
+  // - 99%: deliberate suspense pause (~600ms) before snapping into 100%
   useEffect(() => {
     if (phase === 'loading') {
+      if (hasFinishedRef.current) return;
       setIsLoaded(false);
       setProgress(1);
       let current = 1;
-      const interval = setInterval(() => {
+      let timer: ReturnType<typeof setTimeout> | null = null;
+
+      const step = () => {
         current += 1;
         if (current >= 100) {
           current = 100;
           setProgress(100);
           setIsLoaded(true);
-          clearInterval(interval);
+          hasFinishedRef.current = true;
           if (onLoadingComplete) onLoadingComplete();
-        } else {
-          setProgress(current);
+          return;
         }
-      }, 30);
-      return () => clearInterval(interval);
+
+        setProgress(current);
+
+        // Compute delay based on cinematic curve
+        let delay = 30;
+        if (current >= 99) {
+          delay = 600; // Dramatic cinematic pause at 99% before popping to 100%
+        } else if (current >= 92) {
+          delay = 140 + (current - 92) * 20; // Slow down intensely
+        } else if (current >= 75) {
+          delay = 45 + (current - 75) * 6; // Gradual deceleration
+        } else {
+          delay = 30; // Steady unhurried initial progress
+        }
+
+        timer = setTimeout(step, delay);
+      };
+
+      timer = setTimeout(step, 80);
+
+      return () => {
+        if (timer) clearTimeout(timer);
+      };
     } else if (phase === 'idle') {
+      hasFinishedRef.current = false;
       setProgress(0);
       setIsLoaded(false);
     }
   }, [phase, onLoadingComplete]);
 
-  const originX = buttonOrigin ? `${Math.round(buttonOrigin.x)}px` : '50%';
-  const originY = buttonOrigin ? `${Math.round(buttonOrigin.y)}px` : 'calc(100% - 70px)';
+  // Compute normalized button origin coordinates for the warping animation
+  const winW = typeof window !== 'undefined' ? window.innerWidth : 1440;
+  const winH = typeof window !== 'undefined' ? window.innerHeight : 900;
+  const bx = buttonOrigin ? Math.round((buttonOrigin.x / winW) * 1000) : 850;
+  const by = buttonOrigin ? Math.round((buttonOrigin.y / winH) * 1000) : 900;
 
-  // Organic corner-filling warping animation:
-  const initialClip = `ellipse(0px 0px at ${originX} ${originY})`;
-  const expandingWarpClip = `ellipse(120vw 100vh at ${originX} ${originY})`;
-  const fullCoverClip = `ellipse(220vw 220vh at ${originX} ${originY})`;
+  // Mathematically smooth 4-phase SVG cubic Bezier curve warping:
+  // Starts strictly at the clicked button (bx, by).
+  // Phase 1: Surges down to bottom edge and spreads along bottom towards the left edge first!
+  // Phase 2: Wraps up around the left edge to the top and sweeps across the page.
+  // Phase 3: Finally fills in and seals the bottom-right corner!
+  const pathInitial = `M ${bx} ${by - 2} C ${bx + 1} ${by - 2}, ${bx + 2} ${by - 1}, ${bx + 2} ${by} C ${bx + 2} ${by + 1}, ${bx + 1} ${by + 2}, ${bx} ${by + 2} C ${bx - 1} ${by + 2}, ${bx - 2} ${by + 1}, ${bx - 2} ${by} C ${bx - 2} ${by - 1}, ${bx - 1} ${by - 2}, ${bx} ${by - 2} Z`;
+  const pathStage1Edges = `M ${bx - 50} 600 C 250 500, 0 650, 0 850 C 0 980, 200 1000, 600 1000 C 850 1000, ${bx} 980, ${bx} 900 C ${bx} 800, ${bx} 700, ${bx - 50} 600 Z`;
+  const pathStage2WarpAround = `M 0 0 C 450 0, 850 0, 1000 0 C 1000 350, 1000 650, 920 720 C 780 780, 750 950, 500 1000 C 200 1000, 0 1000, 0 800 C 0 500, 0 250, 0 0 Z`;
+  const pathFull = `M 0 0 C 350 0, 650 0, 1000 0 C 1000 350, 1000 650, 1000 1000 C 650 1000, 350 1000, 0 1000 C 0 650, 0 350, 0 0 Z`;
 
-  const customEase = [0.16, 1, 0.3, 1] as const;
+  const customEase = [0.22, 1, 0.36, 1] as const;
 
   const progressStr = String(Math.min(100, progress)).padStart(3, '0') + '%';
   const digits = progressStr.split('');
 
   const isVisible = phase !== 'idle';
 
-  // Gradient configuration: vibrant cyan and emerald gradients mixed seamlessly with Biscotti Cream
-  const soffitConfig: SoffitGradientConfig = {
-    bgColor: '#00a884',   // Vibrant emerald base
-    colorA: '#00a884',    // WhatsApp primary emerald
-    colorB: '#06b6d4',    // Bright Cyan
-    colorC: '#22d3ee',    // Electric Cyan
-    colorD: '#043e2e',    // Deep dark emerald
-    scale: 0.8,
-    speed: 0.35,
-    tilt: 0.0,
-    rock: 0.06,
-    horizon: -0.15,
-    breathe: 0.25,
-    spread: 0.6,
-    curve: 2.8,
-    direct: 0.85,
-    bounce: 0.25,
-    bounceCurve: 2.5,
-    spillCentre: 0.0,
-    spillWidth: 1.8,
-    spillFloor: 0.2,
-    amount: 0.28,
-    warp: 2.2,
-    warpScale: 0.65,
-    flow: 0.38,
-    roughness: 0.35,
-    lacunarity: 2.0,
-    motes: 0.05,
-    moteScale: 7,
-    ambient: 0.32,
-    contrast: 1.8,
-    midpoint: 0.55,
-    sink: 0.22,
-    glow: 0.45,
-    grain: 0,
-    grainAnim: 0,
-    dither: 0.8,
-    vignette: 0.08,
-    steer: 0.0,
-    lift: 0.08,
-    sweep: 0.2,
-    cursor: 1,
-    parallax: 0.008,
-    maxDpr: 1,
-  };
-
   return (
     <AnimatePresence>
       {isVisible && (
         <div className="fixed inset-0 z-[120] pointer-events-auto overflow-hidden select-none">
+          {/* Expanding Warping Biscotti Cream Curtain */}
+          {phase === 'expanding' && (
+            <svg
+              className="fixed inset-0 z-20 w-full h-full pointer-events-none"
+              viewBox="0 0 1000 1000"
+              preserveAspectRatio="none"
+            >
+              <motion.path
+                fill="#efeae2"
+                initial={{ d: pathInitial, opacity: 0 }}
+                animate={{
+                  d: [pathInitial, pathStage1Edges, pathStage2WarpAround, pathFull],
+                  opacity: [0, 0.65, 0.92, 0.98],
+                }}
+                transition={{
+                  d: {
+                    duration: 2.0,
+                    ease: customEase,
+                    times: [0, 0.35, 0.72, 1],
+                  },
+                  opacity: {
+                    duration: 1.8,
+                    ease: 'easeInOut',
+                  },
+                }}
+                onAnimationComplete={() => {
+                  if (onExpanded) onExpanded();
+                }}
+              />
+            </svg>
+          )}
+
+          {/* Full Loading and Exiting Screen */}
           <motion.div
-            className="fixed inset-0 z-30 flex items-center justify-center overflow-hidden"
+            className="fixed inset-0 z-30 flex items-center justify-center overflow-hidden bg-[#efeae2]"
             initial={{
-              clipPath: initialClip,
-              backgroundColor: 'rgba(239, 234, 226, 0.0)',
+              opacity: phase === 'expanding' ? 0 : 1,
             }}
             animate={
-              phase === 'expanding'
+              phase === 'loading'
                 ? {
-                    clipPath: [initialClip, expandingWarpClip, fullCoverClip],
-                    backgroundColor: ['rgba(239, 234, 226, 0.1)', 'rgba(239, 234, 226, 0.6)', '#efeae2'],
-                    transition: {
-                      clipPath: { duration: 1.05, ease: customEase, times: [0, 0.55, 1] },
-                      backgroundColor: { duration: 0.95, ease: 'easeInOut' },
-                    },
-                  }
-                : phase === 'loading'
-                ? {
-                    clipPath: fullCoverClip,
-                    backgroundColor: '#efeae2',
+                    opacity: 1,
                   }
                 : phase === 'exiting'
                 ? {
                     y: '-100vh',
                     transition: { duration: 0.85, ease: [0.76, 0, 0.24, 1] },
                   }
-                : {}
+                : { opacity: 0 }
             }
             onAnimationComplete={() => {
-              if (phase === 'expanding' && onExpanded) {
-                onExpanded();
-              } else if (phase === 'exiting' && onExited) {
+              if (phase === 'exiting' && onExited) {
                 onExited();
               }
             }}
           >
             {/* 
               Background of the loading page:
-              1. Top ~50%: Authentic WhatsApp Biscotti Cream (#efeae2)
-              2. Bottom ~50%: Vibrant Cyan, Green, and Dark Green fluid gradient
-                 seamlessly feathering up with ZERO sharp cutoff!
+              1. Base is authentic WhatsApp Biscotti Cream (#efeae2).
+              2. Animated Cyan, Vibrant Emerald & Deep Green fluid ripples from the home page (LumenInteractiveShader).
+                 Rises slowly and smoothly from the bottom to strictly 3/8 height (37.5%).
+                 NO static dark green non-animated layer!
             */}
-            <div className="absolute inset-0 pointer-events-none bg-[#efeae2]" />
-
-            {/* Bottom 50% Cyan & Green gradient container */}
-            <div className="absolute bottom-0 left-0 right-0 h-[52vh] min-h-[380px] pointer-events-none overflow-hidden z-10">
-              {/* Home page WebGL fluid shader running in background */}
-              <div className="absolute inset-0 opacity-45">
+            <motion.div
+              initial={{ y: '100%', opacity: 0 }}
+              animate={
+                phase === 'loading'
+                  ? { y: '0%', opacity: 1 }
+                  : { y: '100%', opacity: 0 }
+              }
+              transition={{
+                duration: 3.0, // Slow, calm, unhurried animation so the fluid ripples rise smoothly
+                ease: [0.16, 1, 0.3, 1],
+                delay: 0.1,
+              }}
+              className="absolute inset-x-0 bottom-0 h-[37.5%] pointer-events-none overflow-hidden z-10"
+              style={{
+                // Strictly 3/8 height ratio (37.5%) with soft organic top mask feathering into Biscotti Cream (#efeae2)
+                maskImage:
+                  'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.92) 50%, rgba(0,0,0,0.45) 80%, rgba(0,0,0,0.1) 94%, transparent 100%)',
+                WebkitMaskImage:
+                  'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.92) 50%, rgba(0,0,0,0.45) 80%, rgba(0,0,0,0.1) 94%, transparent 100%)',
+              }}
+            >
+              <div className="absolute inset-0 w-full h-full">
                 <LumenInteractiveShader />
               </div>
-
-              {/* Soffit Cyan & Green generative fluid ripples */}
-              <div className="absolute inset-0 opacity-90">
-                <SoffitGradient
-                  config={soffitConfig}
-                  className="w-full h-full"
-                />
-              </div>
-
-              {/* Smooth organic feathered fade into the top Biscotti Cream (zero sharp cutoff line) */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background:
-                    'linear-gradient(to top, transparent 0%, rgba(239, 234, 226, 0.2) 35%, rgba(239, 234, 226, 0.8) 75%, #efeae2 100%)',
-                }}
-              />
-            </div>
+            </motion.div>
 
             {/* Studio Card (Loading Screen) - WhatsApp off-white cream aesthetic */}
             <AnimatePresence>
@@ -377,23 +484,26 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.96 }}
-                  transition={{ duration: 0.3, ease: 'easeOut' }}
+                  transition={{ duration: 0.35, ease: 'easeOut' }}
                   className="relative z-20 w-full max-w-4xl h-[78vh] max-h-[580px] bg-white/95 rounded-3xl shadow-[0_30px_90px_rgba(11,20,26,0.18)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-[#d1d7db]/80 mx-4 sm:mx-8 backdrop-blur-xl"
                 >
-                  {/* Top Bar: Clean minimal dividing line (removed GVH 2026 and syntax unveilers) */}
-                  <div className="w-full border-b border-[#e9edef] pb-3.5" />
-
-                  {/* Center Loading Telemetry: Space Grotesk font for "Loading" */}
+                  {/* Center Loading Telemetry: Space Grotesk font for "Loading" with calm roll down exit */}
                   <div className="flex flex-col md:flex-row items-center justify-between my-auto w-full gap-8">
-                    {/* Left: 'Loading' in Space Grotesk font with ThreeSquaresLoader */}
-                    <div className="flex items-center gap-4">
-                      <span
-                        className="text-4xl sm:text-5xl md:text-6xl font-bold text-[#111b21] tracking-tight leading-none select-none"
-                        style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                      >
-                        Loading
-                      </span>
-                      <ThreeSquaresLoader size={28} color="#00a884" />
+                    {/* Left: 'Loading' animated with calm roll down exit when 100% reached */}
+                    <div className="flex items-center gap-4 min-h-[64px]">
+                      <RollDownText text="Loading" isComplete={isLoaded} />
+                      <AnimatePresence>
+                        {!isLoaded && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.6, y: 16 }}
+                            transition={{ duration: 0.4 }}
+                          >
+                            <ThreeSquaresLoader size={28} />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
 
                     {/* Right: Big Dot-Matrix Counter with instant digit changes */}
@@ -407,7 +517,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   {/* 
                     Bottom Section:
                     - Left: Retained "END-TO-END ENCRYPTION SIMULATOR"
-                    - Bottom Right: Tactile pill indicator (NOT CLICKABLE, no arrow animation)
+                    - Bottom Right: Tactile pill indicator with sequential lottery machine for "SCROLL"
                   */}
                   <div className="relative flex items-center justify-between w-full border-t border-[#e9edef] pt-4 min-h-[56px]">
                     <span className="text-xs font-mono text-[#667781] tracking-wide select-none">
@@ -421,22 +531,12 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                         style={{
                           padding: '10px 22px 8px 22px',
                           backgroundColor: '#f2f2f2',
-                          boxShadow: '0 2px 2px 0 rgba(0,0,0,0.08), 0 4px 7px 0 rgba(0,0,0,0.2), 0 0.5px 2px 0 rgba(0,0,0,0.15), inset 0 -1px 0.2px 0 rgba(0,0,0,0.12), inset 0 1px 0.2px 0 #ffffff',
+                          boxShadow:
+                            '0 2px 2px 0 rgba(0,0,0,0.08), 0 4px 7px 0 rgba(0,0,0,0.2), 0 0.5px 2px 0 rgba(0,0,0,0.15), inset 0 -1px 0.2px 0 rgba(0,0,0,0.12), inset 0 1px 0.2px 0 #ffffff',
                         }}
                       >
-                        {/* Dot-matrix letters resolving into 'Scroll' */}
-                        <span className="flex items-center text-sm sm:text-base font-normal tracking-wider text-[#1a1a1a]">
-                          {TARGET_WORD.split('').map((char, idx) => (
-                            <LotterySlotChar
-                              key={idx}
-                              targetChar={char}
-                              slotIndex={idx}
-                              totalSlots={TARGET_WORD.length}
-                              progress={progress}
-                              isComplete={isLoaded}
-                            />
-                          ))}
-                        </span>
+                        {/* Dot-matrix lottery machine resolving sequentially into 'SCROLL' */}
+                        <ScrollLotteryMachine progress={progress} isLoaded={isLoaded} />
                       </div>
                     </div>
                   </div>

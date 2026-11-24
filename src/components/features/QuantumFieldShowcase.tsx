@@ -1,4 +1,4 @@
-import React, { useRef, useState, useMemo, useEffect } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { gsap } from 'gsap';
@@ -172,7 +172,7 @@ const DeviceModel: React.FC<DeviceProps> = ({
     []
   );
 
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     if (shaderRef.current) {
       shaderRef.current.uniforms.uTime.value += delta;
       shaderRef.current.uniforms.uSurge.value = THREE.MathUtils.lerp(

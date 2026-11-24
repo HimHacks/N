@@ -5,14 +5,15 @@ import { LumenInteractiveShader } from './LumenInteractiveShader';
 
 interface E2EEHomePageProps {
   onNavigateToSimulator: (origin?: { x: number; y: number }) => void;
+  isInitialReady?: boolean;
 }
 
-export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulator }) => {
+export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulator, isInitialReady = true }) => {
   const pageRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isReadingOver, setIsReadingOver] = useState(false);
-  const autoHideTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const readingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const readingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isHoveredRef = useRef(false);
 
   // Helper to open the pop-up button for precisely 5 seconds, then smoothly hide it unless hovered
@@ -52,11 +53,10 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
     }, 400);
   };
 
-  // Estimated reading time requirement:
-  // The pop-up button will NOT appear until the 6-second reading time completes.
-  // After 6 seconds, it pops up automatically, stays for 5 seconds, and drops down.
-  // After that, hovering anywhere in the bottom-right hotline zone reliably brings it up.
+  // The hero text and reading timer only begin after initial preloader has cleared
   useEffect(() => {
+    if (!isInitialReady) return;
+
     readingTimerRef.current = setTimeout(() => {
       setIsReadingOver(true);
       triggerAutoShow();
@@ -66,7 +66,7 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
       if (readingTimerRef.current) clearTimeout(readingTimerRef.current);
       if (autoHideTimerRef.current) clearTimeout(autoHideTimerRef.current);
     };
-  }, []);
+  }, [isInitialReady]);
 
   return (
     <div
@@ -102,42 +102,49 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
         - Bottom-left: Description copy
         - Bottom-right: Soap Bubble Button (pops up after 6s, and re-accessible anytime via hotline)
       */}
-      <main className="relative z-20 flex flex-col justify-between min-h-screen px-6 sm:px-12 md:px-20 py-12 w-full max-w-7xl mx-auto">
-        {/* Top/Hero Left-Aligned Section */}
-        <div className="mt-12 sm:mt-16 md:mt-24 max-w-4xl text-left">
-          {/* Presenter line: THE SYNTAX UNVEILERS PRESENTS in clean white matching template */}
-          <motion.p
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-xs sm:text-sm md:text-base font-bold tracking-[0.25em] text-white/90 uppercase text-left mb-4 drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]"
-          >
-            THE SYNTAX UNVEILERS PRESENTS
-          </motion.p>
+      <main className="relative z-20 flex flex-col justify-between min-h-screen px-6 sm:px-12 md:px-20 py-8 sm:py-12 w-full max-w-7xl mx-auto">
+        {/* Top/Hero Left-Aligned Section: elevated cleanly away from the bottom of the screen */}
+        <div className="mt-6 sm:mt-10 md:mt-14 max-w-4xl text-left">
+          {/* Presenter line: THE SYNTAX UNVEILERS PRESENTS */}
+          {isInitialReady && (
+            <motion.p
+              initial={{ opacity: 0, y: 24, filter: 'blur(4px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="text-xs sm:text-sm md:text-base font-bold tracking-[0.25em] text-white/90 uppercase text-left mb-3 drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]"
+            >
+              THE SYNTAX UNVEILERS PRESENTS
+            </motion.p>
+          )}
 
-          {/* Headline: Clean solid white matching Lumen template layout without text gradients */}
-          <motion.h1
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-            className="text-left text-white font-black tracking-tight leading-[1.04] text-4xl sm:text-6xl md:text-7xl lg:text-8xl select-none max-w-full py-1 drop-shadow-[0_4px_30px_rgba(0,0,0,0.45)]"
-          >
-            End-to-End Encryption
-          </motion.h1>
+          {/* Headline: "End-to-End Encryption" comes up using smooth curvy upward fade */}
+          {isInitialReady && (
+            <motion.h1
+              initial={{ opacity: 0, y: 36, filter: 'blur(8px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              transition={{ duration: 0.95, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+              className="text-left text-white font-black tracking-tight leading-[1.04] text-4xl sm:text-6xl md:text-7xl lg:text-8xl select-none max-w-full py-1 drop-shadow-[0_4px_30px_rgba(0,0,0,0.45)]"
+            >
+              End-to-End Encryption
+            </motion.h1>
+          )}
+
+          {/* Elevated Description: placed up closely under the headline rather than pushed to the bottom */}
+          {isInitialReady && (
+            <motion.p
+              initial={{ opacity: 0, y: 28, filter: 'blur(6px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              transition={{ duration: 0.85, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              className="text-base sm:text-lg md:text-xl text-[#efeae2]/95 font-normal max-w-xl text-left select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] leading-relaxed mt-6 sm:mt-8"
+            >
+              <span className="block">Messages are encrypted directly on your device.</span>
+              <span className="block mt-1">Only you and the recipient hold the keys.</span>
+            </motion.p>
+          )}
         </div>
 
-        {/* Bottom Section: Description on bottom-left, Soap Bubble Pop-up on bottom-right */}
-        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-8 mt-16 sm:mt-24 w-full">
-          {/* Bottom-left description text: strictly 2 lines */}
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-base sm:text-lg md:text-xl text-[#efeae2]/90 font-normal max-w-xl text-left select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] leading-relaxed"
-          >
-            <span className="block">Messages are encrypted directly on your device.</span>
-            <span className="block mt-0.5">Only you and the recipient hold the keys.</span>
-          </motion.p>
+        {/* Bottom Section: Soap Bubble Pop-up on bottom-right */}
+        <div className="flex flex-col md:flex-row items-end justify-end gap-8 pb-4 w-full">
 
           {/* 
             Right-hand Hotline Zone:
@@ -151,81 +158,83 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
             onMouseLeave={handleHotlineLeave}
             className="relative h-28 w-full md:w-80 flex items-center justify-start md:justify-end pointer-events-auto cursor-pointer"
           >
-            <AnimatePresence>
-              {isOpen && (
-                <motion.div
-                  initial={{ y: 70, opacity: 0, scale: 0.85 }}
-                  animate={{
-                    y: 0,
-                    opacity: 1,
-                    scale: 1,
-                    transition: {
-                      duration: 0.75,
-                      ease: [0.16, 1, 0.3, 1],
-                    },
+            {/* 
+              Pre-warmed Soap Bubble Button:
+              Mounted from page start so WebGL shaders and context compile immediately behind the scenes.
+              Only animates into view when isOpen is true. Eliminates any unrendered or plain transparent fallback flash!
+            */}
+            <motion.div
+              initial={false}
+              animate={{
+                y: isOpen ? 0 : 50,
+                opacity: isOpen ? 1 : 0,
+                scale: isOpen ? 1 : 0.88,
+              }}
+              transition={{
+                duration: 0.75,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+              style={{
+                pointerEvents: isOpen ? 'auto' : 'none',
+              }}
+              className="shrink-0"
+            >
+              <SoapBubbleMaterial
+                glass={0.95}
+                iridescence={0.8}
+                filmScale={4.85}
+                oilOpacity={1}
+                oilCoverage={0.85}
+                oilEdge={18}
+                oilEdgeFade={2.33}
+                clearCenter={0.57}
+                thickness={480}
+                drainage={0.35}
+                swirl={0.5}
+                reflectivity={1.3}
+                refraction={0.15}
+                dispersion={1}
+                bevel={14}
+                wobble={0.08}
+                environment="studio"
+                windowLength={1.3}
+                windowMargin={0.85}
+                windowBend={0.75}
+                windowSize={0.75}
+                windowWidth={0.8}
+                windowGradient={0.96}
+                windowHead={0.7}
+                windowTail={0.6}
+                glintSize={1.65}
+                glintIntensity={0.4}
+                glintDistance={-0.45}
+                glintHeight={0.65}
+                windowIntensity={0.85}
+                windowTwin={false}
+                tint="transparent"
+              >
+                <SoapBubbleButton
+                  interactive={0.35}
+                  onClick={(e) => {
+                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                    const origin = {
+                      x: rect.left + rect.width / 2,
+                      y: rect.top + rect.height / 2,
+                    };
+                    onNavigateToSimulator(origin);
                   }}
-                  exit={{
-                    y: 40,
-                    opacity: 0,
-                    scale: 0.88,
-                    transition: {
-                      duration: 0.45,
-                      ease: [0.32, 0, 0.67, 0],
-                    },
+                  className="flex items-center gap-2.5 px-8 py-3.5 text-sm font-medium text-white transition-transform duration-300 cursor-pointer"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    boxShadow: 'none',
                   }}
-                  className="pointer-events-auto shrink-0"
                 >
-                  <SoapBubbleMaterial
-                    backdrop={pageRef}
-                    glass={1.0}
-                    iridescence={1.5}
-                    filmScale={3.0}
-                    oilCoverage={0.5}
-                    oilEdge={20}
-                    oilEdgeFade={0.8}
-                    clearCenter={0.92}
-                    thickness={520}
-                    drainage={0.25}
-                    swirl={0.3}
-                    reflectivity={1.8}
-                    refraction={0.25}
-                    dispersion={0.08}
-                    bevel={18}
-                    wobble={0.05}
-                    windowIntensity={1.4}
-                    environment="studio"
-                    soapPalette="custom"
-                    soapPaletteRed="#ffffff"
-                    soapPaletteGold="#22d3ee"   // Electric Cyan
-                    soapPaletteGreen="#10b981"  // Vibrant Emerald
-                    soapPaletteCyan="#38bdf8"   // Light Cyan
-                    soapPaletteBlue="#06b6d4"   // Bright Cyan
-                    soapPaletteViolet="#e0f2fe" // Frost White
-                    soapColor="#ffffff"
-                    soapHighlightColor="rgba(255, 255, 255, 1.0)"
-                  >
-                    <SoapBubbleButton
-                      interactive={0.25}
-                      onClick={(e) => {
-                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                        const origin = {
-                          x: rect.left + rect.width / 2,
-                          y: rect.top + rect.height / 2,
-                        };
-                        onNavigateToSimulator(origin);
-                      }}
-                      className="flex items-center gap-2.5 px-8 py-3.5 text-sm font-medium text-white shadow-[0_12px_45px_rgba(0,0,0,0.25),0_0_36px_rgba(255,255,255,0.45),inset_0_1px_1px_rgba(255,255,255,0.9)] border border-white/70 hover:border-white hover:shadow-[0_12px_50px_rgba(0,0,0,0.35),0_0_48px_rgba(255,255,255,0.65)] backdrop-blur-2xl transition-all duration-300 cursor-pointer"
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.15)',
-                      }}
-                    >
-                      <span className="text-white font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">Let's take a deep dive</span>
-                      <span className="text-white font-bold text-base drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">&rarr;</span>
-                    </SoapBubbleButton>
-                  </SoapBubbleMaterial>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  <span className="text-white font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">Let's take a deep dive</span>
+                  <span className="text-white font-bold text-base drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">&rarr;</span>
+                </SoapBubbleButton>
+              </SoapBubbleMaterial>
+            </motion.div>
           </div>
         </div>
       </main>

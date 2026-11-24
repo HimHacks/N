@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { SpotlightCard } from '../ui/SpotlightCard';
 import { animate } from 'animejs';
-import { Sparkles, Terminal, Layers, ArrowRight } from 'lucide-react';
+import { Sparkles, Terminal, Layers } from 'lucide-react';
 
 export const MechanismExplainer: React.FC = () => {
   const svgRef = useRef<SVGSVGElement | null>(null);
