@@ -4,6 +4,13 @@ import { Renderer, Program, Mesh, Triangle } from 'ogl';
 export interface LumenInteractiveShaderProps {
   className?: string;
   style?: React.CSSProperties;
+  // Optional palette overrides
+  baseColor?: [number, number, number];
+  warmColor?: [number, number, number];
+  midColor?: [number, number, number];
+  coolColor?: [number, number, number];
+  cursorColor?: [number, number, number];
+  brightness?: number;
 }
 
 const VERT_SHADER = `
@@ -74,13 +81,18 @@ void main(){
   vec2 d3 = vec2( 0.09, -0.16) * t;
 
   float a = m(uv + d1);
-  vec3 col = mix(u_pal_base, u_pal_warm, a * 2.5);
+  vec3 col = mix(u_pal_base, u_pal_warm, a * 2.2);
+
+  // Pale WhatsApp outgoing message mint tint (#E7FCE3) - user requested +10% presence
+  vec3 u_pal_bubble_mint = vec3(0.898, 0.984, 0.886);
+  col = mix(col, u_pal_bubble_mint, a * 0.85);
 
   float b = m(uv + a * 2.4 + d2);
-  col = mix(col, u_pal_mid, b * 1.65);
+  col = mix(col, u_pal_mid, b * 0.85);
 
+  // Subdued cyan influence: reduced to prevent overwhelming cyan dominance
   float dd = m(uv + b * 3.5 + d3);
-  col = mix(col, u_pal_cool, dd * 0.85);
+  col = mix(col, u_pal_cool, dd * 0.45);
 
   col += u_pal_cursor * fall;
 
@@ -92,6 +104,12 @@ void main(){
 export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
   className = '',
   style,
+  baseColor,
+  warmColor,
+  midColor,
+  coolColor,
+  cursorColor,
+  brightness,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -122,12 +140,7 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
 
     const geometry = new Triangle(gl);
 
-    // Calibrated palette: rich Deep Signal Emerald (#00a884, #043e2e), prominent WhatsApp Biscotti Cream (#efeae2), and subtle cyan bubble glints
-    // Base: Deep dark signal emerald [0.004, 0.080, 0.045]
-    // Warm: Vibrant signal emerald [0.000, 0.658, 0.518] (#00a884)
-    // Mid: Biscotti Cream (#efeae2) [0.937, 0.918, 0.886]
-    // Cool: Deep sea emerald-cyan [0.015, 0.245, 0.220]
-    // Cursor: Reactive luminous signal cyan wake [0.050, 0.700, 0.650]
+    // Calibrated palette: Rich Deep Signal Emerald, Luminous Cyan, Light Green, and balanced White accents.
     const program = new Program(gl, {
       vertex: VERT_SHADER,
       fragment: FRAG_SHADER,
@@ -139,13 +152,13 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
         r: { value: [1, 1] },
         c: { value: [0, 0] },
         ci: { value: 0 },
-        u_pal_base: { value: [0.004, 0.080, 0.045] },
-        u_pal_warm: { value: [0.000, 0.658, 0.518] },
-        u_pal_mid: { value: [0.937, 0.918, 0.886] },
-        u_pal_cool: { value: [0.015, 0.245, 0.220] },
-        u_pal_cursor: { value: [0.050, 0.700, 0.650] },
+        u_pal_base: { value: baseColor ?? [0.004, 0.140, 0.088] },      // Deep emerald
+        u_pal_warm: { value: warmColor ?? [0.000, 0.650, 0.480] },      // Signal emerald
+        u_pal_mid: { value: midColor ?? [0.850, 0.920, 0.880] },        // Creamy white accents
+        u_pal_cool: { value: coolColor ?? [0.015, 0.520, 0.560] },      // Reduced cyan (softer cyan-seafoam)
+        u_pal_cursor: { value: cursorColor ?? [0.030, 0.650, 0.620] },  // Soft wake
         u_pal_rgScale: { value: [1.0, 1.0, 1.0] },
-        u_brightness: { value: 1.78 },
+        u_brightness: { value: brightness ?? 1.35 },
       },
     });
 
@@ -181,38 +194,7 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
     });
     resizeObserver.observe(container);
 
-    let k = [0, 0];
-    let M = [0, 0];
-    let T = 0;
-    let E = 0;
-
-    const handlePointerMove = (e: PointerEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      if (
-        e.clientX < rect.left ||
-        e.clientX > rect.right ||
-        e.clientY < rect.top ||
-        e.clientY > rect.bottom
-      ) {
-        T = 0;
-        return;
-      }
-      const x = (e.clientX - rect.left) * (canvas.width / rect.width);
-      const y = (e.clientY - rect.top) * (canvas.height / rect.height);
-      k[0] = x;
-      k[1] = canvas.height - y;
-      T = 1;
-    };
-
-    const handlePointerLeave = () => {
-      T = 0;
-    };
-
-    window.addEventListener('pointermove', handlePointerMove, { passive: true });
-    window.addEventListener('pointerleave', handlePointerLeave, { passive: true });
-    window.addEventListener('blur', handlePointerLeave);
-
-    // Exact animation loop & intersection observer from upstream
+    // Non-interactive autonomous fluid loop (interactive cursor disturbance removed per user request)
     let isVisible = true;
     let animId = 0;
     const N = performance.now();
@@ -231,17 +213,8 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
       if (dt < R - 1) return;
       P = now - (dt % R);
 
-      const pointerFactor = 1 - Math.pow(0.88, dt / R);
-      M[0] += (k[0] - M[0]) * pointerFactor;
-      M[1] += (k[1] - M[1]) * pointerFactor;
-
-      const intensityFactor = 1 - Math.pow(0.94, dt / R);
-      E += (T - E) * intensityFactor;
-
       program.uniforms.t.value = (now - N) * 0.001;
-      program.uniforms.c.value[0] = M[0];
-      program.uniforms.c.value[1] = M[1];
-      program.uniforms.ci.value = E;
+      program.uniforms.ci.value = 0.0;
 
       renderer.render({ scene: mesh });
     };
@@ -285,9 +258,6 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
       cancelAnimationFrame(resizeReq);
       resizeObserver.disconnect();
       intersectionObserver.disconnect();
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerleave', handlePointerLeave);
-      window.removeEventListener('blur', handlePointerLeave);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       canvas.remove();
       const loseContext = gl.getExtension('WEBGL_lose_context');
