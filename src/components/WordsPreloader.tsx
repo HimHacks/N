@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThreeSquaresLoader } from './ThreeSquaresLoader';
 import { LumenInteractiveShader } from './features/LumenInteractiveShader';
+import { Floating3DShapes } from './features/Floating3DShapes';
 
 export type WordPreloaderPhase = 'idle' | 'expanding' | 'loading' | 'exiting';
 
@@ -665,6 +666,13 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   />
                 </motion.div>
               </motion.div>
+            )}
+
+            {/* Floating 3D green/white bubbles & cross shapes originating on the loading page */}
+            {(isInteractiveScroll || phase === 'expanding' || phase === 'loading' || phase === 'exiting') && (
+              <div className="absolute inset-0 z-[15] pointer-events-none">
+                <Floating3DShapes isTransitioning={false} />
+              </div>
             )}
 
             {/* Studio Card (Loading Screen) - Unified physical surface progressively pulled upward */}
