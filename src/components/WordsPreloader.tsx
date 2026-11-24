@@ -409,24 +409,17 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   const bx = buttonOrigin ? Math.round((buttonOrigin.x / winW) * 1000) : 860;
   const by = buttonOrigin ? Math.round((buttonOrigin.y / winH) * 1000) : 920;
 
-  // Multi-Keyframe Organic Fluid Warping Path Sequence:
-  // 0. Initial: small rounded bubble centered right on the clicked button
-  const p0 = `M ${bx} ${by - 18} C ${bx + 40} ${by - 18}, ${bx + 55} ${by - 5}, ${bx + 55} ${by} C ${bx + 55} ${by + 5}, ${bx + 40} ${by + 18}, ${bx} ${by + 18} C ${bx - 40} ${by + 18}, ${bx - 55} ${by + 5}, ${bx - 55} ${by} C ${bx - 55} ${by - 5}, ${bx - 40} ${by - 18}, ${bx} ${by - 18} Z`;
+  // Smooth expanding circular/radial bubble expansion from button origin:
+  // Starts directly at (bx, by) with radius 0%, smoothly expands into an encompassing circle (150vmax)
+  // covering all four corners simultaneously without any clipping inversion or flipping!
+  const originXPercent = buttonOrigin ? Math.round((buttonOrigin.x / winW) * 100) : 50;
+  const originYPercent = buttonOrigin ? Math.round((buttonOrigin.y / winH) * 100) : 50;
 
-  // 1. Magnetic stretch to Right and Bottom viewport edges:
-  // The bubble's surface tension yields asymmetrically, pulling curved tendrils into the right edge (x=1000)
-  // and the bottom edge (y=1000), while staying fluid and curved (corner 1000,1000 remains untouched).
-  const p1 = `M ${bx - 60} ${by - 110} C ${bx + 80} ${by - 140}, 970 ${by - 50}, 1000 ${by - 20} C 1000 ${by + 30}, 960 930, 930 960 C 900 990, ${bx + 60} 1000, ${bx} 1000 C ${bx - 120} 1000, ${bx - 190} 940, ${bx - 130} ${by} C ${bx - 100} ${by - 60}, ${bx - 90} ${by - 90}, ${bx - 60} ${by - 110} Z`;
-
-  // 2. Liquid sheet engulfs bottom and right margins, swelling upward and leftward:
-  const p2 = `M ${bx - 260} ${by - 320} C 820 450, 960 520, 1000 480 C 1000 680, 970 880, 940 940 C 910 970, 780 1000, 620 1000 C 420 1000, 300 940, 340 820 C 370 720, 520 620, ${bx - 260} ${by - 320} Z`;
-
-  // 3. Fluid expansion sweeps diagonally across the main viewport to top-left (0,0),
-  // with a deeply undulating, living fluid frontier while the bottom-right corner (1000,1000) is held back:
-  const p3 = `M 0 0 C 320 0, 780 0, 1000 0 C 1000 320, 1000 640, 920 740 C 830 830, 850 910, 740 1000 C 510 1000, 0 1000, 0 1000 C 0 680, 0 340, 0 0 Z`;
-
-  // 4. Final step: The concave indentation at bottom-right smoothly fills and seals completely!
-  const p4 = `M 0 0 C 320 0, 780 0, 1000 0 C 1000 320, 1000 640, 1000 1000 C 680 1000, 340 1000, 0 1000 C 0 680, 0 340, 0 0 Z`;
+  const clip0 = `circle(0% at ${originXPercent}% ${originYPercent}%)`;
+  const clip1 = `circle(25% at ${originXPercent}% ${originYPercent}%)`;
+  const clip2 = `circle(65% at ${originXPercent}% ${originYPercent}%)`;
+  const clip3 = `circle(115% at ${originXPercent}% ${originYPercent}%)`;
+  const clip4 = `circle(160% at ${originXPercent}% ${originYPercent}%)`;
 
   const customEase = [0.22, 1, 0.36, 1] as const;
 
@@ -441,40 +434,31 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
         <div className="fixed inset-0 z-[120] pointer-events-auto overflow-hidden select-none">
           {/* 
             Expanding Warping Biscotti Cream Curtain:
-            1. Originates as a translucent bubble over the clicked button.
-            2. Stretches with magnetic attraction to right and bottom edges.
-            3. Fluidly engulfs the canvas with undulating organic curvature.
-            4. Bottom-right corner fills last without any sudden rectangular morph!
+            Smoothly blooms outward from the clicked button origin without any inverted SVG control points or corner flipping!
           */}
           {phase === 'expanding' && (
-            <svg
-              className="fixed inset-0 z-20 w-full h-full pointer-events-none"
-              viewBox="0 0 1000 1000"
-              preserveAspectRatio="none"
-            >
-              <motion.path
-                fill="#efeae2"
-                initial={{ d: p0, opacity: 0.85 }}
-                animate={{
-                  d: [p0, p1, p2, p3, p4],
-                  opacity: [0.85, 0.92, 0.96, 0.99, 1],
-                }}
-                transition={{
-                  d: {
-                    duration: 2.2,
-                    ease: customEase,
-                    times: [0, 0.22, 0.48, 0.78, 1],
-                  },
-                  opacity: {
-                    duration: 1.8,
-                    ease: 'easeInOut',
-                  },
-                }}
-                onAnimationComplete={() => {
-                  if (onExpanded) onExpanded();
-                }}
-              />
-            </svg>
+            <motion.div
+              className="fixed inset-0 z-20 w-full h-full pointer-events-none bg-[#efeae2]"
+              initial={{ clipPath: clip0, opacity: 0.9 }}
+              animate={{
+                clipPath: [clip0, clip1, clip2, clip3, clip4],
+                opacity: [0.9, 0.94, 0.97, 0.99, 1],
+              }}
+              transition={{
+                clipPath: {
+                  duration: 1.8,
+                  ease: customEase,
+                  times: [0, 0.25, 0.55, 0.82, 1],
+                },
+                opacity: {
+                  duration: 1.6,
+                  ease: 'easeInOut',
+                },
+              }}
+              onAnimationComplete={() => {
+                if (onExpanded) onExpanded();
+              }}
+            />
           )}
 
           {/* Full Loading and Exiting Screen */}
@@ -487,7 +471,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
               phase === 'loading'
                 ? {
                     opacity: 1,
-                    transition: { duration: 0.25, ease: 'easeOut' },
+                    transition: { duration: 0.15, ease: 'easeOut' },
                   }
                 : phase === 'exiting'
                 ? {
