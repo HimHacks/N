@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { E2EEHomePage } from './components/features/E2EEHomePage';
+import { E2EEMainPage } from './components/features/E2EEMainPage';
 import { CaesarCipherInteraction } from './components/features/CaesarCipherInteraction';
 import { Skiper8 } from './components/ui/skiper8';
 import { WordsPreloader, type WordPreloaderPhase } from './components/WordsPreloader';
@@ -7,7 +8,7 @@ import { WordsPreloader, type WordPreloaderPhase } from './components/WordsPrelo
 export const App: React.FC = () => {
   // Greeting Preloader (Skiper 8 Words Preloader) plays on first page entry
   const [hasVisited, setHasVisited] = useState(false);
-  const [currentView, setCurrentView] = useState<'home' | 'simulator'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'main' | 'simulator'>('home');
   const [preloaderPhase, setPreloaderPhase] = useState<WordPreloaderPhase>('idle');
   const [buttonOrigin, setButtonOrigin] = useState<{ x: number; y: number } | null>(null);
   const [isCompilingFinished, setIsCompilingFinished] = useState(false);
@@ -30,9 +31,9 @@ export const App: React.FC = () => {
     setPreloaderPhase('loading');
   };
 
-  // 3. Compiling reaches 100% -> mark compiling finished (Do NOT switch currentView to simulator yet!
+  // 3. Compiling reaches 100% -> mark compiling finished (Do NOT switch currentView to main/simulator yet!
   // Switching currentView would cause re-render and unmount/remount of page components.
-  // We only mount/switch to simulator when the user actually scrolls down and exits the preloader!)
+  // We only mount/switch to the main page when the user actually scrolls down and exits the preloader!)
   const handleLoadingComplete = () => {
     setIsCompilingFinished(true);
   };
@@ -74,9 +75,9 @@ export const App: React.FC = () => {
     };
   }, [preloaderPhase, isCompilingFinished]);
 
-  // When reverse downward/upward slide finishes, switch to simulator and reset preloader
+  // When reverse downward/upward slide finishes, switch to main page and reset preloader
   const handlePreloaderExited = () => {
-    setCurrentView('simulator');
+    setCurrentView('main');
     setPreloaderPhase('idle');
   };
 
@@ -104,18 +105,28 @@ export const App: React.FC = () => {
 
       {/* 
         View Routing:
-        - 'home': Main Hero Page with Lumen Interactive Shader and Soap Bubble button
-        - 'simulator': E2EE Simulator Lab with Step 1-5, ECDH/AES-GCM, and Soffit Gradient background
+        - 'home': Original Hero Page with Lumen Interactive Shader and Soap Bubble button
+        - 'main': The Main Page (Lazarev-inspired Doodle frame, Hero Question, 1:1 WhatsApp Chat, E2EE Journey)
+        - 'simulator': Technical E2EE Simulator Lab with Caesar / AES interactive cipher tools
       */}
-      {currentView === 'simulator' ? (
-        <div ref={simulatorRef} className="relative w-full min-h-screen">
-          <CaesarCipherInteraction onScrollToTop={() => setCurrentView('home')} />
-        </div>
-      ) : (
+      {currentView === 'home' && (
         <E2EEHomePage
           onNavigateToSimulator={handleStartDeepDive}
           isInitialReady={hasVisited}
         />
+      )}
+
+      {currentView === 'main' && (
+        <E2EEMainPage
+          onBackToHome={() => setCurrentView('home')}
+          onNavigateToSimulator={() => setCurrentView('simulator')}
+        />
+      )}
+
+      {currentView === 'simulator' && (
+        <div ref={simulatorRef} className="relative w-full min-h-screen">
+          <CaesarCipherInteraction onScrollToTop={() => setCurrentView('main')} />
+        </div>
       )}
     </div>
   );
