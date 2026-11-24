@@ -191,56 +191,137 @@ const RollDownText: React.FC<{
 
 // Target word: "SCROLL"
 const TARGET_WORD = 'SCROLL';
-// Upstream spasoje.dev character pool (uppercase alphanumeric)
-const CHAR_POOL = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','0','1','2','3','4','5','6','7','8','9'];
 
-// Individual character slot that scrambles through random characters in place and settles into its target letter
-const ScrambleCharInPlace: React.FC<{
+// Curated high-contrast glyph pool for vertical slot reel spinning
+const SLOT_GLYPH_POOL = ['S', 'C', 'R', 'O', 'L', 'A', 'E', 'B', 'M', 'K', 'P', 'T', 'X', 'Z', '8', '3', '0', '9'];
+
+// Strict sequential settling thresholds:
+// Slot 0 ('S') locks at 28%
+// Slot 1 ('C') locks at 48%
+// Slot 2 ('R') locks at 66%
+// Slot 3 ('O') locks at 80%
+// Slot 4 ('L') locks at 92%
+// Slot 5 ('L') locks strictly at 100% on the shared timeline!
+const LOCK_THRESHOLDS = [28, 48, 66, 80, 92, 100];
+
+/**
+ * Vertical Rolling Physical Slot-Machine Reel Component
+ * - Starts with all 6 characters rolling simultaneously on independent vertical reels.
+ * - Each slot has a physical continuous character strip moving downwards/upwards.
+ * - Progressively settles in sequential order: S -> C -> R -> O -> L -> L.
+ * - Slot 5 (the final 'L') decelerates dramatically through 85% -> 92% -> 99%,
+ *   pauses in suspense at 99%, and settles into 'L' simultaneously as progress reaches 100%.
+ * - Fixed height/width per reel prevents any layout shifts.
+ */
+const VerticalSlotReel: React.FC<{
   targetChar: string;
-  charIndex: number;
-  totalChars: number;
+  slotIndex: number;
   progress: number;
-  isComplete: boolean;
-}> = ({ targetChar, charIndex, totalChars, progress, isComplete }) => {
-  const [currentChar, setCurrentChar] = useState<string>(() =>
-    CHAR_POOL[Math.floor(Math.random() * CHAR_POOL.length)]
-  );
+  isLoaded: boolean;
+}> = ({ targetChar, slotIndex, progress, isLoaded }) => {
+  const threshold = LOCK_THRESHOLDS[slotIndex];
+  const isFinal = slotIndex === TARGET_WORD.length - 1;
+  const isLocked = isLoaded || progress >= threshold;
+
+  // Build an authentic vertical slot reel strip of characters concluding with targetChar
+  const [tape] = useState<string[]>(() => {
+    const list: string[] = [];
+    // 20 preceding rotating glyphs with distinct offset per reel for independent visual motion
+    for (let i = 0; i < 20; i++) {
+      list.push(SLOT_GLYPH_POOL[(i * 5 + slotIndex * 3 + 1) % SLOT_GLYPH_POOL.length]);
+    }
+    list.push(targetChar);
+    return list;
+  });
+
+  const [tapeIndex, setTapeIndex] = useState(0);
 
   useEffect(() => {
-    if (isComplete) {
-      setCurrentChar(targetChar);
+    if (isLocked) {
+      // Snaps to the target character (final item on the reel tape)
+      setTapeIndex(tape.length - 1);
       return;
     }
 
-    // Characters settle sequentially based on progress:
-    // e.g. char 0 settles at ~20%, char 1 at ~35%, ..., char 5 at 100%
-    const settleThreshold = ((charIndex + 1) / totalChars) * 100;
-
-    if (progress >= settleThreshold) {
-      setCurrentChar(targetChar);
-      return;
+    // Step cadence for the physical slot tape:
+    // Slots 0-4 spin fast (50ms - 75ms)
+    // Final slot ('L') progressively decelerates as loading approaches 99%:
+    let stepSpeed = 55 + (slotIndex % 3) * 10;
+    if (isFinal) {
+      if (progress >= 99) {
+        stepSpeed = 450; // Dramatic suspense crawl at 99% pause
+      } else if (progress >= 92) {
+        stepSpeed = 220; // Noticeable deceleration
+      } else if (progress >= 80) {
+        stepSpeed = 120; // Initial deceleration
+      }
     }
 
-    // Scramble rapidly in its fixed place with subtle jitter
-    const interval = setInterval(() => {
-      setCurrentChar(CHAR_POOL[Math.floor(Math.random() * CHAR_POOL.length)]);
-    }, 55 + (charIndex * 12));
+    const timer = setInterval(() => {
+      setTapeIndex((prev) => {
+        // Continuous looping until locked:
+        if (prev >= tape.length - 2) {
+          return 0;
+        }
+        return prev + 1;
+      });
+    }, stepSpeed);
 
-    return () => clearInterval(interval);
-  }, [progress, isComplete, targetChar, charIndex, totalChars]);
+    return () => clearInterval(timer);
+  }, [isLocked, progress, isFinal, slotIndex, tape.length]);
 
-  const isLocked = isComplete || (progress >= ((charIndex + 1) / totalChars) * 100);
+  const cellHeight = 16; // Exact cell height in px
+  const cellWidth = 11;  // Exact cell width in px
 
   return (
-    <span
-      className={`inline-flex items-center justify-center font-mono w-[1ch] transition-colors duration-150 ${
-        isLocked
-          ? 'text-[#1a1a1a] font-bold'
-          : 'text-[#1a1a1a]/70 font-semibold'
-      }`}
+    <div
+      className="relative inline-block overflow-hidden select-none align-middle"
+      style={{
+        height: `${cellHeight}px`,
+        width: `${cellWidth}px`,
+      }}
     >
-      {currentChar}
-    </span>
+      <motion.div
+        animate={{
+          y: -tapeIndex * cellHeight,
+        }}
+        transition={
+          isLocked
+            ? {
+                type: 'spring',
+                stiffness: isFinal ? 130 : 340,
+                damping: isFinal ? 17 : 24,
+                mass: isFinal ? 1.1 : 0.8,
+              }
+            : {
+                duration: isFinal && progress >= 92 ? 0.22 : 0.06,
+                ease: 'linear',
+              }
+        }
+        className="flex flex-col items-center"
+      >
+        {tape.map((ch, idx) => {
+          const isAtTarget = idx === tape.length - 1 && isLocked;
+          return (
+            <div
+              key={idx}
+              className="flex items-center justify-center font-terminal-dots select-none uppercase tracking-[0.12em]"
+              style={{
+                height: `${cellHeight}px`,
+                width: `${cellWidth}px`,
+                fontSize: '11px',
+                lineHeight: '16px',
+                color: isAtTarget ? '#111b21' : '#555555',
+                textShadow: isAtTarget ? '0 0.5px 1px rgba(0,0,0,0.18)' : 'none',
+                opacity: isAtTarget ? 1 : 0.7,
+              }}
+            >
+              {ch}
+            </div>
+          );
+        })}
+      </motion.div>
+    </div>
   );
 };
 
@@ -533,16 +614,15 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                           )}
                         </span>
 
-                        {/* In-place scrambling letters spelling out "SCROLL" */}
-                        <span className="flex items-center text-[12px] font-mono tracking-wider uppercase text-[#1a1a1a]">
+                        {/* Authentic dot-matrix letters rolling on 6 independent vertical slot reels */}
+                        <span className="flex items-center tracking-normal text-[#1a1a1a]">
                           {TARGET_WORD.split('').map((char, idx) => (
-                            <ScrambleCharInPlace
+                            <VerticalSlotReel
                               key={idx}
                               targetChar={char}
-                              charIndex={idx}
-                              totalChars={TARGET_WORD.length}
+                              slotIndex={idx}
                               progress={progress}
-                              isComplete={isLoaded}
+                              isLoaded={isLoaded}
                             />
                           ))}
                         </span>
