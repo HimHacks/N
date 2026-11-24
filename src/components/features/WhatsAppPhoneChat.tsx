@@ -55,17 +55,6 @@ export const WhatsAppPhoneChat: React.FC<WhatsAppPhoneChatProps> = ({
         <div className="w-2.5 h-2.5 rounded-full bg-[#111b21]/70" />
       </div>
 
-      {/* Close Zoom Button (top right badge) */}
-      {onClose && (
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-50 w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center backdrop-blur-md transition-all cursor-pointer"
-          title="Zoom out"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      )}
-
       {/* Phone Screen Container */}
       <div className="relative w-full h-full rounded-[34px] overflow-hidden flex flex-col bg-[#efeae2]">
         {/* iOS / Android Status Bar */}
@@ -166,22 +155,6 @@ export const WhatsAppPhoneChat: React.FC<WhatsAppPhoneChatProps> = ({
                   <CheckCheck className="w-3.5 h-3.5 text-[#53bdeb]" />
                 </div>
               </div>
-            ))}
-          </div>
-
-          {/* Preset Quick Chips for Instant Testing */}
-          <div className="relative z-10 mb-2 flex flex-wrap gap-1.5 justify-center">
-            <span className="text-[10px] text-[#54656f] w-full text-center font-medium">
-              💡 Click a sample or type your own:
-            </span>
-            {['MEET AT DAWN', 'SECRET KEY 42', 'E2EE IS SAFE'].map((chip) => (
-              <button
-                key={chip}
-                onClick={() => setPreset(chip)}
-                className="px-2 py-0.5 text-[10px] bg-white/90 hover:bg-[#d9fdd3] border border-[#d1d7db] rounded-full text-[#111b21] font-mono transition-all cursor-pointer shadow-xs active:scale-95"
-              >
-                {chip}
-              </button>
             ))}
           </div>
         </div>

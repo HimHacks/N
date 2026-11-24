@@ -119,63 +119,6 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
           Framing the central title seamlessly without overlapping text.
         */}
         <div className="relative w-full flex-1 flex flex-col lg:flex-row items-center justify-between gap-6 my-auto">
-          
-          {/* Animated Connecting Trail directly between Aarav's Phone & Meera's Phone across top/mid arc */}
-          <div className="hidden lg:block absolute inset-x-0 top-12 h-28 pointer-events-none z-15 overflow-visible">
-            <svg
-              className="w-full h-full"
-              viewBox="0 0 1000 110"
-              preserveAspectRatio="none"
-            >
-              <defs>
-                <linearGradient id="arcDirectGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#176B50" stopOpacity="0.45" />
-                  <stop offset="50%" stopColor="#00a884" stopOpacity="0.85" />
-                  <stop offset="100%" stopColor="#176B50" stopOpacity="0.45" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M 170 95 C 320 15, 680 15, 830 95"
-                fill="none"
-                stroke="url(#arcDirectGrad)"
-                strokeWidth="2.5"
-                strokeDasharray="5 7"
-              />
-            </svg>
-
-            {/* Travelling Encrypted Cipher Packet directly between phones */}
-            <motion.div
-              initial={false}
-              animate={
-                reducedMotion
-                  ? { left: '50%', top: '24px', opacity: 1, scale: 1 }
-                  : journeyPhase === 'animating'
-                  ? {
-                      left: ['17%', '28%', '50%', '50%', '72%', '83%'],
-                      top: ['92px', '46px', '22px', '22px', '46px', '92px'],
-                      opacity: [0, 1, 1, 1, 1, 0],
-                      scale: [0.75, 0.9, 1.05, 1.05, 0.9, 0.75],
-                    }
-                  : { opacity: 0 }
-              }
-              transition={{
-                duration: 5.6,
-                times: [0, 0.18, 0.44, 0.60, 0.84, 1],
-                ease: 'easeInOut',
-              }}
-              style={{ transform: 'translate(-50%, -50%)' }}
-              className="absolute z-30 inline-flex items-center gap-2 rounded-full bg-[#153A32] text-[#F7F4EC] px-3.5 py-1.5 shadow-[0_6px_20px_rgba(21,58,50,0.25)] border border-[#21493F] whitespace-nowrap"
-            >
-              <svg width="13" height="15" viewBox="0 0 24 24" fill="none" stroke="#D4E5C9" strokeWidth="2">
-                <rect x="5" y="10" width="14" height="11" rx="2" />
-                <path d="M8 10V6a4 4 0 018 0v4" />
-              </svg>
-              <span className="font-mono text-[11px] sm:text-xs tracking-wider text-[#D8E5CA]">
-                {ciphertext}
-              </span>
-            </motion.div>
-          </div>
-          
           {/* LEFT: Aarav (Enlarged, Facing Inward, Holding Phone) */}
           <div className="w-full lg:w-[24%] flex flex-col items-center lg:items-end justify-center relative order-2 lg:order-1 pt-6 lg:pt-0">
             <div className="relative w-[180px] sm:w-[220px] md:w-[250px] lg:w-[270px]">

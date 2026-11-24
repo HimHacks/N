@@ -49,6 +49,35 @@ export const InteractiveE2EEJourney: React.FC<InteractiveE2EEJourneyProps> = ({ 
   const [currentDisplayText, setCurrentDisplayText] = useState('MEET AT DAWN');
   const [scrollProgress, setScrollProgress] = useState(0.2);
 
+  // Prevent background page scrolling when phone modal is showing
+  useEffect(() => {
+    if (journeyState === 'phone_zoomed') {
+      const originalOverflow = document.body.style.overflow;
+      const originalTouchAction = document.body.style.touchAction;
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+
+      const preventScroll = (e: Event) => {
+        // If event is inside phone screen scroll container, allow it; otherwise prevent background scroll
+        const target = e.target as HTMLElement | null;
+        if (target && target.closest('.overflow-y-auto')) {
+          return;
+        }
+        e.preventDefault();
+      };
+
+      window.addEventListener('wheel', preventScroll, { passive: false });
+      window.addEventListener('touchmove', preventScroll, { passive: false });
+
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        document.body.style.touchAction = originalTouchAction;
+        window.removeEventListener('wheel', preventScroll);
+        window.removeEventListener('touchmove', preventScroll);
+      };
+    }
+  }, [journeyState]);
+
   // Track scroll position to automatically trigger phone zoom when Person 1 is centered
   useEffect(() => {
     const handleScroll = () => {
