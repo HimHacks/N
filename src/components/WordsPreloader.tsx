@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThreeSquaresLoader } from './ThreeSquaresLoader';
-import { SoffitGradient, type SoffitGradientConfig } from './SoffitGradient';
+import { LumenInteractiveShader } from './features/LumenInteractiveShader';
 
 export type WordPreloaderPhase = 'idle' | 'expanding' | 'loading' | 'exiting';
 
@@ -116,137 +116,6 @@ const DIGIT_PATTERNS: Record<string, number[][]> = {
   ],
 };
 
-// 5x7 Dot-matrix glyph definitions for authentic circular dot typography
-// Specifically crafted to match the user's reference image (discrete circular dots in 5x7 grid)
-const LETTER_DOT_PATTERNS: Record<string, number[][]> = {
-  S: [
-    [0, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
-    [0, 1, 1, 1, 0],
-    [0, 0, 0, 0, 1],
-    [0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 0],
-  ],
-  C: [
-    [0, 1, 1, 1, 0],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 1],
-    [0, 1, 1, 1, 0],
-  ],
-  R: [
-    [1, 1, 1, 1, 0],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 1, 1, 1, 0],
-    [1, 0, 1, 0, 0],
-    [1, 0, 0, 1, 0],
-    [1, 0, 0, 0, 1],
-  ],
-  O: [
-    [0, 1, 1, 1, 0],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [0, 1, 1, 1, 0],
-  ],
-  L: [
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
-    [1, 1, 1, 1, 1],
-  ],
-  P: [
-    [1, 1, 1, 1, 0],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 1, 1, 1, 0],
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
-  ],
-  A: [
-    [0, 1, 1, 1, 0],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-  ],
-  B: [
-    [1, 1, 1, 1, 0],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 1, 1, 1, 0],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 1, 1, 1, 0],
-  ],
-  E: [
-    [1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
-    [1, 1, 1, 1, 0],
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
-    [1, 1, 1, 1, 1],
-  ],
-  K: [
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 1, 0],
-    [1, 0, 1, 0, 0],
-    [1, 1, 0, 0, 0],
-    [1, 0, 1, 0, 0],
-    [1, 0, 0, 1, 0],
-    [1, 0, 0, 0, 1],
-  ],
-  T: [
-    [1, 1, 1, 1, 1],
-    [0, 0, 1, 0, 0],
-    [0, 0, 1, 0, 0],
-    [0, 0, 1, 0, 0],
-    [0, 0, 1, 0, 0],
-    [0, 0, 1, 0, 0],
-    [0, 0, 1, 0, 0],
-  ],
-  U: [
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [0, 1, 1, 1, 0],
-  ],
-  X: [
-    [1, 0, 0, 0, 1],
-    [0, 1, 0, 1, 0],
-    [0, 0, 1, 0, 0],
-    [0, 0, 1, 0, 0],
-    [0, 0, 1, 0, 0],
-    [0, 1, 0, 1, 0],
-    [1, 0, 0, 0, 1],
-  ],
-  Z: [
-    [1, 1, 1, 1, 1],
-    [0, 0, 0, 0, 1],
-    [0, 0, 0, 1, 0],
-    [0, 0, 1, 0, 0],
-    [0, 1, 0, 0, 0],
-    [1, 0, 0, 0, 0],
-    [1, 1, 1, 1, 1],
-  ],
-};
-
 const InstantDotMatrixDigit: React.FC<{ char: string; dotSize?: number; color?: string }> = ({
   char,
   dotSize = 5,
@@ -277,74 +146,6 @@ const InstantDotMatrixDigit: React.FC<{ char: string; dotSize?: number; color?: 
         ))
       )}
     </div>
-  );
-};
-
-// Exact Soffit 2 WebGL2 Gradient Configuration provided by user
-const SOFFIT_LOADING_CONFIG: SoffitGradientConfig = {
-  bgColor: '#062334',
-  colorA: '#2b7be8',
-  colorB: '#2bc8e8',
-  colorC: '#4fe0d8',
-  colorD: '#7fe8a0',
-  ambient: 0.24,
-  amount: 0.2,
-  bounce: 0.38,
-  bounceCurve: 4.25,
-  breathe: 0.29,
-  contrast: 2.45,
-  cursor: 1,
-  curve: 3.32,
-  direct: 0.97,
-  dither: 0.58,
-  flow: 0.475,
-  glow: 0.38,
-  grain: 0,
-  grainAnim: 0,
-  horizon: 0.36,
-  lacunarity: 1.99,
-  lift: 0.11,
-  maxDpr: 1,
-  midpoint: 0.57,
-  moteScale: 7,
-  motes: 0.074,
-  parallax: 0.0137,
-  rock: 0.12,
-  roughness: 0.29,
-  scale: 1,
-  sink: 0.24,
-  speed: 0.33,
-  spillCentre: 0.3,
-  spillFloor: 0.26,
-  spillWidth: 2.18,
-  spread: 0.41,
-  steer: -0.13,
-  sweep: 0.5,
-  tilt: 1.87,
-  vignette: 0.21,
-  warp: 2.58,
-  warpScale: 0.78,
-};
-
-// Dot-Matrix Letter component rendering genuine circular dots (as shown in user reference image)
-const DotMatrixLetter: React.FC<{
-  char: string;
-  isLocked: boolean;
-}> = ({ char, isLocked }) => {
-  return (
-    <span
-      className="font-terminal-dots inline-block tracking-[0.14em] select-none uppercase"
-      style={{
-        fontSize: '11.5px',
-        lineHeight: 1,
-        color: isLocked ? '#111b21' : '#4b5563',
-        textShadow: isLocked
-          ? '0 0.5px 1px rgba(0,0,0,0.22)'
-          : 'none',
-      }}
-    >
-      {char}
-    </span>
   );
 };
 
@@ -388,124 +189,105 @@ const RollDownText: React.FC<{
   );
 };
 
-// Single-Roll Vegas 3-Slot Reel Sequences for "SCROLL":
-// Each letter on the word "SCROLL" rolls only once, step-by-step,
-// and that once is where the animation stops for each and every letter!
-// - Slot 0: rolls to 'S' and stops.
-// - Slot 1: rolls to 'C' and stops.
-// - Slot 2: rolls to 'R' and stops.
-// - Slot 3: rolls to 'O' and stops.
-// - Slot 4: rolls to 'L' and stops.
-// - Slot 5 (the last 'L'): decelerates cleanly and rolls to 'L' exactly once at 100%!
+// Target word and sequential resolution parameters
 const TARGET_WORD = 'SCROLL';
-const SLOT_REELS: string[][] = [
-  ['P', 'B', 'S'],           // Slot 0 -> resolves to 'S'
-  ['A', 'K', 'C'],           // Slot 1 -> resolves to 'C'
-  ['E', 'T', 'R'],           // Slot 2 -> resolves to 'R'
-  ['U', 'X', 'O'],           // Slot 3 -> resolves to 'O'
-  ['Z', 'E', 'L'],           // Slot 4 -> resolves to 'L'
-  ['P', 'A', 'K', 'T', 'L'], // Slot 5 -> slows down, rolls once to 'L'
-];
+const CHAR_POOL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('');
+// Strict sequential thresholds: S -> C -> R -> O -> L -> L
+const LOCK_THRESHOLDS = [20, 38, 56, 74, 88, 100];
 
-const LOCK_THRESHOLDS = [18, 36, 54, 72, 88, 100];
+/**
+ * Vertical Rolling Cinematic Slot-Machine Letter Component
+ * Renders authentic dot-matrix characters (.font-terminal-dots) that actively roll vertically
+ * through changing glyphs before smoothly resolving into their locked state.
+ * The final 'L' (slotIndex 5) decelerates heavily and snaps to 'L' simultaneously at 100%.
+ */
+const VerticalSlotLetter: React.FC<{
+  targetChar: string;
+  slotIndex: number;
+  progress: number;
+  isLoaded: boolean;
+}> = ({ targetChar, slotIndex, progress, isLoaded }) => {
+  const [currentChar, setCurrentChar] = useState<string>(() =>
+    CHAR_POOL[(slotIndex * 7) % CHAR_POOL.length]
+  );
+  const [isRolling, setIsRolling] = useState(true);
+
+  const threshold = LOCK_THRESHOLDS[slotIndex];
+  const isFinal = slotIndex === TARGET_WORD.length - 1;
+  const isLocked = isLoaded || progress >= threshold;
+
+  useEffect(() => {
+    if (isLocked) {
+      setCurrentChar(targetChar);
+      setIsRolling(false);
+      return;
+    }
+
+    setIsRolling(true);
+
+    // Compute slot cycle cadence:
+    // Slots 0-4 roll fast (36-44ms)
+    // Slot 5 ('L') slows down progressively as progress approaches 99%, pausing during the 99% suspense mark
+    let intervalSpeed = 38 + slotIndex * 2;
+    if (isFinal) {
+      if (progress >= 99) {
+        intervalSpeed = 480; // Slower deliberate crawl at 99% pause
+      } else if (progress >= 92) {
+        intervalSpeed = 220; // Noticeable deceleration
+      } else if (progress >= 85) {
+        intervalSpeed = 120; // Early deceleration
+      } else {
+        intervalSpeed = 50;
+      }
+    }
+
+    const interval = setInterval(() => {
+      const rand = CHAR_POOL[Math.floor(Math.random() * CHAR_POOL.length)];
+      setCurrentChar(rand);
+    }, intervalSpeed);
+
+    return () => clearInterval(interval);
+  }, [isLocked, progress, isFinal, slotIndex, targetChar]);
+
+  return (
+    <div className="relative inline-flex items-center justify-center overflow-hidden h-[18px] w-[14px]">
+      <AnimatePresence mode="popLayout">
+        <motion.span
+          key={currentChar}
+          initial={isRolling ? { y: '-60%', opacity: 0.6 } : { y: 0, opacity: 1 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={isRolling ? { y: '60%', opacity: 0.3 } : undefined}
+          transition={{ duration: isFinal && progress >= 92 ? 0.22 : 0.05, ease: 'easeOut' }}
+          className="font-terminal-dots inline-block text-center select-none uppercase tracking-[0.14em]"
+          style={{
+            fontSize: '11.5px',
+            lineHeight: 1,
+            color: isLocked ? '#111b21' : '#4b5563',
+            textShadow: isLocked ? '0 0.5px 1px rgba(0,0,0,0.22)' : 'none',
+          }}
+        >
+          {currentChar}
+        </motion.span>
+      </AnimatePresence>
+    </div>
+  );
+};
 
 const ScrollLotteryMachine: React.FC<{ progress: number; isLoaded: boolean }> = ({
   progress,
   isLoaded,
 }) => {
-  const [chars, setChars] = useState<string[]>(() =>
-    SLOT_REELS.map((reel) => reel[0])
-  );
-
-  const progressRef = useRef(progress);
-  progressRef.current = progress;
-  const isLoadedRef = useRef(isLoaded);
-  isLoadedRef.current = isLoaded;
-
-  useEffect(() => {
-    let animId: number;
-    let lastTick = performance.now();
-    const reelIndices = [0, 0, 0, 0, 0, 0];
-    const slotTimers = [0, 0, 0, 0, 0, 0];
-
-    const loop = (now: number) => {
-      const dt = now - lastTick;
-      lastTick = now;
-      const curProg = progressRef.current;
-      const loaded = isLoadedRef.current;
-
-      setChars((prev) => {
-        let changed = false;
-        const next = [...prev];
-
-        for (let i = 0; i < TARGET_WORD.length; i++) {
-          const reel = SLOT_REELS[i];
-          const targetChar = TARGET_WORD[i];
-          const threshold = LOCK_THRESHOLDS[i];
-          const isFinal = i === TARGET_WORD.length - 1;
-
-          // If reached threshold or loaded, lock to final target character
-          if (loaded || curProg >= threshold) {
-            if (next[i] !== targetChar) {
-              next[i] = targetChar;
-              reelIndices[i] = reel.length - 1;
-              changed = true;
-            }
-            continue;
-          }
-
-          // If the slot has already completed its roll, keep it at its current letter
-          if (reelIndices[i] >= reel.length - 1) {
-            continue;
-          }
-
-          // Step cadence: each letter advances along its reel only once
-          let stepDelay = 120;
-          if (isFinal) {
-            // Final reel slows down heavily on its single roll
-            if (curProg >= 95) {
-              stepDelay = 520;
-            } else if (curProg >= 85) {
-              stepDelay = 320;
-            } else {
-              stepDelay = 180;
-            }
-          }
-
-          slotTimers[i] += dt;
-          if (slotTimers[i] >= stepDelay) {
-            slotTimers[i] = 0;
-            // Advance by 1 step only (never loop backwards or duplicate)
-            if (reelIndices[i] < reel.length - 1) {
-              reelIndices[i] += 1;
-              next[i] = reel[reelIndices[i]];
-              changed = true;
-            }
-          }
-        }
-
-        return changed ? next : prev;
-      });
-
-      animId = requestAnimationFrame(loop);
-    };
-
-    animId = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(animId);
-  }, []);
-
   return (
-    <div className="flex items-center gap-[2px]">
-      {chars.map((ch, idx) => {
-        const isLocked = isLoaded || progress >= LOCK_THRESHOLDS[idx];
-        return (
-          <DotMatrixLetter
-            key={idx}
-            char={ch}
-            isLocked={isLocked}
-          />
-        );
-      })}
+    <div className="flex items-center gap-[1px]">
+      {TARGET_WORD.split('').map((targetChar, idx) => (
+        <VerticalSlotLetter
+          key={idx}
+          targetChar={targetChar}
+          slotIndex={idx}
+          progress={progress}
+          isLoaded={isLoaded}
+        />
+      ))}
     </div>
   );
 };
@@ -670,9 +452,10 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
             {/* 
               Loading page background:
               Base is authentic WhatsApp Biscotti Cream (#efeae2).
-              The animated fluid gradient (Soffit 2 WebGL2 with cyan, deep emerald, light green & blue tones)
-              anchors at the bottom 3/8 of the screen (37.5%), with lively flame-like undulating crests
-              expanding organically upward!
+              The animated fluid gradient extends the existing homepage WebGL/WebGPU green/emerald shader
+              (emerald, deep green, and teal highlights - NO blue-black cinematic background).
+              Anchored at the bottom and expanding dynamically to roughly 3/8 (37.5% - 40%) of the viewport
+              with an organic, flame-like undulating crest!
             */}
             <motion.div
               initial={{ y: '100%', opacity: 0 }}
@@ -685,32 +468,39 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   : { y: '100%', opacity: 0 }
               }
               transition={{
-                duration: 2.4,
+                duration: 2.2,
                 ease: [0.16, 1, 0.3, 1],
                 delay: 0.1,
               }}
-              className="absolute inset-x-0 bottom-0 h-[45%] pointer-events-none overflow-hidden z-10"
+              className="absolute inset-x-0 bottom-0 h-[37.5%] pointer-events-none overflow-hidden z-10"
               style={{
+                // Feathered top mask blending into Biscotti Cream (#efeae2)
                 maskImage:
-                  'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 50%, rgba(0,0,0,0.65) 75%, rgba(0,0,0,0.2) 90%, transparent 100%)',
+                  'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.55) 82%, rgba(0,0,0,0.12) 94%, transparent 100%)',
                 WebkitMaskImage:
-                  'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 50%, rgba(0,0,0,0.65) 75%, rgba(0,0,0,0.2) 90%, transparent 100%)',
+                  'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.55) 82%, rgba(0,0,0,0.12) 94%, transparent 100%)',
               }}
             >
-              {/* Lively flame-like undulating motion: cresting and moving upward dynamically like a living flame */}
+              {/* Lively flame-like undulating motion extending the green/emerald fluid shader */}
               <motion.div
                 animate={{
-                  y: [0, -22, -8, -32, -14, 0],
-                  scaleY: [1, 1.16, 1.06, 1.22, 1.1, 1],
+                  y: [0, -20, -6, -28, -12, 0],
+                  scaleY: [1, 1.15, 1.05, 1.20, 1.08, 1],
                 }}
                 transition={{
-                  duration: 7.2,
+                  duration: 8.0,
                   repeat: Infinity,
                   ease: [0.45, 0.05, 0.55, 0.95],
                 }}
-                className="absolute inset-0 w-full h-[125%] -top-[25%]"
+                className="absolute inset-0 w-full h-[130%] -top-[30%]"
               >
-                <SoffitGradient config={SOFFIT_LOADING_CONFIG} />
+                <LumenInteractiveShader
+                  baseColor={[0.005, 0.150, 0.095]}
+                  warmColor={[0.000, 0.680, 0.500]}
+                  midColor={[0.050, 0.850, 0.550]}
+                  coolColor={[0.020, 0.560, 0.520]}
+                  brightness={1.35}
+                />
               </motion.div>
             </motion.div>
 
