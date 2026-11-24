@@ -297,7 +297,7 @@ const VerticalSlotReel: React.FC<{
     }, stepSpeed);
 
     return () => clearTimeout(timer);
-  }, [tapeIndex, targetIndex, isFinal, slotIndex, isEntranceComplete, isLocked, progress]);
+  }, [tapeIndex, targetIndex, isFinal, slotIndex, isEntranceComplete, isLocked]);
 
   const cellHeight = 20;
   const cellWidth = 14;
@@ -392,16 +392,21 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [phase, onClose]);
 
+  const onExpandedRef = useRef(onExpanded);
+  useEffect(() => {
+    onExpandedRef.current = onExpanded;
+  }, [onExpanded]);
+
   // Safety fallback: guarantees entrance completion fires even if onAnimationComplete is skipped under heavy load
   useEffect(() => {
     if (phase === 'expanding' && !isEntranceComplete) {
       const fallbackTimer = setTimeout(() => {
         setIsEntranceComplete(true);
-        if (onExpanded) onExpanded();
+        if (onExpandedRef.current) onExpandedRef.current();
       }, 1100);
       return () => clearTimeout(fallbackTimer);
     }
-  }, [phase, isEntranceComplete, onExpanded]);
+  }, [phase, isEntranceComplete]);
 
   // Reset state when preloader returns to idle
   useEffect(() => {
