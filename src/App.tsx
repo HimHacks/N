@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { E2EEHomePage } from './components/features/E2EEHomePage';
 import { MainGuidedSimulator } from './components/features/MainGuidedSimulator';
 import { CaesarCipherInteraction } from './components/features/CaesarCipherInteraction';
+import { Floating3DShapes } from './components/features/Floating3DShapes';
 import { GreetingPreloader } from './components/GreetingPreloader';
 import { WordsPreloader, type WordPreloaderPhase } from './components/WordsPreloader';
 
@@ -266,9 +267,12 @@ export const App: React.FC = () => {
           initial={preloaderPhase === 'exiting' ? { opacity: 0.45, y: 36, scale: 0.985 } : false}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.95, ease: [0.16, 1, 0.3, 1] }}
-          className="relative w-full min-h-screen bg-[#E9EEE5] py-8 px-4 sm:px-8"
+          className="relative w-full min-h-screen bg-[#E9EEE5] py-8 px-4 sm:px-8 overflow-hidden"
         >
-          <div className="max-w-6xl mx-auto mb-4 flex items-center justify-between">
+          {/* Floating 3D green/white bubbles & sculptural shapes transitioning from loading screen into simulator */}
+          <Floating3DShapes isTransitioning={preloaderPhase === 'exiting'} />
+
+          <div className="relative z-10 max-w-6xl mx-auto mb-4 flex items-center justify-between">
             <button
               onClick={() => setCurrentView('home')}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#D3CDC2] bg-white text-[#153A32] text-xs font-semibold hover:bg-[#E3EDE3] transition-colors cursor-pointer shadow-xs"
@@ -282,7 +286,9 @@ export const App: React.FC = () => {
               Interactive Caesar Cipher Lab &rarr;
             </button>
           </div>
-          <MainGuidedSimulator />
+          <div className="relative z-10">
+            <MainGuidedSimulator />
+          </div>
         </motion.div>
       )}
 

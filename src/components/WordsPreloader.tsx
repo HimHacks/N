@@ -392,6 +392,17 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [phase, onClose]);
 
+  // Safety fallback: guarantees entrance completion fires even if onAnimationComplete is skipped under heavy load
+  useEffect(() => {
+    if (phase === 'expanding' && !isEntranceComplete) {
+      const fallbackTimer = setTimeout(() => {
+        setIsEntranceComplete(true);
+        if (onExpanded) onExpanded();
+      }, 1100);
+      return () => clearTimeout(fallbackTimer);
+    }
+  }, [phase, isEntranceComplete, onExpanded]);
+
   // Reset state when preloader returns to idle
   useEffect(() => {
     if (phase === 'idle' && !isInteractiveScroll) {
@@ -656,43 +667,6 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
               <div
                 className="relative z-20 w-full max-w-4xl h-[78vh] max-h-[580px] bg-white/95 rounded-3xl shadow-[0_30px_90px_rgba(11,20,26,0.22)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-[#d1d7db]/80 mx-4 sm:mx-8 backdrop-blur-xl"
               >
-                {/* Top Header Bar with Integrated, Accessible Close Control */}
-                <div className="flex items-center justify-between w-full border-b border-[#e9edef] pb-3.5">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                        isLoaded ? 'bg-[#176B50]' : 'bg-[#25D366] animate-pulse'
-                      }`}
-                    />
-                    <span className="text-[11px] font-mono uppercase tracking-[0.14em] text-[#52665F] select-none">
-                      {isLoaded ? 'Channel Ready — Scroll to Enter' : isEntranceComplete ? 'Preparing Simulator' : 'Opening Studio'}
-                    </span>
-                  </div>
-
-                  {onClose && (
-                    <button
-                      type="button"
-                      onClick={onClose}
-                      aria-label="Close loading screen and return to home"
-                      className="inline-flex items-center justify-center gap-1.5 min-h-[36px] px-3.5 py-1.5 rounded-full border border-[#d1d7db] bg-[#f8f9fa] hover:bg-[#e9edef] active:scale-[0.97] text-[#153A32] text-xs font-medium transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#176B50]"
-                    >
-                      <span>Close</span>
-                      <svg
-                        width="13"
-                        height="13"
-                        viewBox="0 0 14 14"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        aria-hidden="true"
-                      >
-                        <path d="M3 3L11 11M11 3L3 11" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-
                 {/* Center Loading Telemetry: Space Grotesk font for "Loading" with calm roll down exit */}
                 <div className="flex flex-col md:flex-row items-center justify-between my-auto w-full gap-8">
                   {/* Left: 'Loading' animated with calm roll down exit when 100% reached */}
