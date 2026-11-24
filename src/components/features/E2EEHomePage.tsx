@@ -69,18 +69,20 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
     >
       {/* 
         Authentic WhatsApp Doodle Wallpaper Background:
-        Using the exact authentic WhatsApp doodle artwork at balanced subtle opacity (10-12%)
-        with an elliptical center gradient mask to keep title and buttons crisp and legible.
+        Using lightweight, seamlessly repeating vector doodle wallpaper with thin outlines 
+        (speech bubbles, phones, locks, stars, envelopes, tech doodles).
+        Tuned to low opacity (0.055 - 0.07) so it acts as an elegant, non-distracting 
+        ambient texture that preserves high contrast and legibility for all foreground elements.
       */}
       <div
         className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
         style={{
-          opacity: 0.11,
-          backgroundImage: 'url(/whatsapp-doodle.jpg)',
-          backgroundSize: '420px 420px',
+          opacity: 0.065,
+          backgroundImage: 'url(/whatsapp-doodle.svg)',
+          backgroundSize: '460px 835px',
           backgroundRepeat: 'repeat',
-          maskImage: 'radial-gradient(ellipse 65% 55% at 50% 45%, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.85) 75%, black 100%)',
-          WebkitMaskImage: 'radial-gradient(ellipse 65% 55% at 50% 45%, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.85) 75%, black 100%)',
+          maskImage: 'radial-gradient(ellipse 70% 60% at 50% 45%, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.85) 65%, black 100%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 70% 60% at 50% 45%, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.85) 65%, black 100%)',
         }}
       />
 
