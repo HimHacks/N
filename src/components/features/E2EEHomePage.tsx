@@ -71,20 +71,27 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
     >
       {/* 
         Authentic WhatsApp Doodle Wallpaper Background:
-        Using lightweight, seamlessly repeating vector doodle wallpaper with thin outlines 
-        (speech bubbles, phones, locks, stars, envelopes, tech doodles).
-        Tuned to balanced visibility (~0.14) so the illustrations are clearly discernible
-        while preserving crisp contrast and legibility for all foreground elements.
+        - Carefully refined background-to-foreground separation:
+        - Radial mask creates an editorial clearing in the central text zone (fading doodles to ~0.03 directly behind typography)
+        - Preserves crisp, balanced visibility of doodles (~0.14) around the periphery and behind the illustrated characters.
       */}
       <div
         className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
         style={{
-          opacity: 0.14,
+          opacity: 0.15,
           backgroundImage: 'url(/whatsapp-doodle.svg)',
           backgroundSize: '440px 799px',
           backgroundRepeat: 'repeat',
-          maskImage: 'radial-gradient(ellipse 75% 65% at 50% 45%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.95) 70%, black 100%)',
-          WebkitMaskImage: 'radial-gradient(ellipse 75% 65% at 50% 45%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.95) 70%, black 100%)',
+          maskImage: 'radial-gradient(ellipse 65% 55% at 50% 44%, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.20) 40%, rgba(0,0,0,0.75) 75%, black 100%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 65% 55% at 50% 44%, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.20) 40%, rgba(0,0,0,0.75) 75%, black 100%)',
+        }}
+      />
+
+      {/* Subtle central luminous aura: soft ambient tonal separation providing pristine legibility without artificial shadows */}
+      <div
+        className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] max-w-[900px] h-[55vh] z-0 rounded-full"
+        style={{
+          background: 'radial-gradient(ellipse at center, rgba(255, 254, 250, 0.75) 0%, rgba(247, 244, 236, 0.4) 50%, rgba(247, 244, 236, 0) 80%)',
         }}
       />
 
@@ -159,30 +166,30 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
             </div>
           </div>
 
-          {/* CENTER: Centered Title, Subtitle, and Primary Button */}
-          <div className="w-full lg:w-[52%] flex flex-col items-center text-center px-2 sm:px-6 z-20 order-1 lg:order-2">
-            {/* The Syntax Unveilers present */}
-            <p className="text-[11px] sm:text-xs font-semibold tracking-[0.14em] uppercase text-[#176B50] mb-3 sm:mb-4">
+          {/* CENTER: Focused Typography Zone with Exceptional Editorial Hierarchy */}
+          <div className="w-full lg:w-[56%] flex flex-col items-center text-center px-2 sm:px-6 z-20 order-1 lg:order-2">
+            {/* The Syntax Unveilers present - Refined Secondary Kicker */}
+            <p className="text-[11px] sm:text-xs font-semibold tracking-[0.22em] uppercase text-[#176B50]/85 mb-3 sm:mb-4 select-none">
               The Syntax Unveilers present
             </p>
 
-            {/* Exact Reference Heading with Two-Line Stylish Block Reveal Effect */}
+            {/* Prominent Two-Line Serif Headline with One-Time Stylish Block Reveal Effect */}
             <h1
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-[68px] font-normal leading-[1.12] tracking-tight text-[#153A32] max-w-2xl flex flex-col items-center justify-center"
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-[70px] xl:text-[76px] font-normal leading-[1.08] tracking-tight text-[#113129] max-w-3xl w-full flex flex-col items-center justify-center drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]"
               style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
             >
               <BlockReveal delay={200} duration={0.5} blockColor="#176B50" isReady={isInitialReady}>
-                <span>How does end-to-end</span>
+                <span className="whitespace-nowrap">How does end-to-end</span>
               </BlockReveal>
               <BlockReveal delay={480} duration={0.5} blockColor="#176B50" isReady={isInitialReady}>
-                <span>
+                <span className="whitespace-nowrap">
                   <em className="italic text-[#176B50] font-normal">encryption</em> work?
                 </span>
               </BlockReveal>
             </h1>
 
-            {/* Exact Reference Supporting Text */}
-            <p className="text-sm sm:text-base md:text-lg text-[#52665F] leading-relaxed max-w-lg mt-5 mb-6">
+            {/* Balanced Supporting Explainer Text */}
+            <p className="text-base sm:text-lg text-[#475B54] leading-relaxed max-w-md mt-5 mb-7">
               Your message travels a long way.<br className="hidden sm:inline" />
               How does it stay between the two of you?
             </p>
@@ -200,8 +207,8 @@ export const E2EEHomePage: React.FC<E2EEHomePageProps> = ({ onNavigateToSimulato
               }}
             />
 
-            {/* Supporting Line */}
-            <p className="text-xs text-[#52665F] mt-3 sm:mt-3.5">
+            {/* Subtle Supporting Line */}
+            <p className="text-xs text-[#52665F] mt-3.5 select-none">
               A message you write. An experiment you control.
             </p>
           </div>
