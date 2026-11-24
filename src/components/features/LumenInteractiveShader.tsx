@@ -83,15 +83,16 @@ void main(){
   float a = m(uv + d1);
   vec3 col = mix(u_pal_base, u_pal_warm, a * 2.2);
 
-  // Pale WhatsApp outgoing message mint tint (#E7FCE3)
+  // Pale WhatsApp outgoing message mint tint (#E7FCE3) - user requested +10% presence
   vec3 u_pal_bubble_mint = vec3(0.898, 0.984, 0.886);
-  col = mix(col, u_pal_bubble_mint, a * 0.45);
+  col = mix(col, u_pal_bubble_mint, a * 0.85);
 
   float b = m(uv + a * 2.4 + d2);
-  col = mix(col, u_pal_mid, b * 0.95);
+  col = mix(col, u_pal_mid, b * 0.85);
 
+  // Subdued cyan influence: reduced to prevent overwhelming cyan dominance
   float dd = m(uv + b * 3.5 + d3);
-  col = mix(col, u_pal_cool, dd * 1.15);
+  col = mix(col, u_pal_cool, dd * 0.45);
 
   col += u_pal_cursor * fall;
 
@@ -151,13 +152,13 @@ export const LumenInteractiveShader: React.FC<LumenInteractiveShaderProps> = ({
         r: { value: [1, 1] },
         c: { value: [0, 0] },
         ci: { value: 0 },
-        u_pal_base: { value: baseColor ?? [0.005, 0.125, 0.082] },      // Deep emerald (#074e3c)
-        u_pal_warm: { value: warmColor ?? [0.000, 0.680, 0.520] },      // Vibrant signal emerald (#00a884)
-        u_pal_mid: { value: midColor ?? [0.860, 0.920, 0.880] },        // Delicate white highlight accents
-        u_pal_cool: { value: coolColor ?? [0.028, 0.720, 0.700] },      // Luminous cyan (#06b6d4)
-        u_pal_cursor: { value: cursorColor ?? [0.050, 0.820, 0.760] },  // Cyan accent
+        u_pal_base: { value: baseColor ?? [0.004, 0.140, 0.088] },      // Deep emerald
+        u_pal_warm: { value: warmColor ?? [0.000, 0.650, 0.480] },      // Signal emerald
+        u_pal_mid: { value: midColor ?? [0.850, 0.920, 0.880] },        // Creamy white accents
+        u_pal_cool: { value: coolColor ?? [0.015, 0.520, 0.560] },      // Reduced cyan (softer cyan-seafoam)
+        u_pal_cursor: { value: cursorColor ?? [0.030, 0.650, 0.620] },  // Soft wake
         u_pal_rgScale: { value: [1.0, 1.0, 1.0] },
-        u_brightness: { value: brightness ?? 1.48 },                    // Crisp, luminous brightness
+        u_brightness: { value: brightness ?? 1.35 },
       },
     });
 

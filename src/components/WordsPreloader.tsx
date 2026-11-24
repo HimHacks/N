@@ -285,7 +285,7 @@ const DotMatrixLetter: React.FC<{
   char: string;
   isLocked: boolean;
   dotSize?: number;
-}> = ({ char, isLocked, dotSize = 1.5 }) => {
+}> = ({ char, isLocked, dotSize = 1.1 }) => {
   const pattern =
     LETTER_DOT_PATTERNS[char] ||
     DIGIT_PATTERNS[char] ||
@@ -293,7 +293,7 @@ const DotMatrixLetter: React.FC<{
 
   return (
     <div
-      className="inline-grid gap-[1.5px] p-[1px] select-none"
+      className="inline-grid gap-[1px] p-[0.5px] select-none"
       style={{
         gridTemplateColumns: `repeat(5, ${dotSize}px)`,
         gridTemplateRows: `repeat(7, ${dotSize}px)`,
@@ -362,7 +362,7 @@ const RollDownText: React.FC<{
 };
 
 // Single-Roll Vegas 3-Slot Reel Sequences for "SCROLL":
-// As requested: each letter on the word "SCROLL" rolls only once, step-by-step,
+// Each letter on the word "SCROLL" rolls only once, step-by-step,
 // and that once is where the animation stops for each and every letter!
 // - Slot 0: rolls to 'S' and stops.
 // - Slot 1: rolls to 'C' and stops.
@@ -427,21 +427,21 @@ const ScrollLotteryMachine: React.FC<{ progress: number; isLoaded: boolean }> = 
             continue;
           }
 
-          // If the slot has already completed its single roll to the penultimate letter, wait for threshold
+          // If the slot has already completed its roll, keep it at its current letter
           if (reelIndices[i] >= reel.length - 1) {
             continue;
           }
 
           // Step cadence: each letter advances along its reel only once
-          let stepDelay = 80;
+          let stepDelay = 120;
           if (isFinal) {
             // Final reel slows down heavily on its single roll
             if (curProg >= 95) {
-              stepDelay = 450;
+              stepDelay = 520;
             } else if (curProg >= 85) {
-              stepDelay = 260;
+              stepDelay = 320;
             } else {
-              stepDelay = 140;
+              stepDelay = 180;
             }
           }
 
@@ -449,7 +449,7 @@ const ScrollLotteryMachine: React.FC<{ progress: number; isLoaded: boolean }> = 
           if (slotTimers[i] >= stepDelay) {
             slotTimers[i] = 0;
             // Advance by 1 step only (never loop backwards or duplicate)
-            if (reelIndices[i] < reel.length - 2) {
+            if (reelIndices[i] < reel.length - 1) {
               reelIndices[i] += 1;
               next[i] = reel[reelIndices[i]];
               changed = true;
@@ -468,7 +468,7 @@ const ScrollLotteryMachine: React.FC<{ progress: number; isLoaded: boolean }> = 
   }, []);
 
   return (
-    <div className="flex items-center gap-1 sm:gap-1.5">
+    <div className="flex items-center gap-[3px]">
       {chars.map((ch, idx) => {
         const isLocked = isLoaded || progress >= LOCK_THRESHOLDS[idx];
         return (
@@ -476,7 +476,7 @@ const ScrollLotteryMachine: React.FC<{ progress: number; isLoaded: boolean }> = 
             key={idx}
             char={ch}
             isLocked={isLocked}
-            dotSize={2.0}
+            dotSize={1.1}
           />
         );
       })}
@@ -645,7 +645,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
               Loading page background:
               Base is authentic WhatsApp Biscotti Cream (#efeae2).
               The animated fluid gradient (cyan, deep emerald, and light green with WhatsApp bubble mint highlights)
-              lives at the bottom covering strictly 3/8 of the screen (37.5%), with rich organic movement!
+              lives at the bottom covering strictly 3/8 of the screen (37.5%), with lively flame-like undulating crests!
             */}
             <motion.div
               initial={{ y: '100%', opacity: 0 }}
@@ -671,19 +671,20 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
                   'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.55) 82%, rgba(0,0,0,0.12) 94%, transparent 100%)',
               }}
             >
-              {/* Organic lively breathing expansion to give depth and fluid life */}
+              {/* Lively flame-like undulating motion: drifting, rising, and cresting like a living wave while staying within 3/8 boundary */}
               <motion.div
                 animate={{
-                  scale: [1, 1.05, 1],
-                  x: [0, 15, -15, 0],
-                  y: [0, -8, 4, 0],
+                  y: [0, -18, -6, -26, -10, 0],
+                  x: [0, 12, -8, 16, -12, 0],
+                  scaleY: [1, 1.14, 1.05, 1.18, 1.08, 1],
+                  scaleX: [1, 1.04, 0.98, 1.05, 0.99, 1],
                 }}
                 transition={{
-                  duration: 12,
+                  duration: 8.5,
                   repeat: Infinity,
-                  ease: 'easeInOut',
+                  ease: [0.45, 0.05, 0.55, 0.95],
                 }}
-                className="absolute inset-0 w-full h-full"
+                className="absolute inset-0 w-full h-[125%] -top-[25%]"
               >
                 <LumenInteractiveShader />
               </motion.div>
