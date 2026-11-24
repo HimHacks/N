@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { E2EEHomePage } from './components/features/E2EEHomePage';
 import { CaesarCipherInteraction } from './components/features/CaesarCipherInteraction';
-import { GreetingPreloader } from './components/GreetingPreloader';
+import { Skiper8 } from './components/ui/skiper8';
 import { WordsPreloader, type WordPreloaderPhase } from './components/WordsPreloader';
 
 export const App: React.FC = () => {
@@ -87,7 +87,7 @@ export const App: React.FC = () => {
         Cycles multilingual greetings before smoothly rolling up in a curved path
       */}
       {!hasVisited && (
-        <GreetingPreloader onComplete={() => setHasVisited(true)} />
+        <Skiper8 onComplete={() => setHasVisited(true)} />
       )}
 
       {/* 
