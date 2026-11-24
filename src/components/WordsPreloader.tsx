@@ -238,16 +238,16 @@ const VerticalSlotLetter: React.FC<{
     }
 
     // Step speed for the slot reel:
-    // Slots 0-4 roll vigorously (70ms - 90ms per step)
-    // Final slot ('L') progressively decelerates as progress reaches 85% -> 92% -> 99%
-    let stepSpeed = 75 + (slotIndex % 3) * 10;
+    // Slots 0-4 roll vigorously (60ms - 80ms per step)
+    // Final slot ('L') progressively decelerates smoothly (not a grinding crawl)
+    let stepSpeed = 65 + (slotIndex % 3) * 8;
     if (isFinal) {
       if (progress >= 99) {
-        stepSpeed = 420; // Dramatic crawl during 99% suspense pause
+        stepSpeed = 180; // Smooth final settle
       } else if (progress >= 92) {
-        stepSpeed = 220; // Heavy deceleration
+        stepSpeed = 120; // Gentle deceleration
       } else if (progress >= 80) {
-        stepSpeed = 130;
+        stepSpeed = 90;
       }
     }
 
@@ -374,16 +374,16 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
 
         setProgress(current);
 
-        // Compute delay based on cinematic curve
-        let delay = 30;
+        // Compute delay based on gentle deceleration curve
+        let delay = 24;
         if (current >= 99) {
-          delay = 600; // Dramatic cinematic pause at 99% before popping to 100%
+          delay = 220; // Brief pleasant pause at 99% before snapping to 100%
         } else if (current >= 92) {
-          delay = 140 + (current - 92) * 20; // Slow down intensely
+          delay = 60 + (current - 92) * 8; // Gentle smooth taper
         } else if (current >= 75) {
-          delay = 45 + (current - 75) * 6; // Gradual deceleration
+          delay = 32 + (current - 75) * 2; // Subtle natural ease-out
         } else {
-          delay = 30; // Steady unhurried initial progress
+          delay = 24; // Smooth steady progress
         }
 
         timer = setTimeout(step, delay);
