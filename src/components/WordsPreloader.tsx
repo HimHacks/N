@@ -8,6 +8,7 @@ export type WordPreloaderPhase = 'idle' | 'expanding' | 'loading' | 'exiting';
 interface WordsPreloaderProps {
   phase: WordPreloaderPhase;
   buttonOrigin?: { x: number; y: number } | null;
+  triggerType?: 'button' | 'scroll';
   onExpanded?: () => void;
   onLoadingComplete?: () => void;
   onExited?: () => void;
@@ -341,6 +342,7 @@ const VerticalSlotReel: React.FC<{
 export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   phase,
   buttonOrigin,
+  triggerType = 'scroll',
   onExpanded,
   onLoadingComplete,
   onExited,
@@ -433,10 +435,10 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
       {isVisible && (
         <div className="fixed inset-0 z-[120] pointer-events-auto overflow-hidden select-none">
           {/* 
-            Expanding Warping Biscotti Cream Curtain:
-            Smoothly blooms outward from the clicked button origin without any inverted SVG control points or corner flipping!
+            Expanding Warping Biscotti Cream Curtain / Smooth Vertical Rolling Roll-in:
+            - When triggered by button click or scroll: smooth rolling roll-up from the bottom or expanding circle from the button
           */}
-          {phase === 'expanding' && (
+          {phase === 'expanding' && triggerType === 'button' && (
             <motion.div
               className="fixed inset-0 z-20 w-full h-full pointer-events-none bg-[#efeae2]"
               initial={{ clipPath: clip0, opacity: 0.9 }}
@@ -446,14 +448,29 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
               }}
               transition={{
                 clipPath: {
-                  duration: 1.8,
+                  duration: 1.6,
                   ease: customEase,
                   times: [0, 0.25, 0.55, 0.82, 1],
                 },
                 opacity: {
-                  duration: 1.6,
+                  duration: 1.4,
                   ease: 'easeInOut',
                 },
+              }}
+              onAnimationComplete={() => {
+                if (onExpanded) onExpanded();
+              }}
+            />
+          )}
+
+          {phase === 'expanding' && triggerType === 'scroll' && (
+            <motion.div
+              className="fixed inset-0 z-20 w-full h-full pointer-events-none bg-[#efeae2]"
+              initial={{ y: '100%' }}
+              animate={{ y: '0%' }}
+              transition={{
+                duration: 1.1,
+                ease: [0.16, 1, 0.3, 1],
               }}
               onAnimationComplete={() => {
                 if (onExpanded) onExpanded();

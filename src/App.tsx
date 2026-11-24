@@ -10,23 +10,65 @@ export const App: React.FC = () => {
   const [hasVisited, setHasVisited] = useState(false);
   const [currentView, setCurrentView] = useState<'home' | 'simulator' | 'caesar'>('home');
   const [preloaderPhase, setPreloaderPhase] = useState<WordPreloaderPhase>('idle');
+  const [triggerType, setTriggerType] = useState<'button' | 'scroll'>('scroll');
   const [buttonOrigin, setButtonOrigin] = useState<{ x: number; y: number } | null>(null);
   const [isCompilingFinished, setIsCompilingFinished] = useState(false);
   const simulatorRef = useRef<HTMLDivElement>(null);
 
-  // 1. User clicks the "Find out in 2 minutes" primary button on HomePage
+  // 1. User clicks the "Find out in 2 minutes" primary button on HomePage -> auto-scroll / trigger transition
   const handleStartDeepDive = (origin?: { x: number; y: number }) => {
-    // Prevent re-triggering if already expanding or loading
     if (preloaderPhase !== 'idle') return;
     if (origin) {
       setButtonOrigin(origin);
+      setTriggerType('button');
+    } else {
+      setTriggerType('scroll');
     }
     setIsCompilingFinished(false);
-    // Expand curtain directly outward from the button
     setPreloaderPhase('expanding');
   };
 
-  // 2. Spreading curtain covers the entire screen -> opens compiling studio card
+  // Scroll detection on HomePage: when user scrolls down, automatically roll into the loading page!
+  useEffect(() => {
+    if (!hasVisited || currentView !== 'home' || preloaderPhase !== 'idle') return;
+
+    let accumulatedDelta = 0;
+    const handleWheel = (e: WheelEvent) => {
+      if (e.deltaY > 20) {
+        accumulatedDelta += e.deltaY;
+        if (accumulatedDelta > 50) {
+          setTriggerType('scroll');
+          setIsCompilingFinished(false);
+          setPreloaderPhase('expanding');
+        }
+      }
+    };
+
+    let touchStartY = 0;
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartY = e.touches[0].clientY;
+    };
+    const handleTouchMove = (e: TouchEvent) => {
+      const touchY = e.touches[0].clientY;
+      if (touchStartY - touchY > 50) {
+        setTriggerType('scroll');
+        setIsCompilingFinished(false);
+        setPreloaderPhase('expanding');
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [hasVisited, currentView, preloaderPhase]);
+
+  // 2. Rolling curtain reaches full screen -> opens compiling studio card
   const handleBubbleExpanded = () => {
     setPreloaderPhase('loading');
   };
@@ -91,11 +133,12 @@ export const App: React.FC = () => {
 
       {/* 
         Compiling Studio Preloader with Rising WebGL2 Gradient & Lumen Shader Background:
-        Appears when the visitor clicks the primary button on the homepage.
+        Appears when user scrolls down on the homepage or clicks the primary button.
       */}
       <WordsPreloader
         phase={preloaderPhase}
         buttonOrigin={buttonOrigin}
+        triggerType={triggerType}
         onExpanded={handleBubbleExpanded}
         onLoadingComplete={handleLoadingComplete}
         onExited={handlePreloaderExited}
@@ -103,7 +146,7 @@ export const App: React.FC = () => {
 
       {/* 
         View Routing:
-        - 'home': Human-to-Human E2EE Showcase (Aarav, Meera, Live Cryptographic Journey)
+        - 'home': Human-to-Human E2EE Showcase (Aarav, Meera)
         - 'simulator': Working E2EE Simulator (Sender Device A, Delivery Server Relay, Recipient Device B)
         - 'caesar': Interactive Caesar Cipher
       */}
