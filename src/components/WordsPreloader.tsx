@@ -254,14 +254,14 @@ const VerticalSlotReel: React.FC<{
     : Math.min(maxUnlockedIndex, Math.floor(progressRatio * (tape.length - 1)));
 
   const [tapeIndex, setTapeIndex] = useState(0);
+  const targetIndexRef = useRef(computedTargetIndex);
+  targetIndexRef.current = computedTargetIndex;
 
   useEffect(() => {
     if (isLocked) {
       setTapeIndex(tape.length - 1);
       return;
     }
-
-    setTapeIndex((prev) => Math.max(prev, computedTargetIndex));
 
     let stepSpeed = 46 + (slotIndex % 3) * 6;
     if (isFinal) {
@@ -274,9 +274,11 @@ const VerticalSlotReel: React.FC<{
       }
     }
 
+    // Single source of truth ticker: advances tapeIndex steadily towards targetIndexRef
+    // without resetting, jumping, or restarting from 0!
     const timer = setInterval(() => {
       setTapeIndex((prev) => {
-        if (prev < maxUnlockedIndex) {
+        if (prev < targetIndexRef.current) {
           return prev + 1;
         }
         return prev;
@@ -284,7 +286,7 @@ const VerticalSlotReel: React.FC<{
     }, stepSpeed);
 
     return () => clearInterval(timer);
-  }, [isLocked, computedTargetIndex, isFinal, slotIndex, maxUnlockedIndex, tape.length, progress]);
+  }, [isLocked, isFinal, slotIndex, progress]);
 
   const cellHeight = 22; // Enlarged cell height in px for clear readability
   const cellWidth = 15;  // Enlarged cell width in px
