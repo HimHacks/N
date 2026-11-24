@@ -285,7 +285,7 @@ const DotMatrixLetter: React.FC<{
   char: string;
   isLocked: boolean;
   dotSize?: number;
-}> = ({ char, isLocked, dotSize = 2.4 }) => {
+}> = ({ char, isLocked, dotSize = 1.5 }) => {
   const pattern =
     LETTER_DOT_PATTERNS[char] ||
     DIGIT_PATTERNS[char] ||
@@ -293,7 +293,7 @@ const DotMatrixLetter: React.FC<{
 
   return (
     <div
-      className="inline-grid gap-[2px] p-0.5 select-none"
+      className="inline-grid gap-[1.5px] p-[1px] select-none"
       style={{
         gridTemplateColumns: `repeat(5, ${dotSize}px)`,
         gridTemplateRows: `repeat(7, ${dotSize}px)`,
@@ -448,7 +448,7 @@ const ScrollLotteryMachine: React.FC<{ progress: number; isLoaded: boolean }> = 
   }, []);
 
   return (
-    <div className="flex items-center gap-1.5 sm:gap-2">
+    <div className="flex items-center gap-1 sm:gap-1.5">
       {chars.map((ch, idx) => {
         const isLocked = isLoaded || progress >= LOCK_THRESHOLDS[idx];
         return (
@@ -456,7 +456,7 @@ const ScrollLotteryMachine: React.FC<{ progress: number; isLoaded: boolean }> = 
             key={idx}
             char={ch}
             isLocked={isLocked}
-            dotSize={2.5}
+            dotSize={1.5}
           />
         );
       })}
@@ -599,7 +599,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
 
           {/* Full Loading and Exiting Screen */}
           <motion.div
-            className="fixed inset-0 z-30 flex items-center justify-center overflow-hidden"
+            className="fixed inset-0 z-30 flex items-center justify-center overflow-hidden bg-[#efeae2]"
             initial={{
               opacity: phase === 'expanding' ? 0 : 1,
             }}
@@ -623,21 +623,35 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
           >
             {/* 
               Loading page background:
-              The FULL background of the loading screen features the home page's animated fluid shader
-              with combined cyan, deep emerald, and light green gradients!
+              Base is authentic WhatsApp Biscotti Cream (#efeae2).
+              The animated fluid gradient (cyan, deep emerald, and light green)
+              covers strictly 3/8 of the screen (37.5%) rising from the bottom!
             */}
-            <div className="absolute inset-0 w-full h-full pointer-events-none z-0">
-              <LumenInteractiveShader />
-
-              {/* Soft atmospheric overlay preserving crisp studio card contrast without masking colors */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background:
-                    'radial-gradient(ellipse at 50% 50%, rgba(239, 234, 226, 0.45) 0%, rgba(239, 234, 226, 0.72) 100%)',
-                }}
-              />
-            </div>
+            <motion.div
+              initial={{ y: '100%', opacity: 0 }}
+              animate={
+                phase === 'loading'
+                  ? { y: '0%', opacity: 1 }
+                  : { y: '100%', opacity: 0 }
+              }
+              transition={{
+                duration: 2.8,
+                ease: [0.16, 1, 0.3, 1],
+                delay: 0.1,
+              }}
+              className="absolute inset-x-0 bottom-0 h-[37.5%] pointer-events-none overflow-hidden z-10"
+              style={{
+                // Strictly 3/8 height ratio (37.5%) with soft feathered top mask blending into Biscotti Cream (#efeae2)
+                maskImage:
+                  'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.92) 50%, rgba(0,0,0,0.45) 80%, rgba(0,0,0,0.1) 94%, transparent 100%)',
+                WebkitMaskImage:
+                  'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.92) 50%, rgba(0,0,0,0.45) 80%, rgba(0,0,0,0.1) 94%, transparent 100%)',
+              }}
+            >
+              <div className="absolute inset-0 w-full h-full">
+                <LumenInteractiveShader />
+              </div>
+            </motion.div>
 
             {/* Studio Card (Loading Screen) - Floating WhatsApp off-white cream aesthetic */}
             <AnimatePresence>
