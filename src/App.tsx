@@ -11,11 +11,13 @@ export const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<'home' | 'simulator' | 'caesar'>('home');
   const [preloaderPhase, setPreloaderPhase] = useState<WordPreloaderPhase>('idle');
   const [triggerType, setTriggerType] = useState<'button' | 'scroll'>('scroll');
+  const [scrollFraction, setScrollFraction] = useState<number>(0);
+  const [isInteractiveScroll, setIsInteractiveScroll] = useState<boolean>(false);
   const [buttonOrigin, setButtonOrigin] = useState<{ x: number; y: number } | null>(null);
   const [isCompilingFinished, setIsCompilingFinished] = useState(false);
   const simulatorRef = useRef<HTMLDivElement>(null);
 
-  // 1. User clicks the "Find out in 2 minutes" primary button on HomePage -> auto-scroll / trigger transition
+  // 1. User clicks the "Find out in 2 minutes" primary button on HomePage -> auto-scrolls to loading page!
   const handleStartDeepDive = (origin?: { x: number; y: number }) => {
     if (preloaderPhase !== 'idle') return;
     if (origin) {
@@ -24,23 +26,43 @@ export const App: React.FC = () => {
     } else {
       setTriggerType('scroll');
     }
+    setIsInteractiveScroll(false);
+    setScrollFraction(1);
     setIsCompilingFinished(false);
     setPreloaderPhase('expanding');
   };
 
-  // Scroll detection on HomePage: when user scrolls down, automatically roll into the loading page!
+  // Scroll detection on HomePage:
+  // - Interactive scrubbing: scrolling down moves Biscotti cream + fluid gradient upward in real-time
+  // - Reversible: user can scroll back up when under 75% coverage
+  // - Lock-in threshold: when reaching >= 75% coverage (0.75), automatically locks and rolls to 100%
   useEffect(() => {
     if (!hasVisited || currentView !== 'home' || preloaderPhase !== 'idle') return;
 
-    let accumulatedDelta = 0;
+    let accumulatedScroll = 0;
+    const maxScrollDistance = 550; // px of wheel/touch movement to reach 100%
+
     const handleWheel = (e: WheelEvent) => {
-      if (e.deltaY > 20) {
-        accumulatedDelta += e.deltaY;
-        if (accumulatedDelta > 50) {
-          setTriggerType('scroll');
-          setIsCompilingFinished(false);
-          setPreloaderPhase('expanding');
-        }
+      // Accumulate wheel delta (positive = downward, negative = upward)
+      accumulatedScroll += e.deltaY;
+      if (accumulatedScroll < 0) accumulatedScroll = 0;
+
+      const fraction = Math.min(1, accumulatedScroll / maxScrollDistance);
+      setScrollFraction(fraction);
+
+      if (fraction > 0.05) {
+        setIsInteractiveScroll(true);
+      } else {
+        setIsInteractiveScroll(false);
+      }
+
+      // If user reaches 75% (0.75) of the screen, automatically snap to the loading page!
+      if (fraction >= 0.75) {
+        setTriggerType('scroll');
+        setIsInteractiveScroll(false);
+        setScrollFraction(1);
+        setIsCompilingFinished(false);
+        setPreloaderPhase('expanding');
       }
     };
 
@@ -50,8 +72,25 @@ export const App: React.FC = () => {
     };
     const handleTouchMove = (e: TouchEvent) => {
       const touchY = e.touches[0].clientY;
-      if (touchStartY - touchY > 50) {
+      const deltaY = touchStartY - touchY;
+      accumulatedScroll += deltaY * 1.5;
+      touchStartY = touchY;
+      if (accumulatedScroll < 0) accumulatedScroll = 0;
+
+      const fraction = Math.min(1, accumulatedScroll / maxScrollDistance);
+      setScrollFraction(fraction);
+
+      if (fraction > 0.05) {
+        setIsInteractiveScroll(true);
+      } else {
+        setIsInteractiveScroll(false);
+      }
+
+      // 75% snap threshold
+      if (fraction >= 0.75) {
         setTriggerType('scroll');
+        setIsInteractiveScroll(false);
+        setScrollFraction(1);
         setIsCompilingFinished(false);
         setPreloaderPhase('expanding');
       }
@@ -119,6 +158,8 @@ export const App: React.FC = () => {
   const handlePreloaderExited = () => {
     setCurrentView('simulator');
     setPreloaderPhase('idle');
+    setIsInteractiveScroll(false);
+    setScrollFraction(0);
   };
 
   return (
@@ -133,12 +174,15 @@ export const App: React.FC = () => {
 
       {/* 
         Compiling Studio Preloader with Rising WebGL2 Gradient & Lumen Shader Background:
-        Appears when user scrolls down on the homepage or clicks the primary button.
+        - Interactive real-time scrubbing with 75% auto-snap threshold
+        - Auto-scrolls on clicking 'Find out in 2 minutes'
       */}
       <WordsPreloader
         phase={preloaderPhase}
         buttonOrigin={buttonOrigin}
         triggerType={triggerType}
+        scrollFraction={scrollFraction}
+        isInteractiveScroll={isInteractiveScroll}
         onExpanded={handleBubbleExpanded}
         onLoadingComplete={handleLoadingComplete}
         onExited={handlePreloaderExited}

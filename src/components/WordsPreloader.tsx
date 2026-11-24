@@ -9,6 +9,8 @@ interface WordsPreloaderProps {
   phase: WordPreloaderPhase;
   buttonOrigin?: { x: number; y: number } | null;
   triggerType?: 'button' | 'scroll';
+  scrollFraction?: number; // 0 (hidden at bottom 100%) to 1 (fully loaded 0%)
+  isInteractiveScroll?: boolean;
   onExpanded?: () => void;
   onLoadingComplete?: () => void;
   onExited?: () => void;
@@ -343,6 +345,8 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   phase,
   buttonOrigin,
   triggerType = 'scroll',
+  scrollFraction = 0,
+  isInteractiveScroll = false,
   onExpanded,
   onLoadingComplete,
   onExited,
@@ -428,7 +432,12 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   const progressStr = String(Math.min(100, progress)).padStart(3, '0') + '%';
   const digits = progressStr.split('');
 
-  const isVisible = phase !== 'idle';
+  const isVisible = phase !== 'idle' || isInteractiveScroll;
+
+  // Dynamic Y translation:
+  // When interacting with manual scroll (before locking), follows (1 - scrollFraction) * 100%
+  // e.g., 0% scroll -> 100% (hidden below), 50% scroll -> 50% (halfway up), 75% -> auto snaps to 0% (full screen)
+  const interactiveY = `${Math.max(0, Math.min(100, (1 - scrollFraction) * 100))}%`;
 
   return (
     <AnimatePresence>
@@ -436,17 +445,23 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
         <div className="fixed inset-0 z-[120] pointer-events-auto overflow-hidden select-none">
           {/* 
             Expanding Biscotti Cream Curtain + Fluid Gradient together:
-            Rolls smoothly together from the bottom (0 -> 100% viewport) as one integrated page
-            without sequential delay, eliminating lag so the fluid background arrives with the roll!
+            - Interactive manual scrub: User can scroll down to reveal Biscotti cream + fluid gradient,
+              and scroll back up if under 75% to return to home page!
+            - Once past 75% or clicked, snaps to full screen and initiates loading.
           */}
           <motion.div
             className="fixed inset-0 z-30 flex items-center justify-center overflow-hidden bg-[#efeae2]"
             initial={{ y: '100%' }}
             animate={
-              phase === 'expanding'
+              isInteractiveScroll && phase === 'idle'
+                ? {
+                    y: interactiveY,
+                    transition: { duration: 0.08, ease: 'linear' },
+                  }
+                : phase === 'expanding'
                 ? {
                     y: '0%',
-                    transition: { duration: 1.15, ease: [0.16, 1, 0.3, 1] },
+                    transition: { duration: 0.95, ease: [0.16, 1, 0.3, 1] },
                   }
                 : phase === 'loading'
                 ? {
@@ -507,7 +522,7 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
 
             {/* Studio Card (Loading Screen) - Floating WhatsApp off-white cream aesthetic */}
             <AnimatePresence>
-              {(phase === 'loading' || phase === 'expanding') && (
+              {(phase === 'loading' || phase === 'expanding' || scrollFraction >= 0.35) && (
                 <motion.div
                   key="loading-card-container"
                   initial={{ opacity: 0, scale: 0.96, y: 16 }}
