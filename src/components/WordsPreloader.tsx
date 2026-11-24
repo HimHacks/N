@@ -191,15 +191,22 @@ const RollDownText: React.FC<{
 
 // Target word and sequential resolution parameters
 const TARGET_WORD = 'SCROLL';
-const CHAR_POOL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('');
-// Strict sequential thresholds: S -> C -> R -> O -> L -> L
-const LOCK_THRESHOLDS = [20, 38, 56, 74, 88, 100];
+// Curated pool of high-contrast glyphs for slot cycling
+const CHAR_POOL = ['S', 'C', 'R', 'O', 'L', 'A', 'B', 'E', 'K', 'M', 'P', 'T', 'X', 'Z', '8', '3'];
+
+// Distinct, evenly distributed lock thresholds for each of the 6 letters:
+// Slot 0 ('S') locks at 30%
+// Slot 1 ('C') locks at 48%
+// Slot 2 ('R') locks at 64%
+// Slot 3 ('O') locks at 78%
+// Slot 4 ('L') locks at 90%
+// Slot 5 ('L') slows down dramatically and locks at 100%
+const LOCK_THRESHOLDS = [30, 48, 64, 78, 90, 100];
 
 /**
  * Vertical Rolling Cinematic Slot-Machine Letter Component
- * Renders authentic dot-matrix characters (.font-terminal-dots) that actively roll vertically
- * through changing glyphs before smoothly resolving into their locked state.
- * The final 'L' (slotIndex 5) decelerates heavily and snaps to 'L' simultaneously at 100%.
+ * Every single letter reel runs a physical slot-machine tape that continuously rolls
+ * vertically through random characters, visibly spinning and rolling until its designated threshold!
  */
 const VerticalSlotLetter: React.FC<{
   targetChar: string;
@@ -207,68 +214,106 @@ const VerticalSlotLetter: React.FC<{
   progress: number;
   isLoaded: boolean;
 }> = ({ targetChar, slotIndex, progress, isLoaded }) => {
-  const [currentChar, setCurrentChar] = useState<string>(() =>
-    CHAR_POOL[(slotIndex * 7) % CHAR_POOL.length]
-  );
-  const [isRolling, setIsRolling] = useState(true);
-
   const threshold = LOCK_THRESHOLDS[slotIndex];
   const isFinal = slotIndex === TARGET_WORD.length - 1;
   const isLocked = isLoaded || progress >= threshold;
 
+  // Build a physical reel strip of glyphs that concludes with the target character
+  const [tape, setTape] = useState<string[]>(() => {
+    const list: string[] = [];
+    for (let i = 0; i < 18; i++) {
+      list.push(CHAR_POOL[(i * 7 + slotIndex * 3) % CHAR_POOL.length]);
+    }
+    list.push(targetChar);
+    return list;
+  });
+
+  const [tapeIndex, setTapeIndex] = useState(0);
+
   useEffect(() => {
     if (isLocked) {
-      setCurrentChar(targetChar);
-      setIsRolling(false);
+      // Snap reel to targetChar (the last item on the tape)
+      setTapeIndex(tape.length - 1);
       return;
     }
 
-    setIsRolling(true);
-
-    // Compute slot cycle cadence:
-    // Slots 0-4 roll fast (36-44ms)
-    // Slot 5 ('L') slows down progressively as progress approaches 99%, pausing during the 99% suspense mark
-    let intervalSpeed = 38 + slotIndex * 2;
+    // Step speed for the slot reel:
+    // Slots 0-4 roll vigorously (70ms - 90ms per step)
+    // Final slot ('L') progressively decelerates as progress reaches 85% -> 92% -> 99%
+    let stepSpeed = 75 + (slotIndex % 3) * 10;
     if (isFinal) {
       if (progress >= 99) {
-        intervalSpeed = 480; // Slower deliberate crawl at 99% pause
+        stepSpeed = 420; // Dramatic crawl during 99% suspense pause
       } else if (progress >= 92) {
-        intervalSpeed = 220; // Noticeable deceleration
-      } else if (progress >= 85) {
-        intervalSpeed = 120; // Early deceleration
-      } else {
-        intervalSpeed = 50;
+        stepSpeed = 220; // Heavy deceleration
+      } else if (progress >= 80) {
+        stepSpeed = 130;
       }
     }
 
-    const interval = setInterval(() => {
-      const rand = CHAR_POOL[Math.floor(Math.random() * CHAR_POOL.length)];
-      setCurrentChar(rand);
-    }, intervalSpeed);
+    const timer = setInterval(() => {
+      setTapeIndex((prev) => {
+        // Roll through the tape; if near end and not locked, wrap around to keep spinning!
+        if (prev >= tape.length - 2) {
+          return 0;
+        }
+        return prev + 1;
+      });
+    }, stepSpeed);
 
-    return () => clearInterval(interval);
-  }, [isLocked, progress, isFinal, slotIndex, targetChar]);
+    return () => clearInterval(timer);
+  }, [isLocked, progress, isFinal, slotIndex, tape.length]);
+
+  const itemHeight = 18; // Height in px of each slot reel cell
 
   return (
-    <div className="relative inline-flex items-center justify-center overflow-hidden h-[18px] w-[14px]">
-      <AnimatePresence mode="popLayout">
-        <motion.span
-          key={currentChar}
-          initial={isRolling ? { y: '-60%', opacity: 0.6 } : { y: 0, opacity: 1 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={isRolling ? { y: '60%', opacity: 0.3 } : undefined}
-          transition={{ duration: isFinal && progress >= 92 ? 0.22 : 0.05, ease: 'easeOut' }}
-          className="font-terminal-dots inline-block text-center select-none uppercase tracking-[0.14em]"
-          style={{
-            fontSize: '11.5px',
-            lineHeight: 1,
-            color: isLocked ? '#111b21' : '#4b5563',
-            textShadow: isLocked ? '0 0.5px 1px rgba(0,0,0,0.22)' : 'none',
-          }}
-        >
-          {currentChar}
-        </motion.span>
-      </AnimatePresence>
+    <div
+      className="relative inline-block overflow-hidden select-none"
+      style={{
+        height: `${itemHeight}px`,
+        width: '13px',
+      }}
+    >
+      <motion.div
+        animate={{
+          y: -tapeIndex * itemHeight,
+        }}
+        transition={
+          isLocked
+            ? {
+                type: 'spring',
+                stiffness: isFinal ? 120 : 320,
+                damping: isFinal ? 18 : 24,
+                mass: isFinal ? 1.2 : 0.8,
+              }
+            : {
+                duration: isFinal && progress >= 92 ? 0.22 : 0.08,
+                ease: 'linear',
+              }
+        }
+        className="flex flex-col items-center"
+      >
+        {tape.map((ch, idx) => {
+          const isAtTarget = idx === tape.length - 1 && isLocked;
+          return (
+            <div
+              key={idx}
+              className="flex items-center justify-center font-terminal-dots select-none uppercase tracking-[0.14em]"
+              style={{
+                height: `${itemHeight}px`,
+                width: '13px',
+                fontSize: '11.5px',
+                lineHeight: 1,
+                color: isAtTarget ? '#111b21' : '#525252',
+                textShadow: isAtTarget ? '0 0.5px 1px rgba(0,0,0,0.22)' : 'none',
+                opacity: isAtTarget ? 1 : 0.75,
+              }}
+            >
+              {ch}
+            </div>
+          );
+        })}
+      </motion.div>
     </div>
   );
 };
