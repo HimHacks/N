@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { E2EEHomePage } from './components/features/E2EEHomePage';
+import { E2EEMainPage } from './components/features/E2EEMainPage';
 import { MainGuidedSimulator } from './components/features/MainGuidedSimulator';
 import { CaesarCipherInteraction } from './components/features/CaesarCipherInteraction';
 import { GreetingPreloader } from './components/GreetingPreloader';
@@ -8,7 +9,7 @@ import { WordsPreloader, type WordPreloaderPhase } from './components/WordsPrelo
 export const App: React.FC = () => {
   // Original Greeting Preloader ('Hello', 'Bonjour', ...) plays at calm natural cadence
   const [hasVisited, setHasVisited] = useState(false);
-  const [currentView, setCurrentView] = useState<'home' | 'simulator' | 'caesar'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'phonesim' | 'simulator' | 'caesar'>('home');
   const [preloaderPhase, setPreloaderPhase] = useState<WordPreloaderPhase>('idle');
   const [triggerType, setTriggerType] = useState<'button' | 'scroll'>('scroll');
   const [scrollFraction, setScrollFraction] = useState<number>(0);
@@ -201,9 +202,9 @@ export const App: React.FC = () => {
     };
   }, [preloaderPhase, isCompilingFinished]);
 
-  // When reverse downward/upward slide finishes, switch to simulator and reset preloader
+  // When reverse downward/upward slide finishes, switch to scroll-triggered phone simulator
   const handlePreloaderExited = () => {
-    setCurrentView('simulator');
+    setCurrentView('phonesim');
     setPreloaderPhase('idle');
     setIsInteractiveScroll(false);
     setScrollFraction(0);
@@ -238,8 +239,9 @@ export const App: React.FC = () => {
       {/* 
         View Routing:
         - 'home': Human-to-Human E2EE Showcase (Aarav, Meera)
-        - 'simulator': Working E2EE Simulator (Sender Device A, Delivery Server Relay, Recipient Device B)
-        - 'caesar': Interactive Caesar Cipher
+        - 'phonesim': Scroll-Triggered Phone Simulator (WhatsApp phone, Alice & Bob message delivery journey)
+        - 'simulator': Existing Technical E2EE Guided Simulator (Sender Device A, Delivery Server Relay, Recipient Device B)
+        - 'caesar': Interactive Caesar Cipher Lab
       */}
       {currentView === 'home' && (
         <E2EEHomePage
@@ -248,14 +250,21 @@ export const App: React.FC = () => {
         />
       )}
 
+      {currentView === 'phonesim' && (
+        <E2EEMainPage
+          onBackToHome={() => setCurrentView('home')}
+          onNavigateToSimulator={() => setCurrentView('simulator')}
+        />
+      )}
+
       {currentView === 'simulator' && (
         <div ref={simulatorRef} className="relative w-full min-h-screen bg-[#E9EEE5] py-8 px-4 sm:px-8">
           <div className="max-w-6xl mx-auto mb-4 flex items-center justify-between">
             <button
-              onClick={() => setCurrentView('home')}
+              onClick={() => setCurrentView('phonesim')}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#D3CDC2] bg-white text-[#153A32] text-xs font-semibold hover:bg-[#E3EDE3] transition-colors cursor-pointer shadow-xs"
             >
-              &larr; Back to Home
+              &larr; Back to Phone Simulator
             </button>
             <button
               onClick={() => setCurrentView('caesar')}
@@ -278,7 +287,7 @@ export const App: React.FC = () => {
               &larr; Back to E2EE Simulator
             </button>
           </div>
-          <CaesarCipherInteraction onScrollToTop={() => setCurrentView('simulator')} />
+          <CaesarCipherInteraction onScrollToTop={() => setCurrentView('phonesim')} />
         </div>
       )}
     </div>
