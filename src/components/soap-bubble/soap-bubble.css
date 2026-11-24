@@ -44,8 +44,18 @@
 [data-soap-bubble-ready] > .soap-bubble-control-canvas {
   opacity: 1;
 }
-/* Without WebGL / fallback: subtle translucent liquid shimmer instead of flat opaque white */
-.soap-bubble-surface:not([data-soap-bubble-ready]) {
+/* For buttons: never display a plain fallback button before the WebGL shader is ready */
+.soap-bubble-surface.soap-bubble-button:not([data-soap-bubble-ready]) {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  pointer-events: none !important;
+}
+
+/* Without WebGL / fallback for non-button panels: subtle translucent liquid shimmer instead of flat opaque white */
+.soap-bubble-surface:not([data-soap-bubble-ready]):not(.soap-bubble-button) {
   background:
     radial-gradient(ellipse at 25% 15%, rgba(255, 255, 255, 0.45) 0%, transparent 45%),
     radial-gradient(ellipse at 75% 85%, rgba(6, 182, 212, 0.25) 0%, transparent 50%),
