@@ -33,54 +33,90 @@ export const App: React.FC = () => {
   };
 
   // Scroll detection on HomePage:
-  // - Interactive scrubbing: scrolling down moves Biscotti cream + fluid gradient upward in real-time
+  // - Interactive scrubbing: scrolling down moves Biscotti cream boundary upward in real-time
   // - Reversible: user can scroll back up when under 75% coverage
-  // - Lock-in threshold: when reaching >= 75% coverage (0.75), automatically locks and rolls to 100%
+  // - Automatic smooth retraction: if user stops scrolling and hasn't reached >= 75%, smoothly retract to 0
+  // - Lock-in threshold: when reaching >= 75% coverage (0.75), automatically locks and advances smoothly to 100%
   useEffect(() => {
     if (!hasVisited || currentView !== 'home' || preloaderPhase !== 'idle') return;
 
     let accumulatedScroll = 0;
     const maxScrollDistance = 550; // px of wheel/touch movement to reach 100%
+    let retractTimer: ReturnType<typeof setTimeout> | null = null;
+    let retractAnimFrame: number | null = null;
+
+    const smoothlyRetract = () => {
+      if (accumulatedScroll <= 0 || preloaderPhase !== 'idle') {
+        accumulatedScroll = 0;
+        setScrollFraction(0);
+        setIsInteractiveScroll(false);
+        return;
+      }
+
+      accumulatedScroll = Math.max(0, accumulatedScroll - 24);
+      const frac = accumulatedScroll / maxScrollDistance;
+      setScrollFraction(frac);
+
+      if (accumulatedScroll > 0) {
+        retractAnimFrame = requestAnimationFrame(smoothlyRetract);
+      } else {
+        setIsInteractiveScroll(false);
+      }
+    };
+
+    const scheduleRetract = () => {
+      if (retractTimer) clearTimeout(retractTimer);
+      if (retractAnimFrame) cancelAnimationFrame(retractAnimFrame);
+      retractTimer = setTimeout(() => {
+        smoothlyRetract();
+      }, 350); // After 350ms of inactivity below threshold, smoothly retract
+    };
 
     const handleWheel = (e: WheelEvent) => {
-      // Accumulate wheel delta (positive = downward, negative = upward)
-      accumulatedScroll += e.deltaY;
+      if (retractTimer) clearTimeout(retractTimer);
+      if (retractAnimFrame) cancelAnimationFrame(retractAnimFrame);
+
+      accumulatedScroll += e.deltaY * 0.9;
       if (accumulatedScroll < 0) accumulatedScroll = 0;
 
       const fraction = Math.min(1, accumulatedScroll / maxScrollDistance);
       setScrollFraction(fraction);
 
-      if (fraction > 0.05) {
+      if (fraction > 0.02) {
         setIsInteractiveScroll(true);
       } else {
         setIsInteractiveScroll(false);
       }
 
-      // If user reaches 75% (0.75) of the screen, automatically snap to the loading page!
+      // If user reaches 75% (0.75) of the screen, commit to smooth progression!
       if (fraction >= 0.75) {
         setTriggerType('scroll');
         setIsInteractiveScroll(false);
         setScrollFraction(1);
         setIsCompilingFinished(false);
         setPreloaderPhase('expanding');
+      } else {
+        scheduleRetract();
       }
     };
 
     let touchStartY = 0;
     const handleTouchStart = (e: TouchEvent) => {
+      if (retractTimer) clearTimeout(retractTimer);
+      if (retractAnimFrame) cancelAnimationFrame(retractAnimFrame);
       touchStartY = e.touches[0].clientY;
     };
     const handleTouchMove = (e: TouchEvent) => {
       const touchY = e.touches[0].clientY;
       const deltaY = touchStartY - touchY;
-      accumulatedScroll += deltaY * 1.5;
+      accumulatedScroll += deltaY * 1.3;
       touchStartY = touchY;
       if (accumulatedScroll < 0) accumulatedScroll = 0;
 
       const fraction = Math.min(1, accumulatedScroll / maxScrollDistance);
       setScrollFraction(fraction);
 
-      if (fraction > 0.05) {
+      if (fraction > 0.02) {
         setIsInteractiveScroll(true);
       } else {
         setIsInteractiveScroll(false);
@@ -96,14 +132,25 @@ export const App: React.FC = () => {
       }
     };
 
+    const handleTouchEnd = () => {
+      const fraction = accumulatedScroll / maxScrollDistance;
+      if (fraction < 0.75) {
+        scheduleRetract();
+      }
+    };
+
     window.addEventListener('wheel', handleWheel, { passive: true });
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
     window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     return () => {
+      if (retractTimer) clearTimeout(retractTimer);
+      if (retractAnimFrame) cancelAnimationFrame(retractAnimFrame);
       window.removeEventListener('wheel', handleWheel);
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
     };
   }, [hasVisited, currentView, preloaderPhase]);
 

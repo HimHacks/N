@@ -432,52 +432,92 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
   const progressStr = String(Math.min(100, progress)).padStart(3, '0') + '%';
   const digits = progressStr.split('');
 
-  const isVisible = phase !== 'idle' || isInteractiveScroll;
+  // SVG multi-point organic boundary for the advancing biscotti cream surface:
+  // Instead of a straight horizontal line or instant edge fill, the crest forms an organically undulating wave
+  // with asymmetric peaks and troughs that deform and morph fluidly as the cream advances upward across the viewport.
+  // Coordinate system: 0..1000 width, 0..1000 height.
+  // baselineY is the leading edge (1000 = bottom, 0 = top).
+  const baselineY = isInteractiveScroll && phase === 'idle'
+    ? Math.max(0, Math.min(1000, Math.round((1 - scrollFraction) * 1000)))
+    : phase === 'expanding'
+    ? 0
+    : phase === 'loading'
+    ? 0
+    : 1000;
 
-  // Dynamic Y translation:
-  // When interacting with manual scroll (before locking), follows (1 - scrollFraction) * 100%
-  // e.g., 0% scroll -> 100% (hidden below), 50% scroll -> 50% (halfway up), 75% -> auto snaps to 0% (full screen)
-  const interactiveY = `${Math.max(0, Math.min(100, (1 - scrollFraction) * 100))}%`;
+  // Keyframes for the continuously deforming organic boundary during expansion
+  // (Left and right edges do NOT jump; they are pinned to the organic wave contours)
+  const wave0 = `M 0 1000 C 180 1000, 320 1000, 500 1000 C 680 1000, 840 1000, 1000 1000 L 1000 1000 L 0 1000 Z`;
+  const wave1 = `M 0 780 C 160 720, 290 840, 480 750 C 670 660, 830 790, 1000 730 L 1000 1000 L 0 1000 Z`;
+  const wave2 = `M 0 520 C 190 590, 340 440, 520 480 C 700 520, 850 410, 1000 460 L 1000 1000 L 0 1000 Z`;
+  const wave3 = `M 0 240 C 170 170, 310 290, 510 210 C 710 130, 860 260, 1000 180 L 1000 1000 L 0 1000 Z`;
+  const wave4 = `M 0 0 C 250 0, 500 0, 750 0 C 850 0, 950 0, 1000 0 L 1000 1000 L 0 1000 Z`;
+
+  // Interactive dynamic wave path calculated from current baselineY
+  const amp1 = Math.sin(scrollFraction * Math.PI) * 55;
+  const amp2 = Math.cos(scrollFraction * Math.PI) * 45;
+  const currentInteractiveWave = `M 0 ${Math.min(1000, baselineY + amp1 * 0.4)} C 180 ${Math.max(0, baselineY - amp1)}, 340 ${Math.min(1000, baselineY + amp2)}, 520 ${Math.max(0, baselineY - amp2 * 0.8)} C 700 ${Math.min(1000, baselineY + amp1 * 0.7)}, 860 ${Math.max(0, baselineY - amp2)}, 1000 ${Math.min(1000, baselineY + amp2 * 0.5)} L 1000 1000 L 0 1000 Z`;
 
   return (
     <AnimatePresence>
       {isVisible && (
         <div className="fixed inset-0 z-[120] pointer-events-auto overflow-hidden select-none">
           {/* 
-            Expanding Biscotti Cream Curtain + Fluid Gradient together:
-            - Interactive manual scrub: User can scroll down to reveal Biscotti cream + fluid gradient,
-              and scroll back up if under 75% to return to home page!
-            - Once past 75% or clicked, snaps to full screen and initiates loading.
+            ORGANIC BISCOTTI CREAM ADVANCING SURFACE:
+            - When scrubbing: continuously morphs along an asymmetric fluid wave contour.
+            - When committed: smoothly rolls up with continuous multi-keyframe contour morphing (wave0 -> wave4).
+            - No instantaneous filling of left or right edges; cohesive fluid propagation across the entire viewport.
           */}
+          <svg
+            className="fixed inset-0 z-20 w-full h-full pointer-events-none"
+            viewBox="0 0 1000 1000"
+            preserveAspectRatio="none"
+          >
+            {isInteractiveScroll && phase === 'idle' ? (
+              <path
+                d={currentInteractiveWave}
+                fill="#efeae2"
+                style={{ transition: 'd 0.08s ease-out' }}
+              />
+            ) : phase === 'expanding' ? (
+              <motion.path
+                fill="#efeae2"
+                initial={{ d: currentInteractiveWave }}
+                animate={{
+                  d: [currentInteractiveWave, wave2, wave3, wave4],
+                }}
+                transition={{
+                  duration: 1.25,
+                  ease: [0.16, 1, 0.3, 1],
+                  times: [0, 0.35, 0.7, 1],
+                }}
+                onAnimationComplete={() => {
+                  if (onExpanded) onExpanded();
+                }}
+              />
+            ) : (
+              <path d="M 0 0 L 1000 0 L 1000 1000 L 0 1000 Z" fill="#efeae2" />
+            )}
+          </svg>
+
+          {/* Full Loading and Exiting Screen */}
           <motion.div
-            className="fixed inset-0 z-30 flex items-center justify-center overflow-hidden bg-[#efeae2]"
-            initial={{ y: '100%' }}
+            className="fixed inset-0 z-30 flex items-center justify-center overflow-hidden"
+            initial={{ opacity: 0 }}
             animate={
-              isInteractiveScroll && phase === 'idle'
+              phase === 'loading'
                 ? {
-                    y: interactiveY,
-                    transition: { duration: 0.08, ease: 'linear' },
-                  }
-                : phase === 'expanding'
-                ? {
-                    y: '0%',
-                    transition: { duration: 0.95, ease: [0.16, 1, 0.3, 1] },
-                  }
-                : phase === 'loading'
-                ? {
-                    y: '0%',
+                    opacity: 1,
+                    transition: { duration: 0.35, ease: 'easeOut' },
                   }
                 : phase === 'exiting'
                 ? {
                     y: '-100vh',
                     transition: { duration: 0.85, ease: [0.76, 0, 0.24, 1] },
                   }
-                : { y: '100%' }
+                : { opacity: 0 }
             }
             onAnimationComplete={() => {
-              if (phase === 'expanding' && onExpanded) {
-                onExpanded();
-              }
               if (phase === 'exiting' && onExited) {
                 onExited();
               }
@@ -485,50 +525,55 @@ export const WordsPreloader: React.FC<WordsPreloaderProps> = ({
           >
             {/* 
               Loading page background:
-              Integrated directly inside the rolling screen so it travels in sync with the roll!
+              Only appears once cream expansion has completed and phase enters 'loading'!
               Anchored at the bottom at 3/8 height (37.5%) with lively undulating crest.
             */}
-            <div
-              className="absolute inset-x-0 bottom-0 h-[37.5%] pointer-events-none overflow-hidden z-10"
-              style={{
-                maskImage:
-                  'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.55) 82%, rgba(0,0,0,0.12) 94%, transparent 100%)',
-                WebkitMaskImage:
-                  'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.55) 82%, rgba(0,0,0,0.12) 94%, transparent 100%)',
-              }}
-            >
-              {/* Lively flame-like undulating motion extending the green/emerald fluid shader */}
+            {phase === 'loading' && (
               <motion.div
-                animate={{
-                  y: [0, -20, -6, -28, -12, 0],
-                  scaleY: [1, 1.15, 1.05, 1.20, 1.08, 1],
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute inset-x-0 bottom-0 h-[37.5%] pointer-events-none overflow-hidden z-10"
+                style={{
+                  maskImage:
+                    'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.55) 82%, rgba(0,0,0,0.12) 94%, transparent 100%)',
+                  WebkitMaskImage:
+                    'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.55) 82%, rgba(0,0,0,0.12) 94%, transparent 100%)',
                 }}
-                transition={{
-                  duration: 8.0,
-                  repeat: Infinity,
-                  ease: [0.45, 0.05, 0.55, 0.95],
-                }}
-                className="absolute inset-0 w-full h-[130%] -top-[30%]"
               >
-                <LumenInteractiveShader
-                  baseColor={[0.005, 0.150, 0.095]}
-                  warmColor={[0.000, 0.680, 0.500]}
-                  midColor={[0.050, 0.850, 0.550]}
-                  coolColor={[0.020, 0.560, 0.520]}
-                  brightness={1.35}
-                />
+                {/* Lively flame-like undulating motion extending the green/emerald fluid shader */}
+                <motion.div
+                  animate={{
+                    y: [0, -20, -6, -28, -12, 0],
+                    scaleY: [1, 1.15, 1.05, 1.20, 1.08, 1],
+                  }}
+                  transition={{
+                    duration: 8.0,
+                    repeat: Infinity,
+                    ease: [0.45, 0.05, 0.55, 0.95],
+                  }}
+                  className="absolute inset-0 w-full h-[130%] -top-[30%]"
+                >
+                  <LumenInteractiveShader
+                    baseColor={[0.005, 0.150, 0.095]}
+                    warmColor={[0.000, 0.680, 0.500]}
+                    midColor={[0.050, 0.850, 0.550]}
+                    coolColor={[0.020, 0.560, 0.520]}
+                    brightness={1.35}
+                  />
+                </motion.div>
               </motion.div>
-            </div>
+            )}
 
-            {/* Studio Card (Loading Screen) - Floating WhatsApp off-white cream aesthetic */}
+            {/* Studio Card (Loading Screen) - ONLY rendered once transition completes into 'loading' */}
             <AnimatePresence>
-              {(phase === 'loading' || phase === 'expanding' || scrollFraction >= 0.35) && (
+              {phase === 'loading' && (
                 <motion.div
                   key="loading-card-container"
-                  initial={{ opacity: 0, scale: 0.96, y: 16 }}
+                  initial={{ opacity: 0, scale: 0.95, y: 16 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.96 }}
-                  transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
+                  transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                   className="relative z-20 w-full max-w-4xl h-[78vh] max-h-[580px] bg-white/95 rounded-3xl shadow-[0_30px_90px_rgba(11,20,26,0.22)] overflow-hidden flex flex-col justify-between p-6 sm:p-8 md:p-10 text-slate-900 border border-[#d1d7db]/80 mx-4 sm:mx-8 backdrop-blur-xl"
                 >
                   {/* Center Loading Telemetry: Space Grotesk font for "Loading" with calm roll down exit */}
