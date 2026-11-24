@@ -34,14 +34,14 @@ export const App: React.FC = () => {
 
   // Scroll detection on HomePage:
   // - Interactive scrubbing: scrolling down moves Biscotti cream boundary upward in real-time
-  // - Reversible: user can scroll back up when under 75% coverage
-  // - Automatic smooth retraction: if user stops scrolling and hasn't reached >= 75%, smoothly retract to 0
-  // - Lock-in threshold: when reaching >= 75% coverage (0.75), automatically locks and advances smoothly to 100%
+  // - Reversible: user can scroll back up before 50%
+  // - Automatic smooth retraction: if user stops scrolling and hasn't reached >= 50%, smoothly retract to 0
+  // - Lock-in threshold: when reaching >= 50% (halfway point), automatically locks and advances smoothly to 100%
   useEffect(() => {
     if (!hasVisited || currentView !== 'home' || preloaderPhase !== 'idle') return;
 
     let accumulatedScroll = 0;
-    const maxScrollDistance = 550; // px of wheel/touch movement to reach 100%
+    const maxScrollDistance = 450; // px of wheel/touch movement to reach 100%
     let retractTimer: ReturnType<typeof setTimeout> | null = null;
     let retractAnimFrame: number | null = null;
 
@@ -53,7 +53,7 @@ export const App: React.FC = () => {
         return;
       }
 
-      accumulatedScroll = Math.max(0, accumulatedScroll - 24);
+      accumulatedScroll = Math.max(0, accumulatedScroll - 20);
       const frac = accumulatedScroll / maxScrollDistance;
       setScrollFraction(frac);
 
@@ -88,8 +88,8 @@ export const App: React.FC = () => {
         setIsInteractiveScroll(false);
       }
 
-      // If user reaches 75% (0.75) of the screen, commit to smooth progression!
-      if (fraction >= 0.75) {
+      // Halfway point (50% / 0.50): automatically begins loading transition
+      if (fraction >= 0.50) {
         setTriggerType('scroll');
         setIsInteractiveScroll(false);
         setScrollFraction(1);
@@ -122,8 +122,8 @@ export const App: React.FC = () => {
         setIsInteractiveScroll(false);
       }
 
-      // 75% snap threshold
-      if (fraction >= 0.75) {
+      // Halfway point (50%) auto-scroll commitment
+      if (fraction >= 0.50) {
         setTriggerType('scroll');
         setIsInteractiveScroll(false);
         setScrollFraction(1);
@@ -134,7 +134,7 @@ export const App: React.FC = () => {
 
     const handleTouchEnd = () => {
       const fraction = accumulatedScroll / maxScrollDistance;
-      if (fraction < 0.75) {
+      if (fraction < 0.50) {
         scheduleRetract();
       }
     };

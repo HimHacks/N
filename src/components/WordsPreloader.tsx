@@ -229,14 +229,18 @@ const VerticalSlotReel: React.FC<{
   const isLocked = isLoaded || progress >= threshold;
 
   // Single sequential reel strip:
-  // Starts with random distinct glyphs and terminates EXACTLY once with targetChar at the end!
-  // No duplicate targetChar before the end, ensuring it rolls only 1 time into place.
+  // Starts with random distinct glyphs and terminates with the targetChar at the end.
+  // For the final slot (index 5, target 'L'), penultimate character is 'E' so it rolls visibly through 'E' before settling on 'L'!
   const [tape] = useState<string[]>(() => {
     const list: string[] = [];
     const poolWithoutTarget = SLOT_GLYPH_POOL.filter((g) => g !== targetChar);
-    const count = 16 + slotIndex * 4; // Length scaled so each reel steps steadily towards its target
+    const count = 18 + slotIndex * 4; // Generous length for continuous fluid stepping
     for (let i = 0; i < count; i++) {
       list.push(poolWithoutTarget[(i * 7 + slotIndex * 3) % poolWithoutTarget.length]);
+    }
+    if (isFinal) {
+      // Ensure the penultimate glyph is 'E' so it distinctly rolls through E into L!
+      list[list.length - 1] = 'E';
     }
     list.push(targetChar); // Exactly 1 final destination glyph
     return list;
@@ -252,25 +256,21 @@ const VerticalSlotReel: React.FC<{
       return;
     }
 
-    // Dynamic step cadence:
-    // When rolling freely, steps briskly (45-65ms)
-    // As progress approaches this slot's threshold, it smoothly rolls towards the final letter
     const progressRatio = Math.min(1, Math.max(0, progress / threshold));
-    // Index increases progressively as progress approaches threshold, rolling once to the end
     const maxUnlockedIndex = tape.length - 2;
-    const computedIndex = Math.floor(progressRatio * maxUnlockedIndex);
+    // Map progress linearly to tape position without resetting or plateauing early
+    const computedIndex = Math.min(maxUnlockedIndex, Math.floor(progressRatio * (tape.length - 1)));
 
-    // Keep an active rolling jitter if progress hasn't moved yet
     setTapeIndex((prev) => Math.max(prev, computedIndex));
 
-    let stepSpeed = 48 + (slotIndex % 3) * 8;
+    let stepSpeed = 46 + (slotIndex % 3) * 6;
     if (isFinal) {
       if (progress >= 99) {
-        stepSpeed = 450; // Dramatic crawl during 99% pause
+        stepSpeed = 480; // Dramatic slow crawl through 'E' during 99% pause
       } else if (progress >= 92) {
-        stepSpeed = 220; // Noticeable deceleration
+        stepSpeed = 200; // Progressive deceleration
       } else if (progress >= 80) {
-        stepSpeed = 110;
+        stepSpeed = 100;
       }
     }
 
