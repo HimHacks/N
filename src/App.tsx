@@ -10,7 +10,7 @@ import { WordsPreloader, type WordPreloaderPhase } from './components/WordsPrelo
 export const App: React.FC = () => {
   // Original Greeting Preloader ('Hello', 'Bonjour', ...) plays at calm natural cadence
   const [hasVisited, setHasVisited] = useState(false);
-  const [currentView, setCurrentView] = useState<'home' | 'simulator'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'phonesim' | 'simulator'>('home');
   const [preloaderPhase, setPreloaderPhase] = useState<WordPreloaderPhase>('idle');
   const [triggerType, setTriggerType] = useState<'button' | 'scroll'>('scroll');
   const [scrollFraction, setScrollFraction] = useState<number>(0);
@@ -202,9 +202,9 @@ export const App: React.FC = () => {
     };
   }, [preloaderPhase, isCompilingFinished]);
 
-  // When unified curtain exit finishes, lock in simulator view and reset preloader
+  // When unified curtain exit finishes, lock in phone simulator view and reset preloader
   const handlePreloaderExited = () => {
-    setCurrentView('simulator');
+    setCurrentView('phonesim');
     setPreloaderPhase('idle');
     setIsInteractiveScroll(false);
     setScrollFraction(0);
@@ -219,7 +219,7 @@ export const App: React.FC = () => {
     setIsCompilingFinished(false);
   };
 
-  const showSimulatorLayer = currentView === 'simulator' || preloaderPhase === 'exiting';
+  const showPhoneSimLayer = currentView === 'phonesim' || preloaderPhase === 'exiting';
 
   return (
     <div className="relative w-full min-h-screen bg-[#F7F4EC] text-[#153A32] selection:bg-[#176B50] selection:text-white">
@@ -251,7 +251,8 @@ export const App: React.FC = () => {
       {/* 
         View Routing:
         - 'home': Human-to-Human E2EE Showcase (Aarav, Meera)
-        - 'simulator': Main Web Page with Scroll-Triggered E2EE Phones Animation above Guided Simulator
+        - 'phonesim': Scroll-Triggered WhatsApp Phone Simulator with live Alice & Bob crypto transit
+        - 'simulator': In-depth Guided Cryptographic Lab (5-step interactive lab)
       */}
       {currentView === 'home' && preloaderPhase !== 'exiting' && (
         <E2EEHomePage
@@ -260,32 +261,65 @@ export const App: React.FC = () => {
         />
       )}
 
-      {showSimulatorLayer && (
+      {/* STAGE 1: Phone Simulator (Clean, standalone after loading page, before guided lab) */}
+      {showPhoneSimLayer && (
         <motion.div
           ref={simulatorRef}
           initial={preloaderPhase === 'exiting' ? { opacity: 0.45, y: 36, scale: 0.985 } : false}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.95, ease: [0.16, 1, 0.3, 1] }}
-          className="relative w-full min-h-screen bg-[#E9EEE5] py-8 px-4 sm:px-8 overflow-hidden"
+          className="relative w-full min-h-screen bg-[#F7F4EC] py-6 px-4 sm:px-8 overflow-hidden"
         >
-          {/* Floating 3D green/white bubbles & sculptural shapes transitioning from loading screen into simulator */}
+          {/* Floating 3D green/white bubbles & sculptural shapes transitioning from loading screen */}
           <Floating3DShapes isTransitioning={preloaderPhase === 'exiting'} />
 
-          <div className="relative z-10 max-w-6xl mx-auto mb-4 flex items-center justify-between">
+          <div className="relative z-10 max-w-6xl mx-auto mb-6 flex items-center justify-between">
             <button
               onClick={() => setCurrentView('home')}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#D3CDC2] bg-white text-[#153A32] text-xs font-semibold hover:bg-[#E3EDE3] transition-colors cursor-pointer shadow-xs"
             >
               &larr; Back to Home
             </button>
+
+            <button
+              onClick={() => setCurrentView('simulator')}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#176B50] hover:bg-[#153A32] text-white text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-md hover:shadow-lg active:scale-98"
+            >
+              <span>Explore Cryptography Lab</span>
+              &rarr;
+            </button>
           </div>
 
-          {/* E2EE Phones & Scrambled Encryption Animation Section (Positioned just above the guided simulator) */}
-          <div className="relative z-10 max-w-6xl mx-auto mb-10 rounded-3xl bg-[#F7F4EC] border border-[#D3CDC2] shadow-sm overflow-hidden">
-            <InteractiveE2EEJourney />
+          {/* E2EE Phones & Scrambled Encryption Animation Section */}
+          <div className="relative z-10 max-w-6xl mx-auto rounded-3xl bg-[#F7F4EC] border border-[#D3CDC2] shadow-sm overflow-hidden mb-12">
+            <InteractiveE2EEJourney onExploreMore={() => setCurrentView('simulator')} />
+          </div>
+        </motion.div>
+      )}
+
+      {/* STAGE 2: Deep Dive Technical Guided Lab (Opened when user chooses to advance) */}
+      {currentView === 'simulator' && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="relative w-full min-h-screen bg-[#E9EEE5] py-8 px-4 sm:px-8 overflow-hidden"
+        >
+          <div className="relative z-10 max-w-6xl mx-auto mb-6 flex items-center justify-between">
+            <button
+              onClick={() => setCurrentView('phonesim')}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#D3CDC2] bg-white text-[#153A32] text-xs font-semibold hover:bg-[#E3EDE3] transition-colors cursor-pointer shadow-xs"
+            >
+              &larr; Back to Phone Simulator
+            </button>
+            <button
+              onClick={() => setCurrentView('home')}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#D3CDC2] bg-white text-[#153A32] text-xs font-semibold hover:bg-[#E3EDE3] transition-colors cursor-pointer shadow-xs"
+            >
+              Home
+            </button>
           </div>
 
-          {/* Existing Guided Simulator */}
           <div className="relative z-10">
             <MainGuidedSimulator />
           </div>
